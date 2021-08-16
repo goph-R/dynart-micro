@@ -19,7 +19,7 @@ class Database {
             return;
         }
         $dsn = $this->app->config('database.'.$this->name.'.dsn');
-        $user = $this->app->config('database.'.$this->name.'.user');
+        $user = $this->app->config('database.'.$this->name.'.username');
         $password = $this->app->config('database.'.$this->name.'.password');
         $this->pdo = new \PDO($dsn, $user, $password, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
         $this->connected = true;

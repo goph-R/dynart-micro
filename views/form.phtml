@@ -1,0 +1,36 @@
+<?php foreach ($form->fields() as $name => $field): ?>
+    <?php $inputId = $form->name().'_'.$name ?>
+    <?php $inputName = $form->name().'['.$name.']' ?>
+    <?php $type = $field['type'] ?>
+    <div id="<?= $inputName ?>_group" class="form-group">
+        <?php // Label ?>
+        <?php if (isset($field['label'])): ?>
+            <label for="<?= $inputId ?>"><?= $this->escape($field['label']) ?></label>
+        <?php endif ?>
+        <?php // Input types ?>
+        <?php if ($type == 'text'): ?>
+            <input id="<?= $inputId ?>" name="<?= $inputName ?>" type="text" value="<?= $form->value($name, true) ?>">
+        <?php elseif ($type == 'password'): ?>
+            <input id="<?= $inputId ?>" name="<?= $inputName ?>" type="password" value="">
+        <?php elseif ($type == 'checkbox'): ?>
+            <?php if (isset($field['text'])): ?><label><?php endif ?>
+            <input id="<?= $inputId ?>" name="<?= $inputName ?>" type="checkbox" value="1"<?= $form->value($name) ? ' checked' : '' ?>>
+            <?php if (isset($field['text'])): ?><?= $this->escape($field['text']) ?></label><?php endif ?>
+        <?php elseif ($type == 'select'): ?>
+            <select id="<?= $inputId ?>" name="<?= $inputName ?>">
+                <?php foreach ($field['options'] as $value => $text): ?>
+                    <option value="<?= $this->escapeAttribute($value) ?>"<?= $form->value($name) == $value ? ' selected' : ''?>><?= $this->escape($text) ?></option>
+                <?php endforeach ?>
+            </select>
+        <?php elseif ($type == 'submit'): ?>
+            <input id="<?= $inputId ?>" name="<?= $inputName ?>" type="submit" value="<?= $field['text'] ?>">
+        <?php endif ?>
+        <?php // Error ?>
+        <?php if ($form->error($name)): ?>
+            <small><?= $this->escape($form->error($name)) ?></small>
+        <?php endif ?>
+        <?php if (isset($field['description'])): ?>
+            <small><?= $this->escape($field['description']) ?></small>
+        <?php endif ?>
+    </div>
+<?php endforeach ?>

@@ -61,7 +61,7 @@ class App {
             $content = call_user_func_array($callable, $params);
             $this->sendContent($content);
         } else {
-            $this->error(404);
+            $this->error(404, 'Not found.');
         }
     }    
 
@@ -155,8 +155,10 @@ class App {
         $this->routes[$route] = $callable;
     }
 
-    public function redirect($url) {
-        $this->setHeader('Location', $url);
+    public function redirect($url, $params=[]) {
+        $location = $this->view->routeUrl($url, $params, '&');
+        $this->setHeader('Location', $location);
+        $this->respond();
         $this->finish();
     }
 
@@ -188,7 +190,7 @@ class App {
 
     public function respond($content='') {
         foreach ($this->headers as $name => $value) {
-            header($name, $value);
+            header($name.': '.$value);
         }
         echo $content;        
     }

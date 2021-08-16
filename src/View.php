@@ -65,13 +65,17 @@ class View {
         return htmlspecialchars($value);
     }
 
+    public function escapeAttribute(string $value) {
+        return htmlspecialchars($value, ENT_QUOTES);
+    }
+
     public function attributes(array $attributes, $startWithSpace=true) {
         $pairs = [];
         foreach ($attributes as $name => $value) {
             if (is_int($name)) {
                 $pairs[] = $value;
             } else {
-                $pairs[] = $name.'="'.htmlspecialchars($value, ENT_QUOTES).'"';
+                $pairs[] = $name.'="'.$this->escapeAttribute($value).'"';
             }
         }
         $prefix = !empty($pairs) && $startWithSpace ? ' ' : '';
