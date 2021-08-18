@@ -11,10 +11,28 @@ class Form {
     protected $values = [];
     protected $validators = [];
     protected $errors = [];
+    protected $csrf = true;
 
-    public function __construct(App $app, string $name='form') {
+    public function __construct(App $app, string $name='form', bool $csrf=true) {
         $this->app = $app;
         $this->name = $name;
+        $this->csrf = $csrf;
+    }
+
+    public function generateCsrf() {
+        if (!$this->csrf) {
+            return;
+        }
+        $value = bin2hex(random_bytes(16));
+        $this->addFields(['_csrf' => ['type' => 'hidden']]);
+        $this->setValues(['_csrf' => $value]);
+        $this->app->setSession('form.'.$this->name.'.csrf', $value);
+    }
+
+    public function validateCsrf() {
+        return $this->csrf
+            ? $this->app->session('form.'.$this->name.'.csrf') == $this->value('_csrf')
+            : true;
     }
 
     public function name() {
@@ -60,6 +78,7 @@ class Form {
             $this->bind();
             $result = $this->validate();
         }
+        $this->generateCsrf();
         return $result;
     }
 
@@ -79,10 +98,20 @@ class Form {
     }
 
     public function setValues(array $values) {
-        $this->values = $values;
+        $this->values = array_merge($this->values, $values);
+    }
+
+    public function addError(string $error) {
+        if (!isset($this->errors['_form'])) {
+            $this->errors['_form'] = [];
+        }
+        $this->errors['_form'][] = $error;
     }
 
     public function validate() {
+        if (!$this->validateCsrf()) {
+            $this->addError('CSRF token is invalid.');
+        }
         foreach (array_keys($this->fields) as $name) {            
             if ($this->required($name) && !$this->value($name)) {
                 $this->errors[$name] = 'Required.';
