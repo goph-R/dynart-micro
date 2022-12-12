@@ -5,6 +5,7 @@ namespace Dynart\Micro;
 class Database {
 
     protected $app;
+    /** @var \PDO */
     protected $pdo;
     protected $name;
     protected $connected = false;
@@ -18,12 +19,12 @@ class Database {
         if ($this->connected) {
             return;
         }
-        $dsn = $this->app->config('database.'.$this->name.'.dsn');
-        $user = $this->app->config('database.'.$this->name.'.username');
-        $password = $this->app->config('database.'.$this->name.'.password');
+        $dsn = $this->app->config(['database.'.$this->name.'.dsn', 'mysql:localhost']);
+        $user = $this->app->config(['database.'.$this->name.'.username', 'root']);
+        $password = $this->app->config(['database.'.$this->name.'.password', '']);
         $this->pdo = new \PDO($dsn, $user, $password, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
         $this->connected = true;
-        $this->query("use ".$this->app->config('database.'.$this->name.'.name'));
+        $this->query("use ".$this->app->config(['database.'.$this->name.'.name', 'db_name_missing']));
         $this->query("set names 'utf8'");        
     }
 

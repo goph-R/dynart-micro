@@ -3,7 +3,8 @@
 namespace Dynart\Micro;
 
 abstract class Validator {
-    
+
+    /** @var Form */
     protected $form;
     protected $message;
 

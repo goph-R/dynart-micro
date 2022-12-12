@@ -6,7 +6,8 @@ class View {
 
     protected $app;
     protected $layout = 'layout';
-    protected $lastBlock = [];    
+    protected $lastBlock = [];
+    protected $blocks = [];
     protected $data = [
         '__styles' => [],
         '__scripts' => []
@@ -32,25 +33,7 @@ class View {
     }
 
     public function routeUrl($route, $params=[], $amp='&amp;') {
-        $result = $this->app->config(App::CONFIG_BASE_URL);
-        if ($route == null) {
-            return $result;
-        }
-        $useRewrite = $this->app->config(App::CONFIG_USE_REWRITE);        
-        if ($useRewrite) {
-            $result .= $route;
-        } else {
-            $indexFile = $this->app->config(App::CONFIG_INDEX_FILE);
-            $result .= '/'.$indexFile;
-            if ($route != '/') {
-                $routeParameter = $this->app->config(App::CONFIG_ROUTE_PARAMETER);
-                $params[$routeParameter] = $route;
-            }
-        }        
-        if ($params) {
-            $result .= '?'.http_build_query($params, '', $amp);
-        }
-        return str_replace('%2F', '/', $result);
+        return $this->app->routeUrl($route, $params, $amp);
     }
 
     public function staticUrl(string $url) {

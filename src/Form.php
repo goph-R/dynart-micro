@@ -9,6 +9,7 @@ class Form {
     protected $fields = [];
     protected $required = [];
     protected $values = [];
+    /** @var Validator[] */
     protected $validators = [];
     protected $errors = [];
     protected $csrf = true;
@@ -23,7 +24,11 @@ class Form {
         if (!$this->csrf) {
             return;
         }
-        $value = bin2hex(random_bytes(16));
+        try {
+            $value = bin2hex(random_bytes(16));
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Was not possible to gather sufficient entropy');
+        }
         $this->addFields(['_csrf' => ['type' => 'hidden']]);
         $this->setValues(['_csrf' => $value]);
         $this->app->setSession('form.'.$this->name.'.csrf', $value);
@@ -74,7 +79,7 @@ class Form {
 
     public function process() {
         $result = false;
-        if ($this->app->requestPost()) {
+        if ($this->app->requestIsPost()) {
             $this->bind();
             $result = $this->validate();
         }
@@ -83,7 +88,7 @@ class Form {
     }
 
     public function bind() {
-        $this->values = $this->app->request($this->name);
+        $this->values = $this->app->request($this->name, []);
     }
 
     public function value(string $name, $escape=false) {
@@ -95,6 +100,10 @@ class Form {
             }
         }
         return $value;
+    }
+
+    public function values() {
+        return $this->values;
     }
 
     public function setValues(array $values) {
@@ -118,9 +127,10 @@ class Form {
             }
         }
         foreach ($this->validators as $name => $validators) {
-            if (isset($this->errors[$name])) {
+            if (isset($this->errors[$name]) || (!$this->value($name) && !$this->required($name))) {
                 continue;
             }
+            /** @var Validator $validator */
             foreach ($validators as $validator) {
                 if (!$validator->validate($this->value($name))) {
                     $this->errors[$name] = $validator->message();

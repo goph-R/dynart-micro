@@ -4,8 +4,8 @@ namespace Dynart\Micro;
 
 class App {
 
-    const CONFIG_BASE_URL = 'app.base_url';
-    const CONFIG_SALT = 'app.salt';
+    const CONFIG_BASE_URL = ['app.base_url', 'http://localhost'];
+    const CONFIG_SALT = ['app.salt', ''];
     const CONFIG_ROUTE_PARAMETER = ['app.route_parameter', 'route'];
     const CONFIG_USE_SESSION = ['app.use_session', true];
     const CONFIG_USE_REWRITE = ['app.use_rewrite', true];
@@ -107,8 +107,27 @@ class App {
         return self::ROUTE_NOT_FOUND;
     }
 
+    public function routeUrl($route, $params=[], $amp='&') {
+        $result = $this->config(App::CONFIG_BASE_URL);
+        $useRewrite = $this->config(App::CONFIG_USE_REWRITE);
+        if ($useRewrite) {
+            $result .= $route == null ? '' : $route;
+        } else {
+            $indexFile = $this->config(App::CONFIG_INDEX_FILE);
+            $result .= '/'.$indexFile;
+            if ($route && $route != '/') {
+                $routeParameter = $this->config(App::CONFIG_ROUTE_PARAMETER);
+                $params[$routeParameter] = $route;
+            }
+        }
+        if ($params) {
+            $result .= '?'.http_build_query($params, '', $amp);
+        }
+        return str_replace('%2F', '/', $result);
+    }
+
     public function cookie(string $name, $default=null) {
-        return array_key_exists($name, $_COOKIE) ? $_COOKIE[$cookie] : $default;
+        return array_key_exists($name, $_COOKIE) ? $_COOKIE[$name] : $default;
     }
 
     public function session(string $name, $default=null) {
@@ -134,7 +153,7 @@ class App {
         return $ip;
     }
 
-    public function requestPost() {
+    public function requestIsPost() {
         return $_SERVER['REQUEST_METHOD'] == 'POST';
     }
 
@@ -143,11 +162,9 @@ class App {
         return isset($headers[$name]) ? $headers[$name] : null;
     }
 
-    public function config($name, $default=null) {
-        if (is_array($name)) {
-            $default = $name[1];
-            $name = $name[0];
-        }
+    public function config(array $params) {
+        $name = $params[0];
+        $default = $params[1];
         return array_key_exists($name, $this->config) ? $this->config[$name] : $default;
     }
 
@@ -156,7 +173,7 @@ class App {
     }
 
     public function redirect($url, $params=[]) {
-        $location = $this->view->routeUrl($url, $params, '&');
+        $location = $this->routeUrl($url, $params, '&');
         $this->setHeader('Location', $location);
         $this->respond();
         $this->finish();
@@ -194,5 +211,6 @@ class App {
         }
         echo $content;        
     }
+
 }
 
