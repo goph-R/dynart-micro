@@ -44,7 +44,7 @@ abstract class Repository {
 
     public function deleteByIds(array $ids) {
         list($condition, $params) = $this->db->getInConditionAndParams($ids);
-        $sql = "delete from ".$this->db->escapeName($this->table)." where id in ($condition) limit 1";
+        $sql = "delete from ".$this->db->escapeName($this->table)." where id in ($condition)";
         $this->db->query($sql, $params);
     }
 
@@ -87,7 +87,7 @@ abstract class Repository {
         return ' order by '.$this->db->escapeName($orderBy).' '.$orderDir;
     }
 
-    protected function getLimit(array &$params) {
+    protected function getLimit(array $params) {
         if (!isset($params['page']) || !isset($params['page_size'])) {
             return '';
         }
