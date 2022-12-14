@@ -33,11 +33,11 @@ class View {
     }
 
     public function routeUrl($route, $params=[], $amp='&amp;') {
-        return $this->app->routeUrl($route, $params, $amp);
+        return $this->app->router()->getUrl($route, $params, $amp);
     }
 
     public function staticUrl(string $url) {
-        if (substr($url, 0, 1) == '/') {
+        if (substr($url, 0, 1) == '~') {
             $baseUrl = $this->app->config(App::CONFIG_BASE_URL);
             return $baseUrl.$url;
         }
@@ -92,10 +92,9 @@ class View {
     }
 
     public function fetch(string $__path, array $__vars=[]) {
-        $__viewsFolder = $this->app->config(App::CONFIG_VIEWS_FOLDER);
-        $__path = $__viewsFolder.'/'.$__path.'.phtml';
+        $__path = $this->app->config(App::CONFIG_VIEWS_FOLDER).'/'.$__path.'.phtml';
         if (!file_exists($__path)) {
-            $this->app->error(500, "Couldn't find view: ".$__path);
+            $this->app->sendError(500, "Couldn't find view: ".$__path);
         }
         extract($this->data);
         extract($__vars);

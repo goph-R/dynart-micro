@@ -11,39 +11,57 @@ class App {
     const CONFIG_USE_REWRITE = ['app.use_rewrite', true];
     const CONFIG_INDEX_FILE = ['app.index_file', 'index.php'];
     const CONFIG_VIEWS_FOLDER = ['app.views_folder', 'views'];
-
-    const ROUTE_NOT_FOUND = [null, null];
+    const CONFIG_USE_DATABASE = ['app.use_database', false];
+    const CONFIG_USE_VIEW = ['app.use_view', false];
 
     protected $config = [];
-    protected $headers = [];
-    protected $routes = [];
+    protected $requestHeaders = [];
+    protected $responseHeaders = [];
 
-    protected $view;
+    /** @var Router */
+    protected $router;
+    /** @var Database */
     protected $database;
+    /** @var View */
+    protected $view;
 
     public function __construct(array $configPaths) {
         $this->loadConfig($configPaths);
+        $this->requestHeaders = getallheaders();
+        $this->router = $this->createRouter();
         if ($this->config(self::CONFIG_USE_SESSION)) {
             session_start();
         }
-        $this->view = $this->createView();
-        $this->database = $this->createDatabase();
+        if ($this->config(self::CONFIG_USE_DATABASE)) {
+            $this->database = $this->createDatabase();
+        }
+        if ($this->config(self::CONFIG_USE_VIEW)) {
+            $this->view = $this->createView();
+        }
     }
 
-    protected function createView() {
-        return new View($this);
+    protected function createRouter() {
+        return new Router($this);
     }
 
     protected function createDatabase() {
         return new Database($this);
     }
 
-    public function view() {
-        return $this->view;
+    protected function createView() {
+        return new View($this);
+    }
+
+    public function router() {
+        return $this->router;
     }
 
     public function database() {
         return $this->database;
+    }
+
+    public function view() {
+        return $this->view;
     }
 
     protected function loadConfig(array &$paths) {
@@ -55,75 +73,14 @@ class App {
     }
 
     public function run() {
-        $found = $this->matchCurrentRoute();
+        $found = $this->router->matchCurrentRoute();
         if ($found[0]) {
             list($callable, $params) = $found;
             $content = call_user_func_array($callable, $params);
             $this->sendContent($content);
         } else {
-            $this->error(404, 'Not found.');
+            $this->sendError(404, 'Not found.');
         }
-    }    
-
-    public function getCurrentRoute() {
-        $routeParameter = $this->config(self::CONFIG_ROUTE_PARAMETER);
-        return $this->request($routeParameter, '/');
-    }
-
-    protected function matchCurrentRoute() {
-        $currentParts = explode('/', $this->getCurrentRoute());
-        $currentPartsCount = count($currentParts);
-        $found = self::ROUTE_NOT_FOUND;
-        foreach ($this->routes as $route => $callable) {
-            $found = $this->findRoute($route, $callable, $currentParts, $currentPartsCount);
-            if ($found[0]) {
-                break;
-            }
-        }
-        return $found;
-    }
-
-    protected function findRoute(string $route, &$callable, array &$currentParts, int $currentPartsCount) {
-        $parts = explode('/', $route);
-        if (count($parts) != $currentPartsCount) {
-            return self::ROUTE_NOT_FOUND;
-        }
-        $found = true;
-        $params = [$this];
-        foreach ($parts as $i => $part) {
-            if ($part == $currentParts[$i]) {
-                continue;
-            }
-            if ($part == '?') {
-                $params[] = $currentParts[$i];
-                continue;
-            }
-            $found = false;
-            break;
-        }
-        if ($found) {
-            return [$callable, $params];
-        }
-        return self::ROUTE_NOT_FOUND;
-    }
-
-    public function routeUrl($route, $params=[], $amp='&') {
-        $result = $this->config(App::CONFIG_BASE_URL);
-        $useRewrite = $this->config(App::CONFIG_USE_REWRITE);
-        if ($useRewrite) {
-            $result .= $route == null ? '' : $route;
-        } else {
-            $indexFile = $this->config(App::CONFIG_INDEX_FILE);
-            $result .= '/'.$indexFile;
-            if ($route && $route != '/') {
-                $routeParameter = $this->config(App::CONFIG_ROUTE_PARAMETER);
-                $params[$routeParameter] = $route;
-            }
-        }
-        if ($params) {
-            $result .= '?'.http_build_query($params, '', $amp);
-        }
-        return str_replace('%2F', '/', $result);
     }
 
     public function cookie(string $name, $default=null) {
@@ -153,43 +110,46 @@ class App {
         return $ip;
     }
 
-    public function requestIsPost() {
-        return $_SERVER['REQUEST_METHOD'] == 'POST';
+    public function requestMethod() {
+        return $_SERVER['REQUEST_METHOD'];
     }
 
-    public function header(string $name) {
-        $headers = getallheaders();
-        return isset($headers[$name]) ? $headers[$name] : null;
+    public function requestHeader(string $name) {
+        return isset($this->requestHeaders[$name]) ? $this->requestHeaders[$name] : null;
+    }
+
+    public function responseHeader(string $name) {
+        return isset($this->responseHeaders[$name]) ? $this->responseHeaders[$name] : null;
     }
 
     public function config(array $params) {
-        $name = $params[0];
-        $default = $params[1];
+        list($name, $default) = $params;
         return array_key_exists($name, $this->config) ? $this->config[$name] : $default;
     }
 
-    public function route(string $route, $callable) {
-        $this->routes[$route] = $callable;
+    public function route(string $route, $callable, $method='GET') {
+        $this->router->add($route, $callable, $method);
     }
 
     public function redirect($url, $params=[]) {
-        $location = $this->routeUrl($url, $params, '&');
+        $location = $this->router->getUrl($url, $params);
+        $this->clearHeaders();
         $this->setHeader('Location', $location);
-        $this->respond();
+        $this->send();
         $this->finish();
     }
 
-    protected function sendContent(&$content) {
+    protected function sendContent($content) {
         if (is_string($content)) {
             $this->setHeader('Content-Type', 'text/html; charset=UTF-8');
-            $this->respond($content);
+            $this->send($content);
         } else if (is_array($content)) {
             $this->setHeader('Content-Type', 'application/json');
-            $this->respond(json_encode($content));
+            $this->send(json_encode($content));
         }
     }
     
-    public function error(int $code, $content='') {
+    public function sendError(int $code, $content='') {
         http_response_code($code);
         $this->finish($content);
     }
@@ -198,15 +158,16 @@ class App {
         exit($content);
     }
 
-    public function setHeader(string $name, $value=null) {
-        if ($value === null) {
-            return isset($this->headers[$name]) ? $this->headers[$name] : null;
-        }
-        $this->headers[$name] = $value;
+    public function clearHeaders() {
+        return $this->responseHeaders;
     }
 
-    public function respond($content='') {
-        foreach ($this->headers as $name => $value) {
+    public function setHeader(string $name, $value) {
+        $this->responseHeaders[$name] = $value;
+    }
+
+    public function send($content='') {
+        foreach ($this->responseHeaders as $name => $value) {
             header($name.': '.$value);
         }
         echo $content;        

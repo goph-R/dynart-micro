@@ -2,6 +2,8 @@
 
 namespace Dynart\Micro;
 
+use Share\Pager;
+
 class Form {
     
     protected $app;
@@ -9,7 +11,7 @@ class Form {
     protected $fields = [];
     protected $required = [];
     protected $values = [];
-    /** @var Validator[] */
+    /** @var Validator[][] */
     protected $validators = [];
     protected $errors = [];
     protected $csrf = true;
@@ -79,7 +81,7 @@ class Form {
 
     public function process() {
         $result = false;
-        if ($this->app->requestIsPost()) {
+        if ($this->app->requestMethod() == 'POST') {
             $this->bind();
             $result = $this->validate();
         }
@@ -88,7 +90,13 @@ class Form {
     }
 
     public function bind() {
-        $this->values = $this->app->request($this->name, []);
+        if ($this->name) {
+            $this->values = $this->app->request($this->name, []);
+        } else {
+            foreach ($this->fields as $name => $field) {
+                $this->values[$name] = $this->app->request($name);
+            }
+        }
     }
 
     public function value(string $name, $escape=false) {
@@ -127,10 +135,12 @@ class Form {
             }
         }
         foreach ($this->validators as $name => $validators) {
-            if (isset($this->errors[$name]) || (!$this->value($name) && !$this->required($name))) {
+            if (isset($this->errors[$name])) {
                 continue;
             }
-            /** @var Validator $validator */
+            if (!$this->value($name) && !$this->required($name)) {
+                continue;
+            }
             foreach ($validators as $validator) {
                 if (!$validator->validate($this->value($name))) {
                     $this->errors[$name] = $validator->message();

@@ -84,7 +84,7 @@ class Database {
         }
         $namesString = join(', ', $names);
         $paramsString = join(', ', array_keys($params));
-        $sql = "INSERT INTO $tableName ($namesString) VALUES ($paramsString)";
+        $sql = "insert into $tableName ($namesString) values ($paramsString)";
         $this->query($sql, $params);
     }
 
@@ -98,8 +98,8 @@ class Database {
         }
         $params = array_merge($params, $conditionParams);
         $pairsString = join(', ', $pairs);
-        $where = $condition ? ' WHERE '.$condition : '';
-        $sql = "UPDATE $tableName SET $pairsString$where";
+        $where = $condition ? ' where '.$condition : '';
+        $sql = "update $tableName set $pairsString$where";
         $this->query($sql, $params);
     }
     
@@ -112,7 +112,7 @@ class Database {
             $params[$key] = $item;
         }
         $condition = rtrim($in, ",");
-        return ['condition' => $condition, 'params' => $params];
+        return [$condition, $params];
     }
     
     public function beginTransaction() {
