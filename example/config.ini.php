@@ -1,7 +1,7 @@
 ;<?php '
 
 app.use_rewrite = false
-app.base_url = "http://localhost/micro"
+app.base_url = "http://localhost/dynart-micro"
 app.index_file = "index.php"
 app.route_parameter = "route"
 app.views_folder = "views"

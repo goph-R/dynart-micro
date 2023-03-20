@@ -7,25 +7,26 @@ class Database {
     protected $app;
     /** @var \PDO */
     protected $pdo;
-    protected $name;
+    protected $name = 'default';
     protected $connected = false;
     
-    public function __construct(App $app, string $name='default') {
-        $this->app = $app;
-        $this->name = $name;
+    protected $config;
+
+    public function __construct(Config $config) {
+        $this->config = $config;
     }
 
     protected function connect() {
         if ($this->connected) {
             return;
         }
-        $dsn = $this->app->config(['database.'.$this->name.'.dsn', 'mysql:localhost']);
-        $user = $this->app->config(['database.'.$this->name.'.username', 'root']);
-        $password = $this->app->config(['database.'.$this->name.'.password', '']);
+        $dsn = $this->config->get('database.'.$this->name.'.dsn', 'mysql:localhost');
+        $user = $this->config->get('database.'.$this->name.'.username', 'root');
+        $password = $this->config->get('database.'.$this->name.'.password', '');
         $this->pdo = new \PDO($dsn, $user, $password, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
         $this->connected = true;
-        $this->query("use ".$this->app->config(['database.'.$this->name.'.name', 'db_name_missing']));
-        $this->query("set names 'utf8'");        
+        $this->query("use ".$this->config->get('database.'.$this->name.'.name', 'db_name_missing'));
+        $this->query("set names 'utf8'");
     }
 
     public function escapeName(string $name) {
@@ -102,7 +103,7 @@ class Database {
         $sql = "update $tableName set $pairsString$where";
         $this->query($sql, $params);
     }
-    
+
     public function getInConditionAndParams(array $values, $paramNamePrefix='in') {
         $params = [];
         $in = "";
@@ -114,17 +115,17 @@ class Database {
         $condition = rtrim($in, ",");
         return [$condition, $params];
     }
-    
+
     public function beginTransaction() {
         return $this->pdo->beginTransaction();
     }
-    
+
     public function commit() {
         return $this->pdo->commit();
     }
-    
+
     public function rollBack() {
         return $this->pdo->rollBack();
-    }    
+    }
 
 }

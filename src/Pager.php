@@ -3,7 +3,7 @@
 namespace Dynart\Micro;
 
 class Pager {
-    
+
     protected $page = 0;
     protected $limit = 25;
     protected $count;
@@ -17,7 +17,7 @@ class Pager {
     protected $params;
     protected $route;
 
-    public function __construct(string $route, array $params, int $count, int $pagerLimit=7) {
+    public function __construct(string $route, array $params, int $count, int $pagerLimit = 7) {
         $this->route = $route;
         $this->params = $params;
         $this->page = isset($params['page']) ? (int)$params['page'] : 0;
@@ -34,9 +34,9 @@ class Pager {
         $this->next = $this->page != $this->max;
         $this->calculateStartAndEnd($pagerLimit);
         $this->hideRight = $this->end < $this->max - 1;
-        $this->hideLeft = $this->start > 1;  
+        $this->hideLeft = $this->start > 1;
     }
-    
+
     protected function calculateStartAndEnd($pagerLimit) {
         $limit = floor($pagerLimit / 2);
         $this->start = $this->page - $limit;
@@ -65,12 +65,12 @@ class Pager {
         $params = $this->params;
         $params['page'] = $page;
         return $params;
-    }    
-        
+    }
+
     public function hasLeftHidden() {
         return $this->hideLeft;
     }
-    
+
     public function hasRightHidden() {
         return $this->hideRight;
     }
@@ -78,23 +78,23 @@ class Pager {
     public function start() {
         return $this->start;
     }
-    
+
     public function end() {
         return $this->end;
     }
-    
+
     public function page() {
         return $this->page;
     }
-    
+
     public function max() {
         return $this->max;
     }
-    
+
     public function prev() {
         return $this->prev;
     }
-    
+
     public function next() {
         return $this->next;
     }

@@ -5,18 +5,44 @@
 require_once __DIR__ . '/vendor/autoload.php'; 
 
 use Dynart\Micro\App;
+use Dynart\Micro\WebApp;
+use Dynart\Micro\View;
 
-$app = new App(['config.ini.php']);
+class MyController {
 
-$app->route('/', function(App $app) {
-    return $app->view()->layout('index');
-});
+    private $view;
 
-$app->route('/example/?', function(App $app, $parameter) {
-    return $app->view()->layout('index', [
-        'parameter' => $parameter
-    ]);
-});
+    public function __construct(View $view) {
+        $this->view = $view;
+    }
+    
+    public function index() {
+        return $this->view->layout('index');
+    }
 
-$app->run();
+    public function example($parameter) {
+        return $this->view->layout('index', [
+            'parameter' => $parameter
+        ]); 
+    }
+}
+
+class MyApp extends WebApp {
+
+    public function __construct(array $configPaths) {
+        parent::__construct($configPaths);
+        $this->add(MyController::class);
+    }
+
+    public function init() {
+        parent::init();
+        $myController = $this->get(MyController::class);
+        $this->router->add('/', [$myController, 'index']);
+        $this->router->add('/example/?', [$myController, 'example']);
+    }    
+}
+
+App::run(new MyApp(['config.ini.php']));
+
+
 

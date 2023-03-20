@@ -4,17 +4,14 @@ namespace Dynart\Micro;
 
 abstract class Repository {
 
-    /** @var App */
-    protected $app;
     /** @var Database */
     protected $db;
     protected $table;
     protected $sqlParams = [];
     protected $orderByFields = [];
 
-    public function __construct(App $app) {
-        $this->app = $app;
-        $this->db = $app->database();
+    public function __construct(Database $db) {
+        $this->db = $db;
     }
 
     public function findById(int $id) {
@@ -95,8 +92,8 @@ abstract class Repository {
         $pageSize = (int)$params['page_size'];
         if ($page < 0) $page = 0;
         if ($pageSize < 1) $pageSize = 1;
-        if ($pageSize > 100) $pageSize = 100;
+        if ($pageSize > 100) $pageSize = 100; // TODO: configurable
         return ' limit '.($page * $pageSize).', '.$pageSize;
-    }    
+    }
 
 }

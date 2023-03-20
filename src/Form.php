@@ -2,22 +2,27 @@
 
 namespace Dynart\Micro;
 
-use Share\Pager;
-
 class Form {
-    
-    protected $app;
-    protected $name;
+
+    protected $name = 'form';
+    protected $csrf = true;
     protected $fields = [];
     protected $required = [];
     protected $values = [];
+    protected $errors = [];
+
     /** @var Validator[][] */
     protected $validators = [];
-    protected $errors = [];
-    protected $csrf = true;
 
-    public function __construct(App $app, string $name='form', bool $csrf=true) {
-        $this->app = $app;
+    /** @var Session */
+    protected $session;
+
+    /** @var Request */
+    protected $request;
+
+    public function __construct(Request $request, Session $session, string $name = 'form', bool $csrf = true) {
+        $this->request = $request;
+        $this->session = $session;
         $this->name = $name;
         $this->csrf = $csrf;
     }
@@ -29,16 +34,16 @@ class Form {
         try {
             $value = bin2hex(random_bytes(16));
         } catch (\Exception $e) {
-            throw new \RuntimeException('Was not possible to gather sufficient entropy');
+            throw new \RuntimeException("Couldn't gather sufficient entropy");
         }
         $this->addFields(['_csrf' => ['type' => 'hidden']]);
         $this->setValues(['_csrf' => $value]);
-        $this->app->setSession('form.'.$this->name.'.csrf', $value);
+        $this->session->set('form.'.$this->name.'.csrf', $value);
     }
 
     public function validateCsrf() {
         return $this->csrf
-            ? $this->app->session('form.'.$this->name.'.csrf') == $this->value('_csrf')
+            ? $this->session->get('form.'.$this->name.'.csrf') == $this->value('_csrf')
             : true;
     }
 
@@ -81,7 +86,7 @@ class Form {
 
     public function process() {
         $result = false;
-        if ($this->app->requestMethod() == 'POST') {
+        if ($this->request->method() == 'POST') {
             $this->bind();
             $result = $this->validate();
         }
@@ -91,15 +96,15 @@ class Form {
 
     public function bind() {
         if ($this->name) {
-            $this->values = $this->app->request($this->name, []);
+            $this->values = $this->request->get($this->name, []);
         } else {
             foreach ($this->fields as $name => $field) {
-                $this->values[$name] = $this->app->request($name);
+                $this->values[$name] = $this->request->get($name);
             }
         }
     }
 
-    public function value(string $name, $escape=false) {
+    public function value(string $name, $escape = false) {
         $value = null;
         if (array_key_exists($name, $this->values)) {
             $value = $this->values[$name];
@@ -129,7 +134,7 @@ class Form {
         if (!$this->validateCsrf()) {
             $this->addError('CSRF token is invalid.');
         }
-        foreach (array_keys($this->fields) as $name) {            
+        foreach (array_keys($this->fields) as $name) {
             if ($this->required($name) && !$this->value($name)) {
                 $this->errors[$name] = 'Required.';
             }

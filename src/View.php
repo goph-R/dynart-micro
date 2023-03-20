@@ -4,7 +4,12 @@ namespace Dynart\Micro;
 
 class View {
 
-    protected $app;
+    /** @var Router */
+    protected $router;
+
+    /** @var Config */
+    protected $config;
+
     protected $layout = 'layout';
     protected $lastBlock = [];
     protected $blocks = [];
@@ -13,8 +18,13 @@ class View {
         '__scripts' => []
     ];
 
-    public function __construct(App $app) {
-        $this->app = $app;
+    public function __construct(Config $config, Router $router) {        
+        $this->config = $config;
+        $this->router = $router;
+        $functionsPath = $this->config->get('app.views_folder').'/functions.php';
+        if (file_exists($functionsPath)) {
+            require_once($functionsPath);
+        }
     }
 
     public function data($name, $value=null) {
@@ -30,39 +40,6 @@ class View {
 
     public function addStyle(string $src, array $attributes=[]) {
         $this->data['__styles'][$src] = $attributes;
-    }
-
-    public function routeUrl($route, $params=[], $amp='&amp;') {
-        return $this->app->router()->getUrl($route, $params, $amp);
-    }
-
-    public function staticUrl(string $url) {
-        if (substr($url, 0, 1) == '~') {
-            $baseUrl = $this->app->config(App::CONFIG_BASE_URL);
-            return $baseUrl.$url;
-        }
-        return $url;
-    }
-
-    public function escape(string $value) {
-        return htmlspecialchars($value);
-    }
-
-    public function escapeAttribute(string $value) {
-        return htmlspecialchars($value, ENT_QUOTES);
-    }
-
-    public function attributes(array $attributes, $startWithSpace=true) {
-        $pairs = [];
-        foreach ($attributes as $name => $value) {
-            if (is_int($name)) {
-                $pairs[] = $value;
-            } else {
-                $pairs[] = $name.'="'.$this->escapeAttribute($value).'"';
-            }
-        }
-        $prefix = !empty($pairs) && $startWithSpace ? ' ' : '';
-        return $prefix.join(' ', $pairs);
     }
 
     public function setLayout(string $path) {
@@ -92,14 +69,16 @@ class View {
     }
 
     public function fetch(string $__path, array $__vars=[]) {
-        $__path = $this->app->config(App::CONFIG_VIEWS_FOLDER).'/'.$__path.'.phtml';
+        $__path = $this->config->get('app.views_folder').'/'.$__path.'.phtml';
+        /*
         if (!file_exists($__path)) {
             $this->app->sendError(500, "Couldn't find view: ".$__path);
         }
+        */
         extract($this->data);
         extract($__vars);
         ob_start();
         include $__path;
         return ob_get_clean();
-    }    
+    }
 }

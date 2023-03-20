@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: gopher
- * Date: 12/12/2022
- * Time: 7:10 PM
- */
 
 namespace Dynart\Micro;
-
 
 class Router
 {
@@ -15,22 +8,26 @@ class Router
 
     protected $routes = [];
 
-    /** @var App */
-    protected $app;
+    /** @var Config */
+    protected $config;
 
-    public function __construct(App $app) {
-        $this->app = $app;
+    /** @var Request */
+    protected $request;
+
+    public function __construct(Config $config, Request $request) {
+        $this->config = $config;
+        $this->request = $request;
     }
 
-    public function getCurrentRoute() {
-        $routeParameter = $this->app->config(App::CONFIG_ROUTE_PARAMETER);
-        return $this->app->request($routeParameter, '/');
+    public function currentRoute() {
+        $routeParameter = $this->config->get('app.route_parameter');
+        return $this->request->get($routeParameter, '/');
     }
 
     public function matchCurrentRoute() {
-        $method = $this->app->requestMethod();
+        $method = $this->request->method();
         $routes = array_key_exists($method, $this->routes) ? $this->routes[$method] : [];
-        $currentParts = explode('/', $this->getCurrentRoute());
+        $currentParts = explode('/', $this->currentRoute());
         $currentPartsCount = count($currentParts);
         $found = self::ROUTE_NOT_FOUND;
         foreach ($routes as $route => $callable) {
@@ -48,7 +45,7 @@ class Router
             return self::ROUTE_NOT_FOUND;
         }
         $found = true;
-        $params = [$this->app]; // the first parameter is always the App
+        $params = [];
         foreach ($parts as $i => $part) {
             if ($part == $currentParts[$i]) {
                 continue;
@@ -66,16 +63,16 @@ class Router
         return self::ROUTE_NOT_FOUND;
     }
 
-    public function getUrl($route, $params=[], $amp='&') {
-        $result = $this->app->config(App::CONFIG_BASE_URL);
-        $useRewrite = $this->app->config(App::CONFIG_USE_REWRITE);
+    public function url($route, $params=[], $amp='&') {
+        $result = $this->config->get('app.base_url');
+        $useRewrite = $this->config->get('app.use_rewrite');
         if ($useRewrite) {
             $result .= $route == null ? '' : $route;
         } else {
-            $indexFile = $this->app->config(App::CONFIG_INDEX_FILE);
+            $indexFile = $this->config->get('app.index_file');
             $result .= '/'.$indexFile;
             if ($route && $route != '/') {
-                $routeParameter = $this->app->config(App::CONFIG_ROUTE_PARAMETER);
+                $routeParameter = $this->config->get('app.route_parameter');
                 $params[$routeParameter] = $route;
             }
         }
@@ -85,7 +82,7 @@ class Router
         return str_replace('%2F', '/', $result);
     }
 
-    public function add(string $route, $callable, $method) {
+    public function add(string $route, $callable, $method = 'GET') {
         if ($method == 'BOTH') {
             $this->add($route, $callable, 'GET');
             $this->add($route, $callable, 'POST');
