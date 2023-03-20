@@ -41,14 +41,3 @@ function esc_attrs(array $attributes, $startWithSpace = true) {
     $prefix = !empty($pairs) && $startWithSpace ? ' ' : '';
     return $prefix.join(' ', $pairs);
 }
-
-// photos related
-
-function site_url(string $uri, bool $withMTime = true) {
-    return url('/sites/'.App::instance()->get(Request::class)->get('dir').$uri, $withMTime);
-}
-
-function getthumb_url($uri) {
-    return base_url().App::instance()->get(Config::class)->get('app.getthumb_prefix').$uri;
-}
-
