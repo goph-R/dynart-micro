@@ -1,7 +1,7 @@
 <?php if ($form->error('_form')): ?>
     <div>
         <?php foreach ($form->error('_form') as $error): ?>
-            <?= $this->escape($error) ?>
+            <?= esc_html($error) ?>
         <?php endforeach ?>
     </div>
 <?php endif ?>
@@ -14,7 +14,7 @@
     <?php endif ?>
         <?php // Label ?>
         <?php if (isset($field['label'])): ?>
-            <label for="<?= $inputId ?>"><?= $this->escape($field['label']) ?></label>
+            <label for="<?= $inputId ?>"><?= esc_html($field['label']) ?></label>
         <?php endif ?>
         <?php if ($type == 'text'): ?>
             <?php // -- Text -- ?>
@@ -27,12 +27,12 @@
             <?php if (isset($field['text'])): ?><label><?php endif ?>
             <?php $value = isset($field['value']) ? $field['value'] : '1' ?>
             <input id="<?= $inputId ?>" name="<?= $inputName ?>" type="checkbox" value="<?= $value ?>"<?= $form->value($name) == $value ? ' checked' : '' ?>>
-            <?php if (isset($field['text'])): ?><?= $this->escape($field['text']) ?></label><?php endif ?>
+            <?php if (isset($field['text'])): ?><?= esc_html($field['text']) ?></label><?php endif ?>
         <?php elseif ($type == 'select'): ?>            
             <?php // -- Select -- ?>
             <select id="<?= $inputId ?>" name="<?= $inputName ?>">
                 <?php foreach ($field['options'] as $value => $text): ?>
-                    <option value="<?= $this->escapeAttribute($value) ?>"<?= $form->value($name) == $value ? ' selected' : ''?>><?= $this->escape($text) ?></option>
+                    <option value="<?= esc_attr($value) ?>"<?= $form->value($name) == $value ? ' selected' : ''?>><?= esc_html($text) ?></option>
                 <?php endforeach ?>
             </select>
         <?php elseif ($type == 'hidden'): ?>
@@ -44,11 +44,11 @@
         <?php endif ?>
         <?php // Error ?>
         <?php if ($form->error($name)): ?>
-            <small><?= $this->escape($form->error($name)) ?></small>
+            <small><?= esc_html($form->error($name)) ?></small>
         <?php endif ?>
         <?php // Description ?>
         <?php if (isset($field['description'])): ?>
-            <small><?= $this->escape($field['description']) ?></small>
+            <small><?= esc_html($field['description']) ?></small>
         <?php endif ?>
     <?php if ($type != 'hidden'): ?>
         </div>

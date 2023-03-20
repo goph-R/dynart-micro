@@ -1,11 +1,11 @@
 <?php if ($pager->max() > 0): ?>
 <nav class="pagination is-left is-small" role="navigation" aria-label="pagination">
-<a class="pagination-previous"<?= $pager->prev() ? '' : ' disabled' ?> href="<?= $this->routeUrl($pager->route(), $pager->paramsForPage($pager->page() - 1)) ?>">Previous</a>
-<a class="pagination-next"<?= $pager->next() ? '' : ' disabled' ?> href="<?= $this->routeUrl($pager->route(), $pager->paramsForPage($pager->page() + 1)) ?>">Next</a>
+<a class="pagination-previous"<?= $pager->prev() ? '' : ' disabled' ?> href="<?= route_url($pager->route(), $pager->paramsForPage($pager->page() - 1)) ?>">Previous</a>
+<a class="pagination-next"<?= $pager->next() ? '' : ' disabled' ?> href="<?= route_url($pager->route(), $pager->paramsForPage($pager->page() + 1)) ?>">Next</a>
     <ul class="pagination-list">
         <?php if ($pager->start() != 0): ?>
             <li>
-                <a href="<?= $this->routeUrl($pager->route(), $pager->paramsForPage(0)) ?>" class="pagination-link<?= $pager->page() == 0 ? ' is-current' : '' ?>">1</a>
+                <a href="<?= route_url($pager->route(), $pager->paramsForPage(0)) ?>" class="pagination-link<?= $pager->page() == 0 ? ' is-current' : '' ?>">1</a>
             </li>
         <?php endif ?>
         <?php if ($pager->hasLeftHidden()): ?>
@@ -13,7 +13,7 @@
         <?php endif ?>
         <?php for ($i = $pager->start(); $i <= $pager->end(); $i++): ?>
             <li>
-                <a href="<?= $this->routeUrl($pager->route(), $pager->paramsForPage($i)) ?>" class="pagination-link<?= $pager->page() == $i ? ' is-current' : '' ?>">
+                <a href="<?= route_url($pager->route(), $pager->paramsForPage($i)) ?>" class="pagination-link<?= $pager->page() == $i ? ' is-current' : '' ?>">
                     <?= $i + 1 ?>
                 </a>
             </li>
@@ -23,7 +23,7 @@
         <?php endif ?>
         <?php if ($pager->end() != $pager->max()): ?>
             <li>
-                <a href="<?= $this->routeUrl($pager->route(), $pager->paramsForPage($pager->max())) ?>" class="pagination-link<?= $pager->page() == $pager->max() ? ' is-current' : '' ?>">
+                <a href="<?= route_url($pager->route(), $pager->paramsForPage($pager->max())) ?>" class="pagination-link<?= $pager->page() == $pager->max() ? ' is-current' : '' ?>">
                     <?= $pager->max() + 1 ?>
                 </a>
             </li>
