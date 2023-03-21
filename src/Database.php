@@ -64,7 +64,7 @@ class Database {
         return $result;
     }
 
-    public function fetchColumn(string $query, array $params=[], int $index=0) {
+    public function fetchColumn(string $query, array $params=[], int $index = 0) {
         $stmt = $this->query($query, $params);
         $result = $stmt->fetchColumn($index);
         $stmt = null;

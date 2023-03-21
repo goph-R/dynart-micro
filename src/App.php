@@ -24,48 +24,54 @@ abstract class App {
 
     abstract public function process();
 
-    public function init() {}
+    public function init() {
+    }
 
     public function finish($content = '') {
         exit($content);
     }
 
-    public function add($interface, $class = null) {
+    public function add(string $interface, $class = null) {
         if ($class != null && !($class instanceof $interface)) {
             throw new AppException("$class does not implement $interface");
         }
         $this->classes[$interface] = $class;
     }
 
-    public function hasInterface($interface) {
+    public function hasInterface(string $interface) {
         return array_key_exists($interface, $this->classes);
     }
 
-    public function checkInterface($interface) {
+    public function checkInterface(string $interface) {
         if (!$this->hasInterface($interface)) {
             throw new AppException("$interface was not added");
         }
     }
 
-    public function getClass($interface) {
+    public function getClass(string $interface) {
         $this->checkInterface($interface);
         return isset($this->classes[$interface]) ? $this->classes[$interface] : $interface;
     }
 
-    public function get($interface, array $parameters = []) {
+    public function get(string $interface, array $parameters = []) {
         if (array_key_exists($interface, $this->instances)) {
             return $this->instances[$interface];
         }
-        $result = $this->create($interface, $parameters);
+        $result = $this->create($this->getClass($interface), $parameters);
         $this->instances[$interface] = $result;
         return $result;
     }
 
-    public function create($interface, array $parameters = []) {
+    /**
+     * @param $class The name of the class
+     * @param array $parameters Parameters for the constructor (except DI)
+     * @return mixed
+     */
+    public function create(string $class, array $parameters = []) {
         try {
-            $reflectionClass = new \ReflectionClass($this->getClass($interface));
+            $reflectionClass = new \ReflectionClass($class);
         } catch (\ReflectionException $e) {
-            throw new AppException("Couldn't create reflection class for $interface");
+            throw new AppException("Couldn't create reflection class for $class");
         }
         $dependencies = $this->createDependencies($reflectionClass);
         $result = $reflectionClass->newInstanceArgs(array_merge($dependencies, $parameters));

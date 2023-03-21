@@ -15,5 +15,8 @@
             "email": "gopher.hu@gmail.com"
         }
     ],
+    "require": {
+        "php": ">=7.1.0"
+    },
     "minimum-stability": "stable"
 }
