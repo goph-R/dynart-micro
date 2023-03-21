@@ -9,6 +9,7 @@ abstract class Repository {
     protected $table;
     protected $sqlParams = [];
     protected $orderByFields = [];
+    protected $allFields = [];
 
     public function __construct(Database $db) {
         $this->db = $db;
@@ -19,7 +20,7 @@ abstract class Repository {
         return $this->db->fetch($sql, [':id' => $id]);
     }
 
-    public function findAll(array $fields, array $params) {
+    public function findAll($fields = null, array $params = []) {
         $sql = $this->getSelect($fields, $params);
         $sql .= $this->getWhere($params);
         $sql .= $this->getOrder($params);
@@ -27,7 +28,7 @@ abstract class Repository {
         return $this->db->fetchAll($sql, $this->sqlParams);
     }
 
-    public function findAllCount(array $params) {
+    public function findAllCount(array $params = []) {
         $fields = ['c' => ['count(1)']];
         $sql = $this->getSelect($fields, $params);
         $sql .= $this->getWhere($params);
@@ -45,7 +46,10 @@ abstract class Repository {
         $this->db->query($sql, $params);
     }
 
-    protected function getSelect(array $fields, array $params) {
+    protected function getSelect($fields, array $params) {
+        if ($fields == null) {
+            $fields = $this->allFields;
+        }
         $select = [];
         $this->orderByFields = [];
         foreach ($fields as $as => $name) {
@@ -94,6 +98,15 @@ abstract class Repository {
         if ($pageSize < 1) $pageSize = 1;
         if ($pageSize > 100) $pageSize = 100; // TODO: configurable
         return ' limit '.($page * $pageSize).', '.$pageSize;
+    }
+
+    public function insert(array $data) {
+        $this->db->insert($this->table, $data);
+        return $this->db->lastInsertId();
+    }
+
+    public function update(array $data, string $condition='', array $conditionParams=[]) {
+        $this->db->update($this->table, $data, $condition, $conditionParams);
     }
 
 }

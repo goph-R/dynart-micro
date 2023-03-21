@@ -36,6 +36,9 @@ abstract class WebApp extends App {
     public function process() {
         list($callable, $params) = $this->router->matchCurrentRoute();
         if ($callable) {
+            if (is_array($callable) && is_string($callable[0])) {
+                $callable = [$this->get($callable[0]), $callable[1]];
+            }
             $content = call_user_func_array($callable, $params);
             $this->sendContent($content);
         } else {
