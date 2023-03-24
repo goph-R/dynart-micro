@@ -4,12 +4,13 @@ namespace Dynart\Micro;
 
 class Database {
 
-    protected $app;
-    /** @var \PDO */
-    protected $pdo;
     protected $name = 'default';
     protected $connected = false;
-    
+
+    /** @var \PDO */
+    protected $pdo;
+
+    /** @var Config */
     protected $config;
 
     public function __construct(Config $config) {
