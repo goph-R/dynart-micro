@@ -30,14 +30,18 @@ class Mailer {
     /** @var Config */
     private $config;
 
+    /** @var Logger */
+    private $logger;
+
     /** @var View */
     private $view;
 
     private $addresses = [];
     private $vars = [];
 
-    public function __construct(Config $config, View $view) {
+    public function __construct(Config $config, Logger $logger, View $view) {
         $this->config = $config;
+        $this->logger = $logger;
         $this->view = $view;
     }
 
@@ -76,7 +80,7 @@ class Mailer {
         $message .= 'To: '.join('; ', $to)."\n";
         $message .= 'Subject: '.$subject."\n";
         $message .= "Message:\n".$body."\n";
-        //$this->logger->info($message);
+        $this->logger->info($message);
         return true;
     }
 
@@ -89,7 +93,7 @@ class Mailer {
     }
 
     private function debugOutput($str, $level) {
-        //$this->logger->info("debug level $level; message: $str");
+        $this->logger->debug("debug level $level; message: $str");
     }
 
     private function realSend($subject, $body) {
@@ -108,7 +112,7 @@ class Mailer {
             $mail->Body = $body;
             $mail->send();
         } catch (PHPMailerException $e) {
-            //$this->logger->error($e->getMessage());
+            $this->logger->error($e->getMessage());
             $result = false;
         }
         return $result;

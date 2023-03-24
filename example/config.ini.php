@@ -1,5 +1,8 @@
 ;<?php /*
 
+log.level = "error"
+log.dir = "./logs"
+
 ; Is the server uses rewrite for routing?
 ; Check the example .htaccess file for Apache server config.
 app.use_rewrite = false
