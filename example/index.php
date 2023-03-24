@@ -4,8 +4,6 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-require_once __DIR__ . '/views/functions.php'; // TBD, load the view helper functions
-
 use Dynart\Micro\App;
 use Dynart\Micro\WebApp;
 use Dynart\Micro\View;

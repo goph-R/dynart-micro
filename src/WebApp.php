@@ -2,6 +2,8 @@
 
 namespace Dynart\Micro;
 
+require_once dirname(__FILE__) . '/../views/functions.php'; // TBD, load the view helper functions
+
 class WebApp extends App {
 
     /** @var Router */
