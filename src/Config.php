@@ -15,7 +15,7 @@ class Config {
 
     public function get($name, $default = null) {
         if (array_key_exists($name, $this->cached)) {
-            return $this->cached[$name];
+            return $this->cached[$name.':'.$default];
         }
         $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
         $matches = [];
@@ -26,7 +26,7 @@ class Config {
                 $value = str_replace('{{'.$var.'}}', getenv($var), $value);
             }
         }
-        $this->cached[$name] = $value;
+        $this->cached[$name.':'.$default] = $value;
         return $value;
     }
 
