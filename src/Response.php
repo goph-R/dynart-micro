@@ -7,7 +7,7 @@ class Response {
     protected $headers = [];
 
     public function clearHeaders() {
-        return $this->headers;
+        $this->headers = [];
     }
 
     public function setHeader(string $name, $value) {

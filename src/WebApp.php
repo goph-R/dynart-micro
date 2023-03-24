@@ -2,7 +2,7 @@
 
 namespace Dynart\Micro;
 
-abstract class WebApp extends App {
+class WebApp extends App {
 
     /** @var Router */
     protected $router;
@@ -54,7 +54,7 @@ abstract class WebApp extends App {
         $this->finish();
     }
 
-    protected function sendContent($content) {
+    public function sendContent($content) {
         if (is_string($content)) {
             $this->response->setHeader('Content-Type', 'text/html; charset=UTF-8');
             $this->response->send($content);

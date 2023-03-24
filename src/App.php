@@ -14,6 +14,9 @@ abstract class App {
     }
 
     public static function run(App $app) {
+        if (self::$instance) {
+            throw new AppException("App was instantiated before!");
+        }
         self::$instance = $app;
         $app->init();
         $app->process();
@@ -24,8 +27,7 @@ abstract class App {
 
     abstract public function process();
 
-    public function init() {
-    }
+    public function init() {}
 
     public function finish($content = '') {
         exit($content);
