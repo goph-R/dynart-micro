@@ -2,7 +2,9 @@
 
 // This file should be in your document root folder!
 
-require_once __DIR__ . '/vendor/autoload.php'; 
+require_once __DIR__ . '/vendor/autoload.php';
+
+require_once __DIR__ . '/views/functions.php'; // TBD, load the view helper functions
 
 use Dynart\Micro\App;
 use Dynart\Micro\WebApp;

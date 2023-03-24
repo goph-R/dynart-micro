@@ -11,7 +11,7 @@ class View {
     protected $config;
 
     protected $layout = 'layout';
-    protected $lastBlock = [];
+    protected $blockQueue = [];
     protected $blocks = [];
     protected $data = [
         '__styles' => [],
@@ -21,10 +21,6 @@ class View {
     public function __construct(Config $config, Router $router) {        
         $this->config = $config;
         $this->router = $router;
-        $functionsPath = $this->config->get('app.views_folder').'/functions.php';
-        if (file_exists($functionsPath)) {
-            require_once($functionsPath);
-        }
     }
 
     public function data($name, $value=null) {
@@ -59,22 +55,20 @@ class View {
         if (!isset($this->blocks[$name])) {
             $this->blocks[$name] = '';
         }
-        $this->lastBlock[] = $name;
+        $this->blockQueue[] = $name;
         ob_start();
     }
 
     public function endBlock() {
-        $name = array_pop($this->lastBlock);
+        $name = array_pop($this->blockQueue);
         $this->blocks[$name] .= ob_get_clean();
     }
 
     public function fetch(string $__path, array $__vars=[]) {
-        $__path = $this->config->get('app.views_folder').'/'.$__path.'.phtml';
-        /*
+        $__path = $this->config->get('app.views_folder').'/'.$__path.'.phtml'; // TBD
         if (!file_exists($__path)) {
-            $this->app->sendError(500, "Couldn't find view: ".$__path);
+            throw new AppException("Can't find view: $__path");
         }
-        */
         extract($this->data);
         extract($__vars);
         ob_start();

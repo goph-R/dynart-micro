@@ -15,12 +15,14 @@ class WebApp extends App {
     public function __construct(array $configPaths) {
         $this->configPaths = $configPaths;
         $this->add(Config::class);
+        $this->add(Logger::class);
         $this->add(Request::class);
         $this->add(Response::class);
         $this->add(Router::class);
         $this->add(Database::class);
         $this->add(Session::class);
         $this->add(View::class);
+        $this->add(Mailer::class);
     }
 
     public function init() {
