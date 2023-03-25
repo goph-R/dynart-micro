@@ -31,6 +31,9 @@ class Config {
     }
 
     public function getArray($prefix, $default = []) {
+        if (array_key_exists($prefix, $this->cached)) {
+            return $this->cached[$prefix];
+        }
         $result = $default;
         $len = strlen($prefix);
         foreach ($this->config as $key => $value) {
@@ -39,6 +42,7 @@ class Config {
                 $result[$resultKey] = $this->get($key);
             }
         }
+        $this->cached = $result;
         return $result;
     }
 
