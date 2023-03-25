@@ -15,7 +15,7 @@ class Config {
 
     public function get($name, $default = null, $useCache = true) {
         if ($useCache && array_key_exists($name, $this->cached)) {
-            return $this->cached[$name.':'.$default];
+            return $this->cached[$name];
         }
         $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
         $matches = [];
@@ -27,14 +27,13 @@ class Config {
             }
         }
         if ($useCache) {
-            $this->cached[$name.':'.$default] = $value;
+            $this->cached[$name] = $value;
         }
         return $value;
     }
 
     public function getArray($prefix, $default = []) {
-        $defaultsKey = join(':', $default);
-        if (array_key_exists($prefix.':'.$defaultsKey, $this->cached)) {
+        if (array_key_exists($prefix, $this->cached)) {
             return $this->cached[$prefix];
         }
         $result = $default;
@@ -45,7 +44,7 @@ class Config {
                 $result[$resultKey] = $this->get($key, null, false);
             }
         }
-        $this->cached[$prefix.':'.$defaultsKey] = $result;
+        $this->cached[$prefix] = $result;
         return $result;
     }
 
