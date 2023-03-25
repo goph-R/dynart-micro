@@ -13,8 +13,8 @@ class Config {
         $this->config = array_merge($this->config, parse_ini_file($path, true));
     }
 
-    public function get($name, $default = null) {
-        if (array_key_exists($name, $this->cached)) {
+    public function get($name, $default = null, $useCache = true) {
+        if ($useCache && array_key_exists($name, $this->cached)) {
             return $this->cached[$name.':'.$default];
         }
         $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
@@ -26,7 +26,9 @@ class Config {
                 $value = str_replace('{{'.$var.'}}', getenv($var), $value);
             }
         }
-        $this->cached[$name.':'.$default] = $value;
+        if ($useCache) {
+            $this->cached[$name . ':' . $default] = $value;
+        }
         return $value;
     }
 
@@ -39,7 +41,7 @@ class Config {
         foreach ($this->config as $key => $value) {
             if (substr($key, 0, $len) == $prefix) {
                 $resultKey = substr($key, $len + 1, strlen($key));
-                $result[$resultKey] = $this->get($key);
+                $result[$resultKey] = $this->get($key, null, false);
             }
         }
         $this->cached = $result;
