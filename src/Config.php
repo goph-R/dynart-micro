@@ -30,4 +30,16 @@ class Config {
         return $value;
     }
 
+    public function getArray($prefix, $default = []) {
+        $result = $default;
+        $len = strlen($prefix);
+        foreach ($this->config as $key => $value) {
+            if (substr($key, 0, $len) == $prefix) {
+                $resultKey = substr($key, $len + 1, strlen($key));
+                $result[$resultKey] = $this->get($key);
+            }
+        }
+        return $result;
+    }
+
 }
