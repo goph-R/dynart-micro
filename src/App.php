@@ -65,7 +65,7 @@ abstract class App {
     }
 
     /**
-     * @param $class The name of the class
+     * @param string $class The name of the class
      * @param array $parameters Parameters for the constructor (except DI)
      * @return mixed
      */

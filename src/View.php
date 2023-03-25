@@ -10,13 +10,15 @@ class View {
     /** @var Config */
     protected $config;
 
-    protected $layout = 'layout';
+    protected $layout = '';
     protected $blockQueue = [];
     protected $blocks = [];
     protected $data = [
         '__styles' => [],
         '__scripts' => []
     ];
+
+    protected $inBlock = false;
 
     public function __construct(Config $config, Router $router) {        
         $this->config = $config;
@@ -38,13 +40,8 @@ class View {
         $this->data['__styles'][$src] = $attributes;
     }
 
-    public function setLayout(string $path) {
+    public function useLayout(string $path) {
         $this->layout = $path;
-    }
-
-    public function layout(string $path, array $vars=[]) {
-        $this->fetch($path, $vars); // set 'content' and 'scripts' blocks
-        return $this->fetch($this->layout, $vars);
     }
 
     public function block(string $name) {
@@ -65,14 +62,20 @@ class View {
     }
 
     public function fetch(string $__path, array $__vars=[]) {
-        $__path = $this->config->get('app.views_folder').'/'.$__path.'.phtml'; // TBD
-        if (!file_exists($__path)) {
+        $__viewPath = $this->config->get('app.views_folder').'/'.$__path.'.phtml'; // TBD
+        if (!file_exists($__viewPath)) {
             throw new AppException("Can't find view: $__path");
         }
         extract($this->data);
         extract($__vars);
         ob_start();
-        include $__path;
-        return ob_get_clean();
+        include $__viewPath;
+        $result = ob_get_clean();
+        $layout = $this->layout;
+        if ($layout) {
+            $this->layout = '';
+            $result = $this->fetch($layout);
+        }
+        return $result;
     }
 }
