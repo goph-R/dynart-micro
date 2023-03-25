@@ -21,11 +21,11 @@ function route_url(string $route, array $params = []) {
     return App::instance()->get(Router::class)->url($route, $params, '&amp;');
 }
 
-function esc_html(string $text) {
+function esc_html($text) {
     return htmlspecialchars($text);
 }
 
-function esc_attr(string $value) {
+function esc_attr($value) {
     return htmlspecialchars($value, ENT_QUOTES);
 }
 
