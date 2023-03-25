@@ -27,13 +27,14 @@ class Config {
             }
         }
         if ($useCache) {
-            $this->cached[$name . ':' . $default] = $value;
+            $this->cached[$name.':'.$default] = $value;
         }
         return $value;
     }
 
     public function getArray($prefix, $default = []) {
-        if (array_key_exists($prefix, $this->cached)) {
+        $defaultsKey = join(':', $default);
+        if (array_key_exists($prefix.':'.$defaultsKey, $this->cached)) {
             return $this->cached[$prefix];
         }
         $result = $default;
@@ -44,7 +45,7 @@ class Config {
                 $result[$resultKey] = $this->get($key, null, false);
             }
         }
-        $this->cached = $result;
+        $this->cached[$prefix.':'.$defaultsKey] = $result;
         return $result;
     }
 
