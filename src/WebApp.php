@@ -2,7 +2,7 @@
 
 namespace Dynart\Micro;
 
-require_once dirname(__FILE__) . '/../views/functions.php'; // TBD, load the view helper functions
+require_once dirname(__FILE__) . '/../views/functions.php';
 
 class WebApp extends App {
 
@@ -35,6 +35,38 @@ class WebApp extends App {
         }
         $this->router = $this->get(Router::class);
         $this->response = $this->get(Response::class);
+        if ($config->get('app.use_annotations')) {
+            $this->addRoutingByDocComments();
+        }
+    }
+
+    protected function addRoutingByDocComments() {
+        try {
+            foreach ($this->classes as $interface => $class) {
+                $reflectionClass = new \ReflectionClass($interface);
+                foreach ($reflectionClass->getMethods() as $method) {
+                    $this->addRoutingForMethod($interface, $method);
+                }
+            }
+        } catch (\ReflectionException $ignore) {
+            throw new AppException("Can't create reflection for: $interface");
+        }
+    }
+
+    protected function addRoutingForMethod(string $interface, \ReflectionMethod $method) {
+        $comments = $method->getDocComment();
+        $hasRoute = strpos($comments, '* @route') !== false;
+        if (!$hasRoute) {
+            return;
+        }
+        $matches = [];
+        preg_match('/\s\*\s@route\s(GET|POST|BOTH)\s(.*)\s/', $comments, $matches);
+        if ($matches) {
+            $route = str_replace(array("\r", "\n"), '', $matches[2]);
+            $this->router->add($route, [$interface, $method->getName()], $matches[1]);
+        } else {
+            throw new AppException("Can't find valid route in: $comments\n\nA valid route example: @route GET /api/something");
+        }
     }
 
     public function process() {

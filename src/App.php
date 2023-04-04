@@ -22,8 +22,8 @@ abstract class App {
         $app->process();
     }
 
-    private $classes = [];
-    private $instances = [];
+    protected $classes = [];
+    protected $instances = [];
 
     abstract public function process();
 
@@ -66,7 +66,7 @@ abstract class App {
 
     /**
      * @param string $class The name of the class
-     * @param array $parameters Parameters for the constructor (except DI)
+     * @param array $parameters Parameters for the constructor (except injected ones, those should be the first parameters of the constructor!)
      * @return mixed
      */
     public function create(string $class, array $parameters = []) {

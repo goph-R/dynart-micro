@@ -34,6 +34,8 @@ function esc_attrs(array $attributes, $startWithSpace = true) {
     foreach ($attributes as $name => $value) {
         if (is_int($name)) {
             $pairs[] = $value;
+        } else if ($value === null) {
+            $pairs[] = $name;
         } else {
             $pairs[] = $name.'="'.esc_attr($value).'"';
         }

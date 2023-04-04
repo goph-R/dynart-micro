@@ -36,6 +36,9 @@ class Router
                 break;
             }
         }
+        if (!$found[0] && array_key_exists('*', $this->routes[$method])) {
+            return [$this->routes[$method]['*'], []];
+        }
         return $found;
     }
 
@@ -92,5 +95,9 @@ class Router
             }
             $this->routes[$method][$route] = $callable;
         }
+    }
+
+    public function printRoutes() {
+        print_r($this->routes);
     }
 }

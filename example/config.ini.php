@@ -16,6 +16,9 @@ app.index_file = "index.php"
 ; The query parameter that will be used for routing.
 app.route_parameter = "route"
 
+; Should the app use PHP Document annotations?
+app.use_annotations = false
+
 ; The folder for the views (TBD)
 app.views_folder = "views"
 
