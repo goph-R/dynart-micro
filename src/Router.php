@@ -20,6 +20,7 @@ class Router
         $this->config = $config;
         $this->request = $request;
         $this->segments = explode('/', $this->currentRoute());
+        array_shift($this->segments);
     }
 
     public function currentRoute() {
@@ -35,14 +36,17 @@ class Router
     public function matchCurrentRoute() {
         $method = $this->request->method();
         $routes = array_key_exists($method, $this->routes) ? $this->routes[$method] : [];
-        $currentParts = $this->segments;
-        foreach ($this->prefixVariables as $prefixVariable) { // remove prefix variables before match
-            array_shift($currentParts);
+        $segments = $this->segments;
+        foreach ($this->prefixVariables as $prefixVariable) { // remove prefix variables from the segments
+            array_shift($segments);
         }
-        $currentPartsCount = count($currentParts);
+        $segmentsCount = count($segments);
+        if (!$segmentsCount && isset($this->routes[$method]['/'])) { // if no segments and having home route
+            return [$this->routes[$method]['/'], []]; // return with that
+        }
         $found = self::ROUTE_NOT_FOUND;
         foreach ($routes as $route => $callable) {
-            $found = $this->match($route, $callable, $currentParts, $currentPartsCount);
+            $found = $this->match($route, $callable, $segments, $segmentsCount);
             if ($found[0]) {
                 break;
             }
@@ -56,6 +60,7 @@ class Router
 
     protected function match(string $route, $callable, array $currentParts, int $currentPartsCount) {
         $parts = explode('/', $route);
+        array_shift($parts);
         if (count($parts) != $currentPartsCount) {
             return self::ROUTE_NOT_FOUND;
         }

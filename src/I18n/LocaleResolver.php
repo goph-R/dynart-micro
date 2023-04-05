@@ -17,21 +17,21 @@ class LocaleResolver implements Middleware {
     /** @var Translation */
     protected $translation;
 
-    protected $parameterIndex;
+    protected $localeRouteSegment;
 
     public function __construct(Request $request, Router $router, Translation $translation) {
-        $this->translation = $translation;
         $this->request = $request;
         $this->router = $router;
+        $this->translation = $translation;
     }
 
     public function run() {
         if (!$this->translation->hasMultiLocales()) {
             return;
         }
+        $this->localeRouteSegment = $this->router->addPrefixVariable([$this->translation, 'locale']);
         $this->setLocaleViaAcceptLanguage();
         $this->setLocaleViaParameter();
-        $this->parameterIndex = $this->router->addPrefixVariable([$this->translation, 'locale']);
     }
 
     public function setLocaleViaAcceptLanguage() {
@@ -45,7 +45,7 @@ class LocaleResolver implements Middleware {
     }
 
     public function setLocaleViaParameter() {
-        $locale = $this->router->currentSegment($this->parameterIndex);
+        $locale = $this->router->currentSegment($this->localeRouteSegment);
         if (in_array($locale, $this->translation->allLocales())) {
             $this->translation->setLocale($locale);
         }

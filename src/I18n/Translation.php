@@ -16,8 +16,10 @@ class Translation {
     protected $allLocales;
     protected $hasMultiLocales;
     protected $locale;
+    protected $rootPath;
 
     public function __construct(Config $config) {
+        $this->rootPath = $config->get('app.root_path');
         $this->locale = $config->get(self::CONFIG_DEFAULT, self::DEFAULT_LOCALE);
         $this->allLocales = $config->getCommaSeparatedValues(self::CONFIG_ALL);
         $this->hasMultiLocales = count($this->allLocales) > 1;
@@ -46,14 +48,14 @@ class Translation {
 
     public function get($id, array $params = []) {
         $dotPos = strpos($id, '.');
-        $namespace = substr($id, 0, $dotPos - 1);
+        $namespace = substr($id, 0, $dotPos);
         $name = substr($id, $dotPos + 1);
         $result = '#'.$id.'#';
         if (!isset($this->folders[$namespace])) {
             return $result;
         }
         if (!isset($this->data[$namespace])) {
-            $path = $this->folders[$namespace].'/'.$this->locale.'.ini';
+            $path = $this->rootPath.$this->folders[$namespace].'/'.$this->locale.'.ini';
             $iniData = file_exists($path) ? parse_ini_file($path) : [];
             $this->data[$namespace] = $iniData;
         }

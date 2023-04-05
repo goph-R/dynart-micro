@@ -12,7 +12,7 @@ function base_url() {
 function url(string $uri, bool $withMTime = true) {
     $result = base_url().$uri;
     if ($withMTime) {
-        $result .= '?'.filemtime(App::instance()->get(Config::class)->get('app.path_root').$uri);
+        $result .= '?'.filemtime(App::instance()->get(Config::class)->get('app.root_path').$uri);
     }
     return $result;
 }
@@ -45,5 +45,5 @@ function esc_attrs(array $attributes, $startWithSpace = true) {
 }
 
 function tr($id) {
-    App::instance()->get(Translation::class)->get($id);
+    return App::instance()->get(Translation::class)->get($id);
 }

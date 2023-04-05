@@ -23,7 +23,7 @@ app.use_annotations = false
 app.views_folder = "views"
 
 ; The root path of the application (for example: /var/www/domain.com)
-app.path_root = "."
+app.root_path = "."
 
 ; Database configuration
 database.default.name = "micro"
