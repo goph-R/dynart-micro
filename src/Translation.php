@@ -1,8 +1,6 @@
 <?php
 
-namespace Dynart\Micro\I18n;
-
-use Dynart\Micro\Config;
+namespace Dynart\Micro;
 
 class Translation {
 
