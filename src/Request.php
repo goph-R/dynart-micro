@@ -14,6 +14,10 @@ class Request {
         return array_key_exists($name, $_REQUEST) ? $_REQUEST[$name] : $default;
     }
 
+    public function server(string $name, $default = null) {
+        return array_key_exists($name, $_SERVER) ? $_SERVER[$name] : $default;
+    }
+
     public function method() {
         return $_SERVER['REQUEST_METHOD'];
     }
@@ -32,4 +36,5 @@ class Request {
     public function header(string $name) {
         return isset($this->headers[$name]) ? $this->headers[$name] : null;
     }
+
 }

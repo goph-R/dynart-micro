@@ -31,6 +31,9 @@ database.default.dsn = "mysql:localhost"
 database.default.username = "root"
 database.default.password = ""
 
+translation.all = hu,en
+translation.default = hu
+
 ; Is the mailer send fake emails? If it is true,
 ; it will only log the email on info level.
 mailer.fake = false

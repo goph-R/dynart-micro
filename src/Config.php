@@ -17,19 +17,29 @@ class Config {
         if ($useCache && array_key_exists($name, $this->cached)) {
             return $this->cached[$name];
         }
-        $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
-        $matches = [];
-        preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches);
-        if ($matches) {
-            $vars = array_unique($matches[1]);
-            foreach ($vars as $var) {
-                $value = str_replace('{{'.$var.'}}', getenv($var), $value);
+        if (getenv($name)) {
+            $value = getenv($name);
+        } else {
+            $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
+            $matches = [];
+            preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches);
+            if ($matches) {
+                $vars = array_unique($matches[1]);
+                foreach ($vars as $var) {
+                    $value = str_replace('{{' . $var . '}}', getenv($var), $value);
+                }
             }
         }
         if ($useCache) {
             $this->cached[$name] = $value;
         }
         return $value;
+    }
+
+    public function getCommaSeparatedValues($name) {
+        $values = explode(',', $this->get($name));
+        array_map(function ($e) { return trim($e); }, $values);
+        return $values;
     }
 
     public function getArray($prefix, $default = []) {

@@ -13,7 +13,10 @@ class Database {
     /** @var Config */
     protected $config;
 
-    public function __construct(Config $config) {
+    /** @var Logger */
+    protected $logger;
+
+    public function __construct(Config $config, Logger $logger) {
         $this->config = $config;
     }
 
@@ -41,14 +44,10 @@ class Database {
             $stmt = $this->pdo->prepare($query);
             $stmt->execute($params);
         } catch (\RuntimeException $e) {
-            fwrite(STDERR, "SQL error:\n$query".$this->getParametersString($params));
+            $this->logger->error("SQL error:\n$query\nParameters: ".($params ? json_encode($params) : ''));
             throw $e;
         }
         return $stmt;
-    }
-
-    protected function getParametersString(array $params) {
-        return $params ? "\nParameters: ".json_encode($params) : '';
     }
 
     public function fetch($query, $params=[]) {

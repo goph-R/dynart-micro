@@ -7,6 +7,8 @@ class Router
     const ROUTE_NOT_FOUND = [null, null];
 
     protected $routes = [];
+    protected $prefixVariables = [];
+    protected $segments = [];
 
     /** @var Config */
     protected $config;
@@ -17,6 +19,7 @@ class Router
     public function __construct(Config $config, Request $request) {
         $this->config = $config;
         $this->request = $request;
+        $this->segments = explode('/', $this->currentRoute());
     }
 
     public function currentRoute() {
@@ -24,10 +27,18 @@ class Router
         return $this->request->get($routeParameter, '/');
     }
 
+    public function addPrefixVariable($callable) {
+        $this->prefixVariables[] = $callable;
+        return count($this->prefixVariables) - 1;
+    }
+
     public function matchCurrentRoute() {
         $method = $this->request->method();
         $routes = array_key_exists($method, $this->routes) ? $this->routes[$method] : [];
-        $currentParts = explode('/', $this->currentRoute());
+        $currentParts = $this->segments;
+        foreach ($this->prefixVariables as $prefixVariable) { // remove prefix variables before match
+            array_shift($currentParts);
+        }
         $currentPartsCount = count($currentParts);
         $found = self::ROUTE_NOT_FOUND;
         foreach ($routes as $route => $callable) {
@@ -36,10 +47,11 @@ class Router
                 break;
             }
         }
-        if (!$found[0] && array_key_exists('*', $this->routes[$method])) {
-            return [$this->routes[$method]['*'], []];
-        }
         return $found;
+    }
+
+    public function currentSegment(int $index, $default = null) {
+        return isset($this->segments[$index]) ? $this->segments[$index] : $default;
     }
 
     protected function match(string $route, $callable, array $currentParts, int $currentPartsCount) {
@@ -66,17 +78,21 @@ class Router
         return self::ROUTE_NOT_FOUND;
     }
 
-    public function url($route, $params=[], $amp='&') {
+    public function url($route, $params = [], $amp = '&') {
+        $prefix = '';
+        foreach ($this->prefixVariables as $prefixVariable) {
+            $prefix .= '/'.call_user_func($prefixVariable);
+        }
         $result = $this->config->get('app.base_url');
         $useRewrite = $this->config->get('app.use_rewrite');
         if ($useRewrite) {
-            $result .= $route == null ? '' : $route;
+            $result .= $route == null ? '' : $prefix.$route;
         } else {
             $indexFile = $this->config->get('app.index_file');
             $result .= '/'.$indexFile;
             if ($route && $route != '/') {
                 $routeParameter = $this->config->get('app.route_parameter');
-                $params[$routeParameter] = $route;
+                $params[$routeParameter] = $prefix.$route;
             }
         }
         if ($params) {

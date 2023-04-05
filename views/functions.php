@@ -2,7 +2,7 @@
 
 use Dynart\Micro\App;
 use Dynart\Micro\Config;
-use Dynart\Micro\Request;
+use Dynart\Micro\I18n\Translation;
 use Dynart\Micro\Router;
 
 function base_url() {
@@ -42,4 +42,8 @@ function esc_attrs(array $attributes, $startWithSpace = true) {
     }
     $prefix = !empty($pairs) && $startWithSpace ? ' ' : '';
     return $prefix.join(' ', $pairs);
+}
+
+function tr($id) {
+    App::instance()->get(Translation::class)->get($id);
 }

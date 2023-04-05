@@ -12,7 +12,11 @@ class WebApp extends App {
     /** @var Response */
     protected $response;
 
+    /** @var string[] */
     protected $configPaths;
+
+    /** @var string[] */
+    protected $middlewares = [];
 
     public function __construct(array $configPaths) {
         $this->configPaths = $configPaths;
@@ -24,7 +28,10 @@ class WebApp extends App {
         $this->add(Database::class);
         $this->add(Session::class);
         $this->add(View::class);
-        $this->add(Mailer::class);
+    }
+
+    public function addMiddleware(string $interface) {
+        $this->middlewares[] = $interface;
     }
 
     public function init() {
@@ -35,6 +42,9 @@ class WebApp extends App {
         }
         $this->router = $this->get(Router::class);
         $this->response = $this->get(Response::class);
+        foreach ($this->middlewares as $middlewareInterface) {
+            $this->get($middlewareInterface)->run();
+        }
         if ($config->get('app.use_annotations')) {
             $this->addRoutingByDocComments();
         }
