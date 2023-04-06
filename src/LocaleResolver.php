@@ -30,7 +30,7 @@ class LocaleResolver implements Middleware {
         $this->setLocaleViaParameter();
     }
 
-    public function setLocaleViaAcceptLanguage() {
+    protected function setLocaleViaAcceptLanguage() {
         $acceptLanguage = $this->request->server('HTTP_ACCEPT_LANGUAGE');
         if ($acceptLanguage) {
             $acceptLocale = strtolower(substr($acceptLanguage, 0, 2)); // we use only neutral locale for now
@@ -40,7 +40,7 @@ class LocaleResolver implements Middleware {
         }
     }
 
-    public function setLocaleViaParameter() {
+    protected function setLocaleViaParameter() {
         $locale = $this->router->currentSegment($this->localeRouteSegment);
         if (in_array($locale, $this->translation->allLocales())) {
             $this->translation->setLocale($locale);

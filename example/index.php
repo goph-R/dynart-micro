@@ -17,13 +17,13 @@ class MyController {
     }
     
     public function index() {
-        // render index.phtml with layout.phtml
-        return $this->view->layout('index');
+        // render index.phtml
+        return $this->view->fetch('index');
     }
 
     public function example($parameter) {
         // the path variable value will be in '$parameter'
-        return $this->view->layout('index', [
+        return $this->view->fetch('index', [
             'parameter' => $parameter // give the parameter for the view
         ]); 
     }
