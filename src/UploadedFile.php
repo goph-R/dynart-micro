@@ -10,20 +10,12 @@ class UploadedFile {
     protected $size;
     protected $type;
 
-    public function __construct(array $data, $index = null) {
-        if ($index === null) {
-            $this->name = $data['name'];
-            $this->tempPath = $data['tmp_name'];
-            $this->error = $data['error'];
-            $this->type = $data['type'];
-            $this->size = $data['size'];
-        } else {
-            $this->name = $data['name'][$index];
-            $this->tempPath = $data['tmp_name'][$index];
-            $this->error = $data['error'][$index];
-            $this->type = $data['type'][$index];
-            $this->size = $data['size'][$index];
-        }
+    public function __construct(string $name, string $tempPath, string $error, string $type, int $size) {
+        $this->name = $name;
+        $this->tempPath = $tempPath;
+        $this->error = $error;
+        $this->type = $type;
+        $this->size = $size;
     }
 
     public function name() {

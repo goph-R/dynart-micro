@@ -12,7 +12,7 @@ class Request {
             $this->headers = getallheaders();
         }
         if (!empty($_FILES)) {
-            $this->createAllUploadedFiles();
+            $this->createUploadedFiles();
         }
     }
 
@@ -51,29 +51,45 @@ class Request {
         return file_get_contents('php://input');
     }
 
+    public function bodyAsJson() {
+        $json = $this->body();
+        if ($json) {
+            return json_decode($json, true);
+        }
+        return null;
+    }
+
     public function uploadedFile(string $name) {
         return isset($this->uploadedFiles[$name]) ? $this->uploadedFiles[$name] : null;
     }
 
-    protected function createAllUploadedFiles() {
+    protected function createUploadedFiles() {
         foreach ($_FILES as $name => $file) {
             if (is_array($file['name'])) {
-                $this->createUploadedFiles($file, $name);
+                $this->createUploadedFilesFromArray($file, $name);
             } else {
-                $this->uploadedFiles[$name] = $this->createUploadedFile([$file]);
+                $this->uploadedFiles[$name] = $this->createUploadedFile($file);
             }
         }
     }
 
-    protected function createUploadedFiles($file, $name) {
+    protected function createUploadedFilesFromArray($file, $name) {
         $this->uploadedFiles[$name] = [];
         foreach (array_keys($file['name']) as $index) {
-            $this->uploadedFiles[$name][$index] = $this->createUploadedFile([$file, $index]);
+            $this->uploadedFiles[$name][$index] = $this->createUploadedFile([
+                'name'     => $file['name'][$index],
+                'tmp_name' => $file['tmp_name'][$index],
+                'error'    => $file['error'][$index],
+                'type'     => $file['type'][$index],
+                'size'     => $file['size'][$index]
+            ]);
         }
     }
 
-    protected function createUploadedFile(array $params): UploadedFile {
-        return App::instance()->create(UploadedFile::class, $params);
+    protected function createUploadedFile(array $file): UploadedFile {
+        return App::instance()->create(UploadedFile::class, [
+            $file['name'], $file['tmp_name'], $file['error'], $file['type'], $file['size']
+        ]);
     }
 
 }
