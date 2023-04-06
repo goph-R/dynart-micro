@@ -4,10 +4,12 @@ namespace Dynart\Micro;
 
 class Request {
 
-    protected $headers = [];
+    protected $headers = ['empty' => '']; // default value for testing purposes
 
     public function __construct() {
-        $this->headers = getallheaders();
+        if (function_exists('getallheaders')) { // because of command line purposes
+            $this->headers = getallheaders();
+        }
     }
 
     public function get(string $name, $default = null) {
@@ -24,13 +26,13 @@ class Request {
 
     public function ip() {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
+            return $_SERVER['HTTP_CLIENT_IP'];
         } else if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else {
-            $ip = $_SERVER['REMOTE_ADDR'];
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else if (!empty($_SERVER['REMOTE_ADDR'])) {
+            return $_SERVER['REMOTE_ADDR'];
         }
-        return $ip;
+        return null;
     }
 
     public function header(string $name) {
