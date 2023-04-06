@@ -1,7 +1,14 @@
 ;<?php /*
 
+;;;;;;; Logging
+
+; The logging level, can be: debug, info, warning, error
 log.level = "error"
+
+; Path for logging
 log.dir = "./logs"
+
+;;;;;;; Application
 
 ; Is the server uses rewrite for routing?
 ; Check the example .htaccess file for Apache server config.
@@ -25,14 +32,23 @@ app.views_folder = "views"
 ; The root path of the application (for example: /var/www/domain.com)
 app.root_path = "."
 
-; Database configuration
+;;;;;;; Database
+
 database.default.name = "micro"
 database.default.dsn = "mysql:localhost"
 database.default.username = "root"
 database.default.password = ""
 
+;;;;;;; Translation
+
+; All translations locale that the application has
 translation.all = hu,en
+
+; The default locale if the browser didn't set it in the Accept-Language
+; or the accepted language doesn't present in the all translations
 translation.default = hu
+
+;;;;;;; Mailer
 
 ; Is the mailer send fake emails? If it is true,
 ; it will only log the email on info level.
