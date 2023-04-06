@@ -54,11 +54,19 @@ class Request {
     public function bodyAsJson() {
         $json = $this->body();
         if ($json) {
-            return json_decode($json, true);
+            $result = json_decode($json, true);
+            if ($result) {
+                return $result;
+            }
+            throw new AppException("The request body is not a valid JSON: ".$json);
         }
         return null;
     }
 
+    /**
+     * @param string $name
+     * @return mixed|null
+     */
     public function uploadedFile(string $name) {
         return isset($this->uploadedFiles[$name]) ? $this->uploadedFiles[$name] : null;
     }
