@@ -2,7 +2,7 @@
 
 use Dynart\Micro\App;
 use Dynart\Micro\Config;
-use Dynart\Micro\I18n\Translation;
+use Dynart\Micro\Translation;
 use Dynart\Micro\Router;
 
 function base_url() {
