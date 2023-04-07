@@ -27,7 +27,7 @@ app.route_parameter = "route"
 app.use_annotations = false
 
 ; The default folder for the views
-app.views_folder = "views"
+app.views_folder = "~/views"
 
 ; The root path of the application (for example: /var/www/domain.com)
 app.root_path = "."
