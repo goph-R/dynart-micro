@@ -26,7 +26,7 @@ app.route_parameter = "route"
 ; Should the app use PHP Document annotations?
 app.use_annotations = false
 
-; The folder for the views (TBD)
+; The default folder for the views
 app.views_folder = "views"
 
 ; The root path of the application (for example: /var/www/domain.com)

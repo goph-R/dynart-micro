@@ -2,8 +2,6 @@
 
 namespace Dynart\Micro;
 
-require_once dirname(__FILE__) . '/../views/functions.php';
-
 class WebApp extends App {
 
     /** @var Router */
@@ -75,7 +73,7 @@ class WebApp extends App {
             $route = str_replace(array("\r", "\n"), '', $matches[2]);
             $this->router->add($route, [$interface, $method->getName()], $matches[1]);
         } else {
-            throw new AppException("Can't find valid route in: $comments\n\nA valid route example: @route GET /api/something");
+            throw new AppException("Can't find valid route in: $comments\nA valid route example: @route GET /api/something");
         }
     }
 

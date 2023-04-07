@@ -28,6 +28,12 @@ class Request {
     protected $uploadedFiles = [];
 
     /**
+     * Stores the request body
+     * @var string
+     */
+    protected $body;
+
+    /**
      * The Request constructor
      *
      * It will fill up the `headers` and the `uploadedFiles` arrays.
@@ -37,18 +43,21 @@ class Request {
      */
     public function __construct() {
         if (function_exists('getallheaders')) { // because of command line purposes
-            $this->headers = getallheaders();
+            foreach (getallheaders() as $key => $value) {
+                $this->headers[strtolower($key)] = $value;
+            }
         }
         if (!empty($_FILES)) {
             $this->createUploadedFiles();
         }
+        $this->body = file_get_contents('php://input');
     }
 
     /**
      * Returns with a parameter of the request, uses the $_REQUEST array
      *
      * @param string $name The name of the parameter
-     * @param mixed|null $default The default value if the parameter not presents
+     * @param mixed|null $default The default value if the parameter doesn't present
      * @return mixed|null The value of the parameter or the default value
      */
     public function get(string $name, $default = null) {
@@ -59,7 +68,7 @@ class Request {
      * Returns with the information that was created by the web server, uses the $_SERVER array
      *
      * @param string $name The name of the server info
-     * @param mixed|null $default The default value if the info not presents
+     * @param mixed|null $default The default value if the info doesn't present
      * @return mixed|null The info created by the web server or the default value
      */
     public function server(string $name, $default = null) {
@@ -94,21 +103,32 @@ class Request {
     }
 
     /**
+     * Sets a request header
+     *
+     * @param string $name The name of the header
+     * @param string $value The value of the header
+     */
+    public function setHeader(string $name, string $value) {
+        $this->headers[strtolower($name)] = $value;
+    }
+
+    /**
      * Returns with a request header by name
      *
      * @param string $name The header name
-     * @param mixed|null $default The default value if the header not presents
+     * @param mixed|null $default The default value if the header doesn't present
      * @return mixed|null The header value or the default value
      */
     public function header(string $name, $default = null) {
-        return isset($this->headers[$name]) ? $this->headers[$name] : $default;
+        $lowerName = strtolower($name);
+        return isset($this->headers[$lowerName]) ? $this->headers[$lowerName] : $default;
     }
 
     /**
      * Returns with a cookie value by name
      *
      * @param string $name The name of the cookie
-     * @param mixed|null $default The default value if the cookie not presents
+     * @param mixed|null $default The default value if the cookie doesn't present
      * @return mixed|null The cookie value or the default value
      */
     public function cookie(string $name, $default = null) {
@@ -121,7 +141,16 @@ class Request {
      * @return bool|string The request body
      */
     public function body() {
-        return file_get_contents('php://input');
+        return $this->body;
+    }
+
+    /**
+     * Sets the request body
+     *
+     * @param string $content
+     */
+    public function setBody(string $content) {
+        $this->body = $content;
     }
 
     /**

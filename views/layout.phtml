@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title></title>
+        <title>Micro PHP</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <?= $this->fetch('layout-styles') ?>
+        <?php foreach ($this->styles() as $url => $attributes): ?>
+            <link rel="stylesheet" type="text/css" href="<?= url($url) ?>"<?= esc_attrs($attributes) ?>>
+        <?php endforeach ?>
     </head>
     <body>
         <nav>
@@ -15,7 +17,9 @@
         <main>
             <?= $this->block('content') ?>
         </main>
-        <?= $this->fetch('layout-scripts') ?>
+        <?php foreach ($this->scripts() as $url => $attributes): ?>
+            <script src="<?= url($url) ?>"<?= esc_attrs($attributes) ?>></script>
+        <?php endforeach ?>
         <?= $this->block('scripts') ?>
     </body>
 </html>

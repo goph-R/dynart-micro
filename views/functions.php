@@ -7,9 +7,13 @@ use Dynart\Micro\Router;
 
 /**
  * Returns with the `app.base_url` config value
+ *
+ * @return string The base URL
  */
-function base_url() {
-    return App::instance()->get(Config::class)->get('app.base_url');
+if (!function_exists('base_url')) {
+    function base_url() {
+        return App::instance()->get(Config::class)->get('app.base_url');
+    }
 }
 
 /**
@@ -25,12 +29,14 @@ function base_url() {
  * @param bool $withMTime Are you need a modification time at the end?
  * @return string The full URL
  */
-function url(string $uri, bool $withMTime = true) {
-    $result = base_url().$uri;
-    if ($withMTime) {
-        $result .= '?'.filemtime(App::instance()->get(Config::class)->get('app.root_path').$uri);
+if (!function_exists('url')) {
+    function url(string $uri, bool $withMTime = true) {
+        $result = base_url() . $uri;
+        if ($withMTime) {
+            $result .= '?' . filemtime(App::instance()->get(Config::class)->get('app.root_path') . $uri);
+        }
+        return $result;
     }
-    return $result;
 }
 
 /**
@@ -38,11 +44,9 @@ function url(string $uri, bool $withMTime = true) {
  *
  * Heavily depends on the configuration of the application.
  *
- * For example, if the given `$route` is /example-route, the `$params` is an associative array ['name' => 'joe'],
- * you have a multi locale config, the `app.use_rewrite` set to true and `app.base_url` is http://example.com
- * then the result will be:
- *
- * http://example.com/en/example-route?name=joe
+ * For example, if the given `$route` is '/example-route', the `$params` is an associative array ['name' => 'joe'],
+ * you have a multi locale config, the `app.use_rewrite` set to true and `app.base_url` is 'http://example.com'
+ * then the result will be: 'http://example.com/en/example-route?name=joe'
  *
  * @see \Dynart\Micro\Router::url()
  * @param string $route The route
@@ -57,8 +61,8 @@ function route_url(string $route, array $params = [], string $amp = '&amp;') {
 /**
  * Returns with a safe HTML string
  *
- * For example: if the `$text` is "<script>Evil script</script>"
- * the result will be \&lt;script\&gt;Evil script\&lt;/script\&gt;
+ * For example: if the `$text` is '<script>Evil script</script>'
+ * the result will be '\&lt;script\&gt;Evil script\&lt;/script\&gt;'
  *
  * @param string $text The text for escaping
  * @return string The HTML escaped string
@@ -70,8 +74,8 @@ function esc_html($text) {
 /**
  * Returns with a safe HTML attribute value
  *
- * For example: if the `$value` is "something" with the double quotes
- * the result will be \&quot;something\&quot;
+ * For example: if the `$value` is '"something"' with the double quotes
+ * the result will be '\&quot;something\&quot;'
  *
  * @param string $value The value for escaping
  * @return string The safe HTML attribute value
@@ -83,8 +87,13 @@ function esc_attr($value) {
 /**
  * Returns with a safe HTML attributes string
  *
- * For example: if the `$attributes` is ['name1' => 'value1', 'name2' = '"', 'name3']
- * the result will be: name1="value1" name2="\&quot;" name3
+ * For example, the following call:
+ *
+ * <pre>
+ * esc_attrs(['name1' => 'value1', 'name2' = '"', 'name3']);
+ * </pre>
+ *
+ * will return with 'name1="value1" name2="\&quot;" name3'
  *
  * @param array $attributes
  * @param bool $startWithSpace should the result start with a space?
@@ -110,7 +119,7 @@ function esc_attrs(array $attributes, $startWithSpace = true) {
  *
  * <pre>
  * translation.all = en, hu
- * tranlation.default = en
+ * translation.default = en
  * </pre>
  *
  * The current locale is "en" and you added a translation directory with namespace "example"
@@ -120,12 +129,12 @@ function esc_attrs(array $attributes, $startWithSpace = true) {
  * hello = "Welcome"
  * </pre>
  *
- * Calling `tr('example.welcome')` will return "Welcome"
+ * Calling `tr('example:hello')` will return 'Welcome'
  *
  * @see \Dynart\Micro\Translation
  * @see \Dynart\Micro\LocaleResolver
- * @param $id
- * @return mixed
+ * @param string $id The ID of the text "namespace:text_id"
+ * @return string The translated text
  */
 function tr($id) {
     return App::instance()->get(Translation::class)->get($id);

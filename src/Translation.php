@@ -45,7 +45,7 @@ class Translation {
     }
 
     public function get($id, array $params = []) {
-        $dotPos = strpos($id, '.');
+        $dotPos = strpos($id, ':');
         $namespace = substr($id, 0, $dotPos);
         $name = substr($id, $dotPos + 1);
         $result = '#'.$id.'#';
