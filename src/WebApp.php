@@ -32,7 +32,6 @@ class WebApp extends App {
     }
 
     public function init() {
-        parent::init();
         $config = $this->get(Config::class);
         foreach ($this->configPaths as $path) {
             $config->load($path);
