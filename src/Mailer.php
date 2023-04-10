@@ -49,7 +49,7 @@ class Mailer {
         $this->addresses = [];
     }
 
-    public function addAddress($email, $name=null) {
+    public function addAddress($email, $name = null) {
         $this->addresses[] = [
             'email' => $email,
             'name' => $name
@@ -60,8 +60,8 @@ class Mailer {
         $this->vars[$name] = $value;
     }
 
-    public function send($subject, $templatePath, $vars=[]) {
-        $body = $this->view->layout($templatePath, array_merge($this->vars, $vars));
+    public function send($subject, $templatePath, $vars = []) {
+        $body = $this->view->fetch($templatePath, array_merge($this->vars, $vars));
         $result = true;
         if ($this->config->get(self::CONFIG_FAKE)) {
             $this->fakeSend($subject, $body);
@@ -90,10 +90,6 @@ class Mailer {
 
     private function getDebugLevel() {
         return (int)$this->config->get(self::CONFIG_DEBUG_LEVEL);
-    }
-
-    private function debugOutput($str, $level) {
-        $this->logger->debug("debug level $level; message: $str");
     }
 
     private function realSend($subject, $body) {

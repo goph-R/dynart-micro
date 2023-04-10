@@ -4,6 +4,10 @@ namespace Dynart\Micro;
 
 abstract class App {
 
+    const CONFIG_BASE_URL = 'app.base_url';
+    const CONFIG_ROOT_PATH = 'app.root_path';
+    const CONFIG_USE_ANNOTATIONS = 'app.use_annotations';
+
     private static $instance;
 
     /**

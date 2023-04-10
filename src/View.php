@@ -11,6 +11,8 @@ namespace Dynart\Micro;
  */
 class View {
 
+    const CONFIG_DEFAULT_FOLDER = 'view.default_folder';
+
     /** @var Router */
     protected $router;
 
@@ -77,7 +79,6 @@ class View {
 
     /**
      * Returns with a view variable value by name
-     *
      * @param string $name The name of the variable
      * @param mixed|null $default The default value if the variable doesn't present
      * @return mixed|null The value of the variable
@@ -88,7 +89,6 @@ class View {
 
     /**
      * Sets a view variable
-     *
      * @param string $name The name of the variable
      * @param mixed $value The value of the variable
      */
@@ -98,7 +98,6 @@ class View {
 
     /**
      * Adds a script for the view
-     *
      * @param string $src
      * @param array $attributes
      */
@@ -108,7 +107,6 @@ class View {
 
     /**
      * Returns with the scripts in [src => [attributes]] array
-     *
      * @return array The scripts array
      */
     public function scripts(): array {
@@ -117,7 +115,6 @@ class View {
 
     /**
      * Adds a style for the view
-     *
      * @param string $src
      * @param array $attributes
      */
@@ -127,7 +124,6 @@ class View {
 
     /**
      * Returns with the styles in [src => [attributes]] array
-     *
      * @return array The styles array
      */
     public function styles(): array {
@@ -161,7 +157,6 @@ class View {
 
     /**
      * Returns with the content of a block
-     *
      * @param string $name
      * @return string
      */
@@ -242,9 +237,8 @@ class View {
 
     /**
      * Fetches a template with variables
-     *
-     * @param string $__viewPath
-     * @param array $__vars
+     * @param string $__viewPath The path to the view
+     * @param array $__vars The variables in [name => value] format
      * @return string The fetched template output in string
      */
     public function fetch(string $__viewPath, array $__vars=[]): string {
@@ -269,7 +263,7 @@ class View {
     /**
      * Returns with the real path to the template file
      *
-     * * If the path doesn't contain a namespace it will use the `app.view_folder` config value to determine the path for the folder.
+     * * If the path doesn't contain a namespace it will use the `view.default_folder` config value to determine the path for the folder.
      * * If the path contains a namespace it will use the folder of the namespace.
      * * If the view has a theme, that path will be checked first, so the theme can override every template.
      *
@@ -297,7 +291,7 @@ class View {
             $name = substr($path, $dotPos + 1);
             $themePath = $this->theme.'/'.$namespace.'/'.$name;
         } else {
-            $folder = $this->config->get('app.views_folder');
+            $folder = $this->config->get(self::CONFIG_DEFAULT_FOLDER);
             $name = $path;
             $themePath = $this->theme.'/'.$path;
         }
@@ -312,12 +306,11 @@ class View {
 
     /**
      * Replaces the ~ symbol with the `app.root_path` config value
-     *
      * @param string $path
      * @return string
      */
     protected function getFullPath(string $path): string {
-        return str_replace('~', $this->config->get('app.root_path'), $path);
+        return str_replace('~', $this->config->get(App::CONFIG_ROOT_PATH), $path);
     }
 
     /**
@@ -328,7 +321,7 @@ class View {
             return;
         }
         $themeFunctionsPath = $this->getFullPath($this->theme.'/functions.php');
-        $appFunctionsPath = $this->getFullPath($this->config->get('app.views_folder').'/'.'functions.php');
+        $appFunctionsPath = $this->getFullPath($this->config->get(self::CONFIG_DEFAULT_FOLDER).'/'.'functions.php');
         $defaultFunctionsPath = dirname(__FILE__) . '/../views/functions.php';
         if ($this->theme && file_exists($themeFunctionsPath)) {
             require_once $themeFunctionsPath;

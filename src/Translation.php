@@ -13,6 +13,7 @@ namespace Dynart\Micro;
  * * translation.all - the all known translation locales seperated with commas, for example: "hu, en"
  * * translation.default - if no locale was set this will be the default, for example: "en"
  *
+ * @see Config
  * @package Dynart\Micro
  */
 class Translation {
@@ -135,17 +136,12 @@ class Translation {
      *
      * <pre>
      * class MyApp extends App {
-     *
-     *   public function __construct() {
-     *     $this->add(Translation::class);
-     *   }
-     *
+     *   // ...
      *   public function init() {
      *     $translation = $this->get(Translation::class);
      *     $translation->addFolder('test', '~/folder/within/the/app/root/folder');
      *   }
-     *
-     *   public function process() {}
+     *   // ...
      * }
      * </pre>
      *

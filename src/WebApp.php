@@ -23,7 +23,6 @@ class WebApp extends App {
         $this->add(Request::class);
         $this->add(Response::class);
         $this->add(Router::class);
-        $this->add(Database::class);
         $this->add(Session::class);
         $this->add(View::class);
     }
@@ -43,7 +42,7 @@ class WebApp extends App {
         foreach ($this->middlewares as $middlewareInterface) {
             $this->get($middlewareInterface)->run();
         }
-        if ($config->get('app.use_annotations')) {
+        if ($config->get(App::CONFIG_USE_ANNOTATIONS)) {
             $this->addRoutingByDocComments();
         }
     }

@@ -1,6 +1,7 @@
 ;<?php /*
 
-;;;;;;; Logging
+; Logging
+; -------
 
 ; The logging level, can be: debug, info, warning, error
 log.level = "error"
@@ -8,47 +9,57 @@ log.level = "error"
 ; Path for logging
 log.dir = "./logs"
 
-;;;;;;; Application
-
-; Is the server uses rewrite for routing?
-; Check the example .htaccess file for Apache server config.
-app.use_rewrite = false
+; Application
+; -----------
 
 ; The base URL of the application (for example: https://domain.com/app)
 app.base_url = "http://localhost/dynart-micro"
 
-; The index file (usually index.php)
-app.index_file = "index.php"
-
-; The query parameter that will be used for routing.
-app.route_parameter = "route"
+; The root path of the application (for example: /var/www/domain.com)
+app.root_path = "."
 
 ; Should the app use PHP Document annotations?
 app.use_annotations = false
 
+; Router
+; ------
+
+; Is the server uses rewrite for routing?
+; Check the example .htaccess file for Apache server config.
+router.use_rewrite = false
+
+; The index file (usually index.php)
+router.index_file = "index.php"
+
+; The query parameter that will be used for routing.
+router.route_parameter = "route"
+
+; View
+; ----
+
 ; The default folder for the views
-app.views_folder = "~/views"
+view.default_folder = "~/views"
 
-; The root path of the application (for example: /var/www/domain.com)
-app.root_path = "."
-
-;;;;;;; Database
+; Database
+; --------
 
 database.default.name = "micro"
 database.default.dsn = "mysql:localhost"
 database.default.username = "root"
 database.default.password = ""
 
-;;;;;;; Translation
+; Translation
+; -----------
 
 ; All translations locale that the application has
-translation.all = hu,en
+translation.all = "hu, en"
 
 ; The default locale if the browser didn't set it in the Accept-Language
 ; or the accepted language doesn't present in the all translations
-translation.default = hu
+translation.default = "hu"
 
-;;;;;;; Mailer
+; Mailer
+; ------
 
 ; Is the mailer send fake emails? If it is true,
 ; it will only log the email on info level.

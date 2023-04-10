@@ -21,6 +21,10 @@ class Router
      */
     const ROUTE_NOT_FOUND = [null, null];
 
+    const CONFIG_INDEX_FILE = 'router.index_file';
+    const CONFIG_ROUTE_PARAMETER = 'router.route_parameter';
+    const CONFIG_USE_REWRITE = 'router.use_rewrite';
+
     /**
      * Stores all of the routes in ['HTTP method' => ['/route' => callable]] format
      *
@@ -81,7 +85,7 @@ class Router
      * @return string
      */
     public function currentRoute(): string {
-        $routeParameter = $this->config->get('app.route_parameter');
+        $routeParameter = $this->config->get(self::CONFIG_ROUTE_PARAMETER);
         return $this->request->get($routeParameter, '/');
     }
 
@@ -202,9 +206,9 @@ class Router
      *
      * <pre>
      * app.base_url = "http://example.com"
-     * app.use_rewrite = false
-     * app.index_file = "index.php"
-     * app.route_parameter = "route"
+     * router.use_rewrite = false
+     * router.index_file = "index.php"
+     * router.route_parameter = "route"
      * </pre>
      *
      * then the result will be:
@@ -213,7 +217,7 @@ class Router
      * http://example.com/index.php?route=/books/123&name=joe
      * </pre>
      *
-     * If the `app.use_rewrite` set to true, the `app.index_file` and the `app.route_parameter` will not be
+     * If the `router.use_rewrite` set to true, the `app.index_file` and the `app.route_parameter` will not be
      * in the result, but for this you have to configure your webserver to redirect non existing
      * file &amp; directory HTTP queries to your /index.php?route={URI}
      *
@@ -237,15 +241,15 @@ class Router
         foreach ($this->prefixVariables as $callable) {
             $prefix .= '/'.call_user_func($callable);
         }
-        $result = $this->config->get('app.base_url');
-        $useRewrite = $this->config->get('app.use_rewrite');
+        $result = $this->config->get(App::CONFIG_BASE_URL);
+        $useRewrite = $this->config->get(self::CONFIG_USE_REWRITE);
         if ($useRewrite) {
             $result .= $route == null ? '' : $prefix.$route;
         } else {
-            $indexFile = $this->config->get('app.index_file');
+            $indexFile = $this->config->get(self::CONFIG_INDEX_FILE);
             $result .= '/'.$indexFile;
             if ($route && $route != '/') {
-                $routeParameter = $this->config->get('app.route_parameter');
+                $routeParameter = $this->config->get(self::CONFIG_ROUTE_PARAMETER);
                 $params[$routeParameter] = $prefix.$route;
             }
         }
