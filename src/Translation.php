@@ -74,7 +74,7 @@ class Translation {
      * @param Config $config
      */
     public function __construct(Config $config) {
-        $this->rootPath = $config->get('app.root_path');
+        $this->rootPath = $config->get(App::CONFIG_ROOT_PATH);
         $this->locale = $config->get(self::CONFIG_DEFAULT, self::DEFAULT_LOCALE);
         $this->allLocales = $config->getCommaSeparatedValues(self::CONFIG_ALL);
         $this->hasMultiLocales = count($this->allLocales) > 1;

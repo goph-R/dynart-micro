@@ -25,6 +25,10 @@ class Router
     const CONFIG_ROUTE_PARAMETER = 'router.route_parameter';
     const CONFIG_USE_REWRITE = 'router.use_rewrite';
 
+    const DEFAULT_INDEX_FILE = 'index.php';
+    const DEFAULT_ROUTE_PARAMETER = 'route';
+    const DEFAULT_USE_REWRITE = false;
+
     /**
      * Stores all of the routes in ['HTTP method' => ['/route' => callable]] format
      *
@@ -78,7 +82,7 @@ class Router
     /**
      * Returns with the current route
      *
-     * The route HTTP query parameter name can be configured with the `app.route_parameter`.
+     * The route HTTP query parameter name can be configured with the `router.route_parameter`.
      * If no parameter exists the default will be the home route '/'
      *
      * @see Config
@@ -217,7 +221,7 @@ class Router
      * http://example.com/index.php?route=/books/123&name=joe
      * </pre>
      *
-     * If the `router.use_rewrite` set to true, the `app.index_file` and the `app.route_parameter` will not be
+     * If the `router.use_rewrite` set to true, the `router.index_file` and the `router.route_parameter` will not be
      * in the result, but for this you have to configure your webserver to redirect non existing
      * file &amp; directory HTTP queries to your /index.php?route={URI}
      *
@@ -242,14 +246,14 @@ class Router
             $prefix .= '/'.call_user_func($callable);
         }
         $result = $this->config->get(App::CONFIG_BASE_URL);
-        $useRewrite = $this->config->get(self::CONFIG_USE_REWRITE);
+        $useRewrite = $this->config->get(self::CONFIG_USE_REWRITE, self::DEFAULT_USE_REWRITE);
         if ($useRewrite) {
             $result .= $route == null ? '' : $prefix.$route;
         } else {
-            $indexFile = $this->config->get(self::CONFIG_INDEX_FILE);
+            $indexFile = $this->config->get(self::CONFIG_INDEX_FILE, self::DEFAULT_INDEX_FILE);
             $result .= '/'.$indexFile;
             if ($route && $route != '/') {
-                $routeParameter = $this->config->get(self::CONFIG_ROUTE_PARAMETER);
+                $routeParameter = $this->config->get(self::CONFIG_ROUTE_PARAMETER, self::DEFAULT_ROUTE_PARAMETER);
                 $params[$routeParameter] = $prefix.$route;
             }
         }
