@@ -80,7 +80,7 @@ class Request {
      *
      * @return string The request method. Can be GET, POST, PUT, OPTIONS, PATCH, DELETE
      */
-    public function method(): string {
+    public function httpMethod(): string {
         return $this->server('REQUEST_METHOD');
     }
 
@@ -201,7 +201,7 @@ class Request {
     }
 
     /**
-     * It will create an UploadedFile array by parameter name and puts in the `uploadedFiles` array
+     * It will create an UploadedFile array by parameter name and puts into the `uploadedFiles` array
      *
      * @param string $name The name of the parameter
      * @param array $file One element of the $_FILES array

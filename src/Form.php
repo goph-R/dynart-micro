@@ -86,7 +86,7 @@ class Form {
 
     public function process() {
         $result = false;
-        if ($this->request->method() == 'POST') {
+        if ($this->request->httpMethod() == 'POST') {
             $this->bind();
             $result = $this->validate();
         }

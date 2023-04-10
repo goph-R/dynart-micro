@@ -71,9 +71,8 @@ class View {
      */
     protected $functionsIncluded = false;
 
-    public function __construct(Config $config, Router $router) {
+    public function __construct(Config $config) {
         $this->config = $config;
-        $this->router = $router;
     }
 
     /**
@@ -153,6 +152,14 @@ class View {
     }
 
     /**
+     * Returns with the current layout
+     * @return string The current layout
+     */
+    public function layout(): string {
+        return $this->layout;
+    }
+
+    /**
      * Returns with the content of a block
      *
      * @param string $name
@@ -209,6 +216,15 @@ class View {
     }
 
     /**
+     * Returns with the folder path by namespace
+     * @param string $namespace
+     * @return string The path for the folder
+     */
+    public function folder(string $namespace): string {
+        return $this->folders[$namespace];
+    }
+
+    /**
      * Sets the theme path for overriding templates
      * @param string $path
      */
@@ -217,58 +233,11 @@ class View {
     }
 
     /**
-     * Returns with the real path to the template file
-     *
-     * * If the path doesn't contain a namespace it will use the `app.view_folder` config value to determine the path for the folder.
-     * * If the path contains a namespace it will use the folder of the namespace.
-     *
-     * For example if you added a folder with namespace 'folder':
-     *
-     * <pre>
-     * $view->addFolder('folder', '~/views/example');
-     * </pre>
-     *
-     * and the `app.root_path` config value is '/var/www/example.com'
-     * the result will be '/var/www/example.com/views/example/index.phtml'
-     *
-     * @throws AppException If the view path has a namespace but a folder wasn't added for it
-     * @param string $path The view path
-     * @return string The real path to the template file
-     */
-    protected function getRealPath(string $path): string {
-        $dotPos = strpos($path, ':');
-        if ($dotPos !== false) {
-            $namespace = substr($path, 0, $dotPos);
-            if (!isset($this->folders[$namespace])) {
-                throw new AppException("Folder wasn't added with namespace: $namespace");
-            }
-            $folder = $this->folders[$namespace];
-            $name = substr($path, $dotPos + 1);
-            $themeFile = $this->theme.'/'.$namespace.'/'.$name;
-        } else {
-            $folder = $this->config->get('app.views_folder');
-            $name = $path;
-            $themeFile = $this->theme.'/'.$name;
-        }
-        $themePath = $this->theme.'/'.$themeFile;
-        if ($this->theme && file_exists($themePath)) {
-            $resultPath = $themePath;
-        } else {
-            $resultPath = $folder.'/'.$name;
-        }
-        return $this->getFullPath($resultPath);
-    }
-
-    /**
-     * Returns with the full path for a path with ~ symbol
-     *
-     * The ~ symbol represents the `app.root_path` config value.
-     *
-     * @param string $path
+     * Returns with the theme path
      * @return string
      */
-    protected function getFullPath(string $path): string {
-        return str_replace('~', $this->config->get('app.root_path'), $path);
+    public function theme(): string {
+        return $this->theme;
     }
 
     /**
@@ -297,7 +266,64 @@ class View {
         return $result;
     }
 
-    private function includeFunctions() {
+    /**
+     * Returns with the real path to the template file
+     *
+     * * If the path doesn't contain a namespace it will use the `app.view_folder` config value to determine the path for the folder.
+     * * If the path contains a namespace it will use the folder of the namespace.
+     * * If the view has a theme, that path will be checked first, so the theme can override every template.
+     *
+     * For example if you added a folder with namespace 'folder':
+     *
+     * <pre>
+     * $view->addFolder('folder', '~/views/example');
+     * </pre>
+     *
+     * and the `app.root_path` config value is '/var/www/example.com'
+     * the result will be '/var/www/example.com/views/example/index.phtml'
+     *
+     * @throws AppException If the view path has a namespace but a folder wasn't added for it
+     * @param string $path The view path
+     * @return string The real path to the template file
+     */
+    protected function getRealPath(string $path): string {
+        $dotPos = strpos($path, ':');
+        if ($dotPos !== false) {
+            $namespace = substr($path, 0, $dotPos);
+            if (!isset($this->folders[$namespace])) {
+                throw new AppException("Folder wasn't added with namespace: $namespace");
+            }
+            $folder = $this->folders[$namespace];
+            $name = substr($path, $dotPos + 1);
+            $themePath = $this->theme.'/'.$namespace.'/'.$name;
+        } else {
+            $folder = $this->config->get('app.views_folder');
+            $name = $path;
+            $themePath = $this->theme.'/'.$path;
+        }
+        if ($this->theme) {
+            $themeFullPath = $this->getFullPath($themePath);
+            if (file_exists($themeFullPath.'.phtml')) {
+                return $themeFullPath;
+            }
+        }
+        return $this->getFullPath($folder.'/'.$name);
+    }
+
+    /**
+     * Replaces the ~ symbol with the `app.root_path` config value
+     *
+     * @param string $path
+     * @return string
+     */
+    protected function getFullPath(string $path): string {
+        return str_replace('~', $this->config->get('app.root_path'), $path);
+    }
+
+    /**
+     * Includes the functions.php of the theme, the app and the framework
+     */
+    protected function includeFunctions() {
         if ($this->functionsIncluded) {
             return;
         }
