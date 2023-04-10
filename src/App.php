@@ -25,9 +25,8 @@ abstract class App {
     protected $classes = [];
     protected $instances = [];
 
+    abstract public function init();
     abstract public function process();
-
-    public function init() {}
 
     public function finish($content = '') {
         exit($content);
