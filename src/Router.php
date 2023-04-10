@@ -89,7 +89,7 @@ class Router
      * @return string
      */
     public function currentRoute(): string {
-        $routeParameter = $this->config->get(self::CONFIG_ROUTE_PARAMETER);
+        $routeParameter = $this->config->get(self::CONFIG_ROUTE_PARAMETER, self::DEFAULT_ROUTE_PARAMETER);
         return $this->request->get($routeParameter, '/');
     }
 
