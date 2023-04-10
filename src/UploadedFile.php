@@ -5,7 +5,7 @@ namespace Dynart\Micro;
 /**
  * Represents an uploaded file
  *
- * You can get and instance of this via the `Request::uploadedFile()` method.
+ * You can get an instance of this via the `Request::uploadedFile()` method.
  *
  * @see Request
  * @package Dynart\Micro

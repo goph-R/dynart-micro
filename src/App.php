@@ -206,11 +206,11 @@ abstract class App {
             return $result;
         }
         foreach ($constructor->getParameters() as $parameter) {
-            $parameterClass = $parameter->getClass();
-            if (!$parameterClass) {
+            $type = $parameter->getType();
+            if (!$type) {
                 continue;
             }
-            $interface = $parameterClass->getName();
+            $interface = $type->getName();
             if ($this->hasInterface($interface)) {
                 $result[] = $this->get($interface);
             }
