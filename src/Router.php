@@ -161,7 +161,7 @@ class Router
 
     /**
      * Matches a route and returns with the given callable
-     **
+     *
      * The `$callable` can be in a [Example::class, 'exampleMethod'] format as well,
      * so you don't have to create an instance only when this callable is used.
      *

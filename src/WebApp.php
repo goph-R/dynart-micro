@@ -13,7 +13,7 @@ class WebApp extends App {
     /** @var string[] */
     protected $configPaths;
 
-    /** @var string[] */
+    /** @var Middleware[] */
     protected $middlewares = [];
 
     public function __construct(array $configPaths) {
@@ -28,51 +28,15 @@ class WebApp extends App {
     }
 
     public function addMiddleware(string $interface) {
+        $this->add($interface);
         $this->middlewares[] = $interface;
     }
 
     public function init() {
-        $config = $this->get(Config::class);
-        foreach ($this->configPaths as $path) {
-            $config->load($path);
-        }
+        $this->loadConfigs();
         $this->router = $this->get(Router::class);
         $this->response = $this->get(Response::class);
-        foreach ($this->middlewares as $middlewareInterface) {
-            $this->get($middlewareInterface)->run();
-        }
-        if ($config->get(App::CONFIG_USE_ANNOTATIONS)) {
-            $this->addRoutingByDocComments();
-        }
-    }
-
-    protected function addRoutingByDocComments() {
-        try {
-            foreach ($this->classes as $interface => $class) {
-                $reflectionClass = new \ReflectionClass($interface);
-                foreach ($reflectionClass->getMethods() as $method) {
-                    $this->addRoutingForMethod($interface, $method);
-                }
-            }
-        } catch (\ReflectionException $ignore) {
-            throw new AppException("Can't create reflection for: $interface");
-        }
-    }
-
-    protected function addRoutingForMethod(string $interface, \ReflectionMethod $method) {
-        $comments = $method->getDocComment();
-        $hasRoute = strpos($comments, '* @route') !== false;
-        if (!$hasRoute) {
-            return;
-        }
-        $matches = [];
-        preg_match('/\s\*\s@route\s(GET|POST|BOTH)\s(.*)\s/', $comments, $matches);
-        if ($matches) {
-            $route = str_replace(array("\r", "\n"), '', $matches[2]);
-            $this->router->add($route, [$interface, $method->getName()], $matches[1]);
-        } else {
-            throw new AppException("Can't find valid route in: $comments\nA valid route example: @route GET /api/something");
-        }
+        $this->runMiddlewares();
     }
 
     public function process() {
@@ -109,5 +73,18 @@ class WebApp extends App {
     public function sendError(int $code, $content='') {
         http_response_code($code);
         $this->finish($content);
+    }
+
+    protected function loadConfigs() {
+        $config = $this->get(Config::class);
+        foreach ($this->configPaths as $path) {
+            $config->load($path);
+        }
+    }
+
+    protected function runMiddlewares() {
+        foreach ($this->middlewares as $m) {
+            $this->get($m)->run();
+        }
     }
 }

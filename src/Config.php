@@ -10,23 +10,25 @@ class Config {
     public function __construct() {}
 
     public function load(string $path) {
-        $this->config = array_merge($this->config, parse_ini_file($path, true));
+        $this->config = array_merge($this->config, parse_ini_file($path, false, INI_SCANNER_TYPED));
     }
 
     public function get($name, $default = null, $useCache = true) {
         if ($useCache && array_key_exists($name, $this->cached)) {
             return $this->cached[$name];
         }
-        if (getenv($name)) {
+        if (getenv($name) !== false) {
             $value = getenv($name);
         } else {
             $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
-            $matches = [];
-            preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches);
-            if ($matches) {
-                $vars = array_unique($matches[1]);
-                foreach ($vars as $var) {
-                    $value = str_replace('{{' . $var . '}}', getenv($var), $value);
+            if ($value !== null) {
+                $matches = [];
+                preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches);
+                if ($matches) {
+                    $vars = array_unique($matches[1]);
+                    foreach ($vars as $var) {
+                        $value = str_replace('{{' . $var . '}}', getenv($var), $value);
+                    }
                 }
             }
         }

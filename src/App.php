@@ -11,7 +11,6 @@ abstract class App {
 
     const CONFIG_BASE_URL = 'app.base_url';
     const CONFIG_ROOT_PATH = 'app.root_path';
-    const CONFIG_USE_ANNOTATIONS = 'app.use_annotations';
 
     private static $instance;
 
@@ -91,7 +90,7 @@ abstract class App {
      * @param null $class The class, it can be null, then the interface itself a class
      */
     public function add(string $interface, $class = null) {
-        if ($class != null && !($class instanceof $interface)) {
+        if ($class != null && !(is_subclass_of($class, $interface))) {
             throw new AppException("$class does not implement $interface");
         }
         $this->classes[$interface] = $class;
@@ -216,6 +215,14 @@ abstract class App {
             }
         }
         return $result;
+    }
+
+    /**
+     * Returns with all of the interfaces in an array
+     * @return array All of the added interfaces
+     */
+    public function interfaces() {
+        return array_keys($this->classes);
     }
 
 }

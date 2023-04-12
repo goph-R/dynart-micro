@@ -36,7 +36,7 @@ class Request {
     /**
      * The Request constructor
      *
-     * It will fill up the `headers` and the `uploadedFiles` arrays.
+     * Fills up the `headers` and the `uploadedFiles` arrays.
      *
      * @see Request::$headers
      * @see Request::$uploadedFiles

@@ -18,9 +18,6 @@ app.base_url = "http://localhost/dynart-micro"
 ; The root path of the application (for example: /var/www/domain.com)
 app.root_path = "."
 
-; Should the app use PHP Document annotations?
-app.use_annotations = false
-
 ; Router
 ; ------
 
