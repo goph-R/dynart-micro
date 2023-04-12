@@ -255,7 +255,7 @@ class View {
         $layout = $this->layout;
         if ($layout) {
             $this->layout = '';
-            $result = $this->fetch($layout);
+            $result = $this->fetch($layout, $__vars);
         }
         return $result;
     }

@@ -11,14 +11,14 @@ class AnnotationProcessor implements Middleware {
     protected $annotations = [];
 
     /** @var string[] */
-    protected $onlyInterfaces = [];
+    protected $namespaces = [];
 
     public function add(string $class) {
         $this->annotationClasses[] = $class;
     }
 
-    public function setProcessOnly(array $interfaces) {
-        $this->onlyInterfaces = $interfaces;
+    public function addNamespace(string $namespace) {
+        $this->namespaces[] = $namespace;
     }
 
     public function run() {
@@ -26,20 +26,30 @@ class AnnotationProcessor implements Middleware {
         foreach ($this->annotationClasses as $class) {
             $this->annotations[] = $app->get($class);
         }
-        $interfaces = empty($interfaces) ? $app->interfaces() : $this->onlyInterfaces;
-        foreach ($interfaces as $interface) {
-            if (in_array($interface, $this->annotationClasses)) {
-                continue;
-            }
-            try {
-                $reflectionClass = new \ReflectionClass($interface);
-            } catch (\ReflectionException $ignore) {
-                throw new AppException("Can't create reflection for: $interface");
-            }
-            foreach ($reflectionClass->getMethods() as $method) {
-                $this->process($interface, $method);
+        foreach ($app->interfaces() as $interface) {
+            if ($this->processAllowed($interface)) {
+                try {
+                    $reflectionClass = new \ReflectionClass($interface);
+                } catch (\ReflectionException $ignore) {
+                    throw new AppException("Can't create reflection for: $interface");
+                }
+                foreach ($reflectionClass->getMethods() as $method) {
+                    $this->process($interface, $method);
+                }
             }
         }
+    }
+
+    protected function processAllowed(string $interface): bool {
+        if (empty($this->namespaces)) {
+            return true;
+        }
+        foreach ($this->namespaces as $namespace) {
+            if (substr($interface, 0, strlen($namespace)) == $namespace) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function process(string $interface, \ReflectionMethod $method) {
