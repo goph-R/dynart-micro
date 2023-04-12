@@ -1,2 +1,5 @@
 # dynart-micro
-A micro PHP framework.
+### Micro PHP framework
+* [API documentation](https://micro.dynart.net/docs/api/)
+* [Test GitHub repository](https://github.com/goph-R/dynart-micro-test)
+* [Coverage report](https://micro.dynart.net/reports/coverage-html/)
