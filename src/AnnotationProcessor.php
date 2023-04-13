@@ -2,10 +2,14 @@
 
 namespace Dynart\Micro;
 
+/**
+ * Processes the annotations that are in the PHP document comments
+ * @package Dynart\Micro
+ */
 class AnnotationProcessor implements Middleware {
 
     /** @var string[] */
-    protected $annotationInterfaces = [];
+    protected $classes = [];
 
     /** @var Annotation[] */
     protected $annotations = [];
@@ -13,26 +17,56 @@ class AnnotationProcessor implements Middleware {
     /** @var string[] */
     protected $namespaces = [];
 
-    public function add(string $interface) {
-        $this->annotationInterfaces[] = $interface;
+    /**
+     * Adds an annotation for processing
+     *
+     * The given class name should implement the Annotation interface, otherwise
+     * it will throw an AppException.
+     *
+     * @throws AppException if the given class does not implement the Annotation
+     * @param string $class The class name
+     */
+    public function add(string $class) {
+        if (!is_subclass_of($class, Annotation::class)) {
+            throw new AppException("$class doesn't implement the Annotation interface");
+        }
+        $this->classes[] = $class;
     }
 
+    /**
+     * Adds a namespace
+     *
+     * If one or more namespace added only those will be processed.
+     *
+     * @param string $namespace
+     */
     public function addNamespace(string $namespace) {
         $this->namespaces[] = $namespace;
     }
 
+    /**
+     * Creates the annotations then processes all interfaces or those that are in the given namespaces.
+     */
     public function run() {
         $app = App::instance();
         $this->createAnnotations($app);
         $this->processInterfaces($app);
     }
 
+    /**
+     * Creates the annotation instances
+     * @param App $app
+     */
     protected function createAnnotations(App $app): void {
-        foreach ($this->annotationInterfaces as $interface) {
+        foreach ($this->classes as $interface) {
             $this->annotations[] = $app->get($interface);
         }
     }
 
+    /**
+     * Processes all interfaces or those that are in the given namespaces
+     * @param App $app
+     */
     protected function processInterfaces(App $app): void {
         foreach ($app->interfaces() as $interface) {
             if ($this->isProcessAllowed($interface)) {
@@ -41,6 +75,11 @@ class AnnotationProcessor implements Middleware {
         }
     }
 
+    /**
+     * If no namespace added returns true, otherwise checks the namespace and returns true if the interface is in it.
+     * @param string $interface The name of the interface
+     * @return bool Should we process this interface?
+     */
     protected function isProcessAllowed(string $interface): bool {
         if (empty($this->namespaces)) {
             return true;
@@ -53,7 +92,11 @@ class AnnotationProcessor implements Middleware {
         return false;
     }
 
-    protected function processInterface($interface): void {
+    /**
+     * Processes one interface with the given name
+     * @param string $interface The name of the interface
+     */
+    protected function processInterface(string $interface): void {
         try {
             $reflectionClass = new \ReflectionClass($interface);
         } catch (\ReflectionException $ignore) {
@@ -64,6 +107,11 @@ class AnnotationProcessor implements Middleware {
         }
     }
 
+    /**
+     * Processes one method of an interface
+     * @param string $interface The name of the interface
+     * @param \ReflectionMethod $method The method of the interface
+     */
     protected function processMethod(string $interface, \ReflectionMethod $method) {
         $comment = $method->getDocComment();
         foreach ($this->annotations as $annotation) {
@@ -71,7 +119,7 @@ class AnnotationProcessor implements Middleware {
             if ($has) {
                 $matches = [];
                 $commentWithoutNewLines = str_replace(array("\r", "\n"), ' ', $comment);
-                $fullRegex = '/\s\*\s@'.$annotation->name().'\s'.$annotation->regex().'\s/U';
+                $fullRegex = '/\*\s@'.$annotation->name().'\s'.$annotation->regex().'\s\*/U';
                 preg_match($fullRegex, $commentWithoutNewLines, $matches);
                 $annotation->process($interface, $method, $commentWithoutNewLines, $matches);
             }
