@@ -2,6 +2,12 @@
 
 namespace Dynart\Micro;
 
+/**
+ * The @route annotation
+ *
+ * @see Annotation
+ * @package Dynart\Micro
+ */
 class RouteAnnotation implements Annotation {
 
     /** @var Router */
