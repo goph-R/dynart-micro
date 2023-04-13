@@ -36,7 +36,7 @@ class AnnotationProcessor implements Middleware {
     /**
      * Adds a namespace
      *
-     * If one or more namespace added only those will be processed.
+     * If one or more namespace added only those will be processed. The namespace should NOT start with a backslash!
      *
      * @param string $namespace
      */

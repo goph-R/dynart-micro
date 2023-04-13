@@ -16,8 +16,12 @@ class Database {
     /** @var Logger */
     protected $logger;
 
-    public function __construct(Config $config, Logger $logger) {
+    /** @var PdoBuilder */
+    protected $pdoBuilder;
+
+    public function __construct(Config $config, Logger $logger, PdoBuilder $pdoBuilder) {
         $this->config = $config;
+        $this->pdoBuilder = $pdoBuilder;
     }
 
     protected function connect() {
@@ -27,7 +31,12 @@ class Database {
         $dsn = $this->config->get('database.'.$this->name.'.dsn', 'mysql:localhost');
         $user = $this->config->get('database.'.$this->name.'.username', 'root');
         $password = $this->config->get('database.'.$this->name.'.password', '');
-        $this->pdo = new \PDO($dsn, $user, $password, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
+        $this->pdo = $this->pdoBuilder
+            ->dsn($dsn)
+            ->username($user)
+            ->password($password)
+            ->options([\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION])
+            ->build();
         $this->connected = true;
         $this->query("use ".$this->config->get('database.'.$this->name.'.name', 'db_name_missing'));
         $this->query("set names 'utf8'");
