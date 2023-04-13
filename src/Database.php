@@ -24,35 +24,15 @@ abstract class Database {
         $this->pdoBuilder = $pdoBuilder;
     }
 
-    protected function connect() {
-        if ($this->connected) {
-            return;
-        }
-        $dsn = $this->config->get('database.'.$this->name.'.dsn', 'mysql:localhost');
-        $user = $this->config->get('database.'.$this->name.'.username', 'root');
-        $password = $this->config->get('database.'.$this->name.'.password', '');
-        $this->pdo = $this->pdoBuilder
-            ->dsn($dsn)
-            ->username($user)
-            ->password($password)
-            ->options([\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION])
-            ->build();
-        $this->connected = true;
-        $this->query("use ".$this->config->get('database.'.$this->name.'.name', 'db_name_missing'));
-        $this->query("set names 'utf8'");
-    }
-
-    public function escapeName(string $name) {
-        $parts = explode('.', $name);
-        return '`'.join('`.`', $parts).'`';
-    }
+    abstract protected function connect();
+    abstract public function escapeName(string $name);
 
     public function query(string $query, array $params=[]) {
-        $this->connect();
         try {
+            $this->connect();
             $stmt = $this->pdo->prepare($query);
             $stmt->execute($params);
-        } catch (\RuntimeException $e) {
+        } catch (\PDOException $e) {
             $this->logger->error("SQL error:\n$query\nParameters: ".($params ? json_encode($params) : ''));
             throw $e;
         }
