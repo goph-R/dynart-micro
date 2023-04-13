@@ -1,6 +1,10 @@
 <?php
 
-namespace Dynart\Micro;
+namespace Dynart\Micro\Annotation;
+
+use Dynart\Micro\Annotation;
+use Dynart\Micro\Router;
+use Dynart\Micro\AppException;
 
 /**
  * The @route annotation

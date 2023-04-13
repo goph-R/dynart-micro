@@ -2,7 +2,7 @@
 
 namespace Dynart\Micro;
 
-class Database {
+abstract class Database {
 
     protected $name = 'default';
     protected $connected = false;
@@ -16,10 +16,10 @@ class Database {
     /** @var Logger */
     protected $logger;
 
-    /** @var PdoBuilder */
+    /** @var Database\PdoBuilder */
     protected $pdoBuilder;
 
-    public function __construct(Config $config, Logger $logger, PdoBuilder $pdoBuilder) {
+    public function __construct(Config $config, Logger $logger, Database\PdoBuilder $pdoBuilder) {
         $this->config = $config;
         $this->pdoBuilder = $pdoBuilder;
     }

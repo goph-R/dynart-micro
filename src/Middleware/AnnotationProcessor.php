@@ -1,6 +1,11 @@
 <?php
 
-namespace Dynart\Micro;
+namespace Dynart\Micro\Middleware;
+
+use Dynart\Micro\Middleware;
+use Dynart\Micro\Annotation;
+use Dynart\Micro\AppException;
+use Dynart\Micro\App;
 
 /**
  * Processes the annotations that are in the PHP document comments

@@ -1,6 +1,11 @@
 <?php
 
-namespace Dynart\Micro;
+namespace Dynart\Micro\Middleware;
+
+use Dynart\Micro\Middleware;
+use Dynart\Micro\Request;
+use Dynart\Micro\Router;
+use Dynart\Micro\Translation;
 
 class LocaleResolver implements Middleware {
 
