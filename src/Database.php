@@ -4,7 +4,7 @@ namespace Dynart\Micro;
 
 abstract class Database {
 
-    protected $name = 'default';
+    protected $configName = 'default';
     protected $connected = false;
 
     /** @var \PDO */
@@ -21,13 +21,22 @@ abstract class Database {
 
     public function __construct(Config $config, Logger $logger, Database\PdoBuilder $pdoBuilder) {
         $this->config = $config;
+        $this->logger = $logger;
         $this->pdoBuilder = $pdoBuilder;
+    }
+
+    public function connected(): bool {
+        return $this->connected;
+    }
+
+    protected function setConnected(bool $value): void {
+        $this->connected = $value;
     }
 
     abstract protected function connect();
     abstract public function escapeName(string $name);
 
-    public function query(string $query, array $params=[]) {
+    public function query(string $query, array $params = []) {
         try {
             $this->connect();
             $stmt = $this->pdo->prepare($query);
@@ -39,21 +48,25 @@ abstract class Database {
         return $stmt;
     }
 
-    public function fetch($query, $params=[]) {
+    public function configValue(string $name) {
+        return $this->config->get("database.{$this->configName}.$name", "db_{$name}_missing");
+    }
+
+    public function fetch($query, $params = []) {
         $stmt = $this->query($query, $params);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         $stmt = null;
         return $result;
     }
 
-    public function fetchAll(string $query, array $params=[]) {
+    public function fetchAll(string $query, array $params = []) {
         $stmt = $this->query($query, $params);
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $stmt = null;
         return $result;
     }
 
-    public function fetchColumn(string $query, array $params=[], int $index = 0) {
+    public function fetchColumn(string $query, array $params = [], int $index = 0) {
         $stmt = $this->query($query, $params);
         $result = $stmt->fetchColumn($index);
         $stmt = null;
@@ -78,7 +91,7 @@ abstract class Database {
         $this->query($sql, $params);
     }
 
-    public function update(string $tableName, array $data, string $condition='', array $conditionParams=[]) {
+    public function update(string $tableName, array $data, string $condition = '', array $conditionParams = []) {
         $tableName = $this->escapeName($tableName);
         $params = [];
         $pairs = [];
@@ -93,7 +106,7 @@ abstract class Database {
         $this->query($sql, $params);
     }
 
-    public function getInConditionAndParams(array $values, $paramNamePrefix='in') {
+    public function getInConditionAndParams(array $values, $paramNamePrefix = 'in') {
         $params = [];
         $in = "";
         foreach ($values as $i => $item) {

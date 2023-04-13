@@ -7,20 +7,18 @@ use Dynart\Micro\Database;
 class MariaDatabase extends Database {
 
     protected function connect() {
-        if ($this->connected) {
+        if ($this->connected()) {
             return;
         }
-        $dsn = $this->config->get('database.'.$this->name.'.dsn', 'mysql:localhost');
-        $user = $this->config->get('database.'.$this->name.'.username', 'root');
-        $password = $this->config->get('database.'.$this->name.'.password', '');
         $this->pdo = $this->pdoBuilder
-            ->dsn($dsn)
-            ->username($user)
-            ->password($password)
+            ->dsn($this->configValue('dsn'))
+            ->username($this->configValue('username'))
+            ->password($this->configValue('password'))
             ->options([\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION])
             ->build();
-        $this->connected = true;
-        $this->query("use ".$this->config->get('database.'.$this->name.'.name', 'db_name_missing'));
+        $this->setConnected(true);
+        $dbName = $this->escapeName($this->configValue('name'));
+        $this->query("use $dbName");
         $this->query("set names 'utf8'");
     }
 

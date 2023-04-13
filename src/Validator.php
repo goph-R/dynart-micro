@@ -8,11 +8,27 @@ abstract class Validator {
     protected $form;
     protected $message;
 
-    public function setForm(Form $form) {
+    /**
+     * Assigns a form to this validator
+     * @param Form $form
+     */
+    public function setForm(Form $form): void {
         $this->form = $form;
     }
 
-    public function message() {
+    /**
+     * Returns with the assigned form
+     * @return Form
+     */
+    public function form(): Form {
+        return $this->form;
+    }
+
+    /**
+     * The message after validation
+     * @return string
+     */
+    public function message(): string {
         return $this->message;
     }
 

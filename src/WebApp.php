@@ -2,7 +2,26 @@
 
 namespace Dynart\Micro;
 
+/**
+ * Handles HTTP request/response
+ * @package Dynart\Micro
+ */
 class WebApp extends App {
+
+    const CONFIG_ERROR_PAGES_FOLDER = 'app.error_pages_folder';
+    const CONFIG_ENVIRONMENT = 'app.environment';
+    const DEFAULT_ENVIRONMENT = 'prod';
+    const HEADER_CONTENT_TYPE = 'Content-Type';
+    const HEADER_LOCATION = 'Location';
+    const CONTENT_TYPE_HTML = 'text/html; charset=UTF-8';
+    const CONTENT_TYPE_JSON = 'application/json';
+    const ERROR_CONTENT_PLACEHOLDER = '<!-- content -->';
+
+    /** @var Config */
+    protected $config;
+
+    /** @var Logger */
+    protected $logger;
 
     /** @var Router */
     protected $router;
@@ -33,52 +52,95 @@ class WebApp extends App {
     }
 
     public function init() {
-        $this->loadConfigs();
-        $this->router = $this->get(Router::class);
-        $this->response = $this->get(Response::class);
-        $this->runMiddlewares();
+        try {
+            $this->config = $this->get(Config::class);
+            $this->loadConfigs();
+            $this->logger = $this->get(Logger::class);
+            $this->router = $this->get(Router::class);
+            $this->response = $this->get(Response::class);
+            $this->runMiddlewares();
+        } catch (\Exception $e) {
+            $this->handleException($e);
+        }
     }
 
     public function process() {
-        list($callable, $params) = $this->router->matchCurrentRoute();
-        if ($callable) {
-            if (is_array($callable) && is_string($callable[0])) {
-                $callable = [$this->get($callable[0]), $callable[1]];
+        try {
+            list($callable, $params) = $this->router->matchCurrentRoute();
+            if ($callable) {
+                if (is_array($callable) && is_string($callable[0])) {
+                    $callable = [$this->get($callable[0]), $callable[1]];
+                }
+                $content = call_user_func_array($callable, $params);
+                $this->sendContent($content);
+            } else {
+                $this->sendError(404);
             }
-            $content = call_user_func_array($callable, $params);
-            $this->sendContent($content);
-        } else {
-            $this->sendError(404, 'Not found.');
+        } catch (\Exception $e) {
+            $this->handleException($e);
         }
     }
 
     public function redirect($url, $params = []) {
         $location = $this->router->url($url, $params);
         $this->response->clearHeaders();
-        $this->response->setHeader('Location', $location);
+        $this->response->setHeader(self::HEADER_LOCATION, $location);
         $this->response->send();
         $this->finish();
     }
 
     public function sendContent($content) {
         if (is_string($content)) {
-            $this->response->setHeader('Content-Type', 'text/html; charset=UTF-8');
+            $this->response->setHeader(self::HEADER_CONTENT_TYPE, self::CONTENT_TYPE_HTML);
             $this->response->send($content);
         } else if (is_array($content)) {
-            $this->response->setHeader('Content-Type', 'application/json');
+            $this->response->setHeader(self::HEADER_CONTENT_TYPE, self::CONTENT_TYPE_JSON);
             $this->response->send(json_encode($content));
         }
     }
 
-    public function sendError(int $code, $content='') {
+    public function sendError(int $code, $content = '') {
         http_response_code($code);
-        $this->finish($content);
+        $pageContent = str_replace(self::ERROR_CONTENT_PLACEHOLDER, $content, $this->loadErrorPageContent($code));
+        $this->finish($pageContent);
+    }
+
+    protected function handleException(\Exception $e) {
+        if (!$this->config) {
+            throw new AppException("Couldn't instantiate Config::class");
+        }
+        if (!$this->logger) {
+            throw new AppException("Couldn't instantiate Logger::class");
+        }
+        $type = get_class($e);
+        $file = $e->getFile();
+        $line = $e->getLine();
+        $message = $e->getMessage();
+        $trace = $e->getTraceAsString();
+        if (http_response_code() !== false) {
+            $content = "<h2>$type</h2><p>In $file on line $line with message: $message</p>";
+            $content .= "<h3>Stacktrace:</h3><p>".str_replace("\n", "<br>", $trace)."</p>";
+        } else {
+            $content = "`$type` in $file on line $line with message `$message`\n$trace";
+        }
+        $env = $this->config->get(self::CONFIG_ENVIRONMENT, self::DEFAULT_ENVIRONMENT);
+        $this->sendError(500, $env != self::DEFAULT_ENVIRONMENT ? $content : '');
+    }
+
+    protected function loadErrorPageContent(int $code) {
+        $dir = $this->config->get(self::CONFIG_ERROR_PAGES_FOLDER);
+        if ($dir) {
+            $path = str_replace('~', App::CONFIG_ROOT_PATH, $dir).'/'.$code.'.html';
+            if (file_exists($path)) {
+                return file_get_contents($path);
+            }
+        }
+        return self::ERROR_CONTENT_PLACEHOLDER;
     }
 
     protected function loadConfigs() {
-        $config = $this->get(Config::class);
         foreach ($this->configPaths as $path) {
-            $config->load($path);
+            $this->config->load($path);
         }
     }
 

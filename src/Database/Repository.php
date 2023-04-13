@@ -1,6 +1,8 @@
 <?php
 
-namespace Dynart\Micro;
+namespace Dynart\Micro\Database;
+
+use \Dynart\Micro\Database;
 
 abstract class Repository {
 

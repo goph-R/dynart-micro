@@ -33,12 +33,12 @@ class Pager {
         $this->prev = $this->page != 0;
         $this->next = $this->page != $this->max;
         $this->calculateStartAndEnd($pagerLimit);
-        $this->hideRight = $this->end < $this->max - 1;
         $this->hideLeft = $this->start > 1;
+        $this->hideRight = $this->end < $this->max - 1;
     }
 
     protected function calculateStartAndEnd($pagerLimit) {
-        $limit = floor($pagerLimit / 2);
+        $limit = (int)floor($pagerLimit / 2);
         $this->start = $this->page - $limit;
         $add = 0;
         if ($this->start < 0) {
@@ -99,12 +99,7 @@ class Pager {
         return $this->next;
     }
 
-    public function limit() {
-        return $this->limit;
-    }
-
     public function params() {
         return $this->params;
     }
-
 }

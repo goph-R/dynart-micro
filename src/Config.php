@@ -40,17 +40,18 @@ class Config {
 
     public function getCommaSeparatedValues($name) {
         $values = explode(',', $this->get($name));
-        array_map(function ($e) { return trim($e); }, $values);
-        return $values;
+        return array_map(function ($e) { return trim($e); }, $values);
     }
 
     public function getArray($prefix, $default = []) {
+        global $_ENV;
         if (array_key_exists($prefix, $this->cached)) {
             return $this->cached[$prefix];
         }
         $result = $default;
         $len = strlen($prefix);
-        foreach ($this->config as $key => $value) {
+        $keys = array_merge(array_keys($this->config), array_keys($_ENV));
+        foreach ($keys as $key) {
             if (substr($key, 0, $len) == $prefix) {
                 $resultKey = substr($key, $len + 1, strlen($key));
                 $result[$resultKey] = $this->get($key, null, false);
@@ -58,6 +59,10 @@ class Config {
         }
         $this->cached[$prefix] = $result;
         return $result;
+    }
+
+    public function isCached(string $name) {
+        return array_key_exists($name, $this->cached);
     }
 
 }
