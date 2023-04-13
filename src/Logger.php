@@ -36,4 +36,8 @@ class Logger extends KLogger {
         return $this->level;
     }
 
+    public function error($message, array $context = array()) {
+        parent::error($message, $context);
+        error_log($message); // always log errors
+    }
 }

@@ -214,7 +214,7 @@ abstract class App {
         }
         foreach ($constructor->getParameters() as $parameter) {
             $type = $parameter->getType();
-            if (!$type) {
+            if (!$type || $type->isBuiltin()) {
                 continue;
             }
             $interface = $type->getName();
