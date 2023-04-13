@@ -99,6 +99,11 @@ class WebApp extends App {
         }
     }
 
+    /**
+     * Sends an error as the response
+     * @param int $code The error code
+     * @param string $content The error content
+     */
     public function sendError(int $code, $content = '') {
         http_response_code($code);
         $pageContent = str_replace(self::ERROR_CONTENT_PLACEHOLDER, $content, $this->loadErrorPageContent($code));
@@ -106,31 +111,43 @@ class WebApp extends App {
     }
 
     protected function handleException(\Exception $e) {
+        // Check first for the needed classes
         if (!$this->config) {
             throw new AppException("Couldn't instantiate Config::class");
         }
         if (!$this->logger) {
             throw new AppException("Couldn't instantiate Logger::class");
         }
+
+        // Extract the exception info
         $type = get_class($e);
         $file = $e->getFile();
         $line = $e->getLine();
         $message = $e->getMessage();
         $trace = $e->getTraceAsString();
+        $text = "`$type` in $file on line $line with message: $message\n$trace";
+
+        // Log the error
+        $this->logger->error($text);
+
+        // Set the output for web or cli
         if (http_response_code() !== false) {
-            $content = "<h2>$type</h2><p>In $file on line $line with message: $message</p>";
-            $content .= "<h3>Stacktrace:</h3><p>".str_replace("\n", "<br>", $trace)."</p>";
+            $content = "<h2>$type</h2>\n<p>In <b>$file</b> on <b>line $line</b> with message: $message</p>\n";
+            $content .= "<h3>Stacktrace:</h3>\n<p>".str_replace("\n", "<br>\n", $trace)."</p>";
         } else {
-            $content = "`$type` in $file on line $line with message `$message`\n$trace";
+            $content = $text;
         }
+
+        // Send the error: with content if this is not a production (default) environment
         $env = $this->config->get(self::CONFIG_ENVIRONMENT, self::DEFAULT_ENVIRONMENT);
         $this->sendError(500, $env != self::DEFAULT_ENVIRONMENT ? $content : '');
+
     }
 
     protected function loadErrorPageContent(int $code) {
         $dir = $this->config->get(self::CONFIG_ERROR_PAGES_FOLDER);
         if ($dir) {
-            $path = str_replace('~', App::CONFIG_ROOT_PATH, $dir).'/'.$code.'.html';
+            $path = str_replace('~', $this->config->get(App::CONFIG_ROOT_PATH), $dir).'/'.$code.'.html';
             if (file_exists($path)) {
                 return file_get_contents($path);
             }

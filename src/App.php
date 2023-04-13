@@ -124,13 +124,14 @@ abstract class App {
      *
      * @param string $interface The interface
      * @param array $parameters The parameters for the constructor. Important: only the parameters that are not injected
+     * @param array $dependencyStack
      * @return mixed
      */
-    public function get(string $interface, array $parameters = []) {
+    public function get(string $interface, array $parameters = [], array $dependencyStack = []) {
         if (array_key_exists($interface, $this->instances)) {
             return $this->instances[$interface];
         }
-        $result = $this->create($this->getClass($interface), $parameters);
+        $result = $this->create($this->getClass($interface), $parameters, $dependencyStack);
         $this->instances[$interface] = $result;
         return $result;
     }
@@ -177,15 +178,20 @@ abstract class App {
      *
      * @param string $class The name of the class
      * @param array $parameters Parameters for the constructor. Important: only the parameters that are not injected
+     * @param array $dependencyStack
      * @return mixed
      */
-    public function create(string $class, array $parameters = []) {
+    public function create(string $class, array $parameters = [], array $dependencyStack = []) {
+        if (in_array($class, $dependencyStack)) {
+            throw new AppException("Circular dependency: ".join(" <- ", $dependencyStack));
+        }
+        $dependencyStack[] = $class;
         try {
             $reflectionClass = new \ReflectionClass($class);
         } catch (\ReflectionException $e) {
             throw new AppException("Couldn't create reflection class for $class");
         }
-        $dependencies = $this->createDependencies($reflectionClass);
+        $dependencies = $this->createDependencies($class, $reflectionClass, $dependencyStack);
         $result = $reflectionClass->newInstanceArgs(array_merge($dependencies, $parameters));
         if (method_exists($result, 'postConstruct')) {
             $result->postConstruct();
@@ -195,10 +201,12 @@ abstract class App {
 
     /**
      * Creates the singleton dependencies for a given class and returns with it as an array
+     * @param string $class The class name
      * @param \ReflectionClass $reflectionClass
+     * @param array $dependencyStack
      * @return array The created singleton instances
      */
-    private function createDependencies(\ReflectionClass $reflectionClass) {
+    private function createDependencies(string $class, \ReflectionClass $reflectionClass, array $dependencyStack = []) {
         $result = [];
         $constructor = $reflectionClass->getConstructor();
         if (!$constructor) {
@@ -211,7 +219,9 @@ abstract class App {
             }
             $interface = $type->getName();
             if ($this->hasInterface($interface)) {
-                $result[] = $this->get($interface);
+                $result[] = $this->get($interface, [], $dependencyStack);
+            } else {
+                throw new AppException("Non existing dependency `$interface` for `$class`");
             }
         }
         return $result;

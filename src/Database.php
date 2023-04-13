@@ -41,11 +41,18 @@ abstract class Database {
             $this->connect();
             $stmt = $this->pdo->prepare($query);
             $stmt->execute($params);
+            if ($this->logger->level() == Logger::DEBUG) { // because of the json_encode
+                $this->logger->debug("SQL query:$query\n".$this->getParametersString($params));
+            }
         } catch (\PDOException $e) {
-            $this->logger->error("SQL error:\n$query\nParameters: ".($params ? json_encode($params) : ''));
+            $this->logger->error("SQL error for query: $query\n".$this->getParametersString($params));
             throw $e;
         }
         return $stmt;
+    }
+
+    protected function getParametersString($params): string {
+        return "Parameters: ".($params ? json_encode($params) : '');
     }
 
     public function configValue(string $name) {
