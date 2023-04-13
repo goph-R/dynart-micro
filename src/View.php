@@ -296,21 +296,12 @@ class View {
             $themePath = $this->theme.'/'.$path;
         }
         if ($this->theme) {
-            $themeFullPath = $this->getFullPath($themePath);
+            $themeFullPath = $this->config->getFullPath($themePath);
             if (file_exists($themeFullPath.'.phtml')) {
                 return $themeFullPath;
             }
         }
-        return $this->getFullPath($folder.'/'.$name);
-    }
-
-    /**
-     * Replaces the ~ symbol with the `app.root_path` config value
-     * @param string $path
-     * @return string
-     */
-    protected function getFullPath(string $path): string {
-        return str_replace('~', $this->config->get(App::CONFIG_ROOT_PATH), $path);
+        return $this->config->getFullPath($folder.'/'.$name);
     }
 
     /**
@@ -320,8 +311,8 @@ class View {
         if ($this->functionsIncluded) {
             return;
         }
-        $themeFunctionsPath = $this->getFullPath($this->theme.'/functions.php');
-        $appFunctionsPath = $this->getFullPath($this->config->get(self::CONFIG_DEFAULT_FOLDER).'/'.'functions.php');
+        $themeFunctionsPath = $this->config->getFullPath($this->theme.'/functions.php');
+        $appFunctionsPath = $this->config->getFullPath($this->config->get(self::CONFIG_DEFAULT_FOLDER).'/'.'functions.php');
         $defaultFunctionsPath = dirname(__FILE__) . '/../views/functions.php';
         if ($this->theme && file_exists($themeFunctionsPath)) {
             require_once $themeFunctionsPath;

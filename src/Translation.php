@@ -64,17 +64,16 @@ class Translation {
     protected $locale = 'en';
 
     /**
-     * The `app.root_path` configuration value
-     * @var string
+     * @var Config
      */
-    protected $rootPath;
+    protected $config;
 
     /**
-     * Sets the `$rootPath`, the `$locale`, the `$allLocales` and `$hasMultiLocales` members via the `$config`
+     * Sets the `$locale`, the `$allLocales` and `$hasMultiLocales` members via the `$config`
      * @param Config $config
      */
     public function __construct(Config $config) {
-        $this->rootPath = $config->get(App::CONFIG_ROOT_PATH);
+        $this->config = $config;
         $this->locale = $config->get(self::CONFIG_DEFAULT, self::DEFAULT_LOCALE);
         $this->allLocales = $config->getCommaSeparatedValues(self::CONFIG_ALL);
         $this->hasMultiLocales = count($this->allLocales) > 1;
@@ -189,7 +188,7 @@ class Translation {
             return $result;
         }
         if (!isset($this->data[$namespace])) {
-            $path = str_replace('~', $this->rootPath, $this->folders[$namespace].'/'.$this->locale.'.ini');
+            $path = $this->config->getFullPath($this->folders[$namespace].'/'.$this->locale.'.ini');
             $iniData = file_exists($path) ? parse_ini_file($path) : [];
             $this->data[$namespace] = $iniData;
         }

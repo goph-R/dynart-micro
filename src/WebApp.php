@@ -110,51 +110,6 @@ class WebApp extends App {
         $this->finish($pageContent);
     }
 
-    protected function handleException(\Exception $e) {
-        // Check first for the needed classes
-        if (!$this->config) {
-            throw new AppException("Couldn't instantiate Config::class");
-        }
-        if (!$this->logger) {
-            throw new AppException("Couldn't instantiate Logger::class");
-        }
-
-        // Extract the exception info
-        $type = get_class($e);
-        $file = $e->getFile();
-        $line = $e->getLine();
-        $message = $e->getMessage();
-        $trace = $e->getTraceAsString();
-        $text = "`$type` in $file on line $line with message: $message\n$trace";
-
-        // Log the error
-        $this->logger->error($text);
-
-        // Set the output for web or cli
-        if (http_response_code() !== false) {
-            $content = "<h2>$type</h2>\n<p>In <b>$file</b> on <b>line $line</b> with message: $message</p>\n";
-            $content .= "<h3>Stacktrace:</h3>\n<p>".str_replace("\n", "<br>\n", $trace)."</p>";
-        } else {
-            $content = $text;
-        }
-
-        // Send the error: with content if this is not a production (default) environment
-        $env = $this->config->get(self::CONFIG_ENVIRONMENT, self::DEFAULT_ENVIRONMENT);
-        $this->sendError(500, $env != self::DEFAULT_ENVIRONMENT ? $content : '');
-
-    }
-
-    protected function loadErrorPageContent(int $code) {
-        $dir = $this->config->get(self::CONFIG_ERROR_PAGES_FOLDER);
-        if ($dir) {
-            $path = str_replace('~', $this->config->get(App::CONFIG_ROOT_PATH), $dir).'/'.$code.'.html';
-            if (file_exists($path)) {
-                return file_get_contents($path);
-            }
-        }
-        return self::ERROR_CONTENT_PLACEHOLDER;
-    }
-
     protected function loadConfigs() {
         foreach ($this->configPaths as $path) {
             $this->config->load($path);
@@ -166,4 +121,39 @@ class WebApp extends App {
             $this->get($m)->run();
         }
     }
+
+    protected function loadErrorPageContent(int $code) {
+        $dir = $this->config->get(self::CONFIG_ERROR_PAGES_FOLDER);
+        if ($dir) {
+            $path = $this->config->getFullPath($dir.'/'.$code.'.html');
+            if (file_exists($path)) {
+                return file_get_contents($path);
+            }
+        }
+        return self::ERROR_CONTENT_PLACEHOLDER;
+    }
+
+    protected function handleException(\Exception $e) {
+        $type = get_class($e);
+        $file = $e->getFile();
+        $line = $e->getLine();
+        $message = $e->getMessage();
+        $trace = $e->getTraceAsString();
+        $text = "`$type` in $file on line $line with message: $message\n$trace";
+        $this->logger->error($text);
+        if (http_response_code() === false) { // cli
+            $this->finish();
+        }
+        if (!$this->config) {
+            throw new AppException("Couldn't instantiate Config::class");
+        }
+        if (!$this->logger) {
+            throw new AppException("Couldn't instantiate Logger::class");
+        }
+        $content = "<h2>$type</h2>\n<p>In <b>$file</b> on <b>line $line</b> with message: $message</p>\n";
+        $content .= "<h3>Stacktrace:</h3>\n<p>".str_replace("\n", "<br>\n", $trace)."</p>";
+        $env = $this->config->get(self::CONFIG_ENVIRONMENT, self::DEFAULT_ENVIRONMENT);
+        $this->sendError(500, $env != self::DEFAULT_ENVIRONMENT ? $content : '');
+    }
+
 }
