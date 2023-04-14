@@ -81,10 +81,10 @@ class WebApp extends App {
         }
     }
 
-    public function redirect($url, $params = []) {
-        $location = $this->router->url($url, $params);
+    public function redirect($location, $params = []) {
+        $url = substr($location, 0, 4) == 'http' ? $location : $this->router->url($location, $params);
         $this->response->clearHeaders();
-        $this->response->setHeader(self::HEADER_LOCATION, $location);
+        $this->response->setHeader(self::HEADER_LOCATION, $url);
         $this->response->send();
         $this->finish();
     }
@@ -133,6 +133,10 @@ class WebApp extends App {
         return self::ERROR_CONTENT_PLACEHOLDER;
     }
 
+    protected function isCli() {
+        return http_response_code() === false;
+    }
+
     protected function handleException(\Exception $e) {
         $type = get_class($e);
         $file = $e->getFile();
@@ -140,15 +144,15 @@ class WebApp extends App {
         $message = $e->getMessage();
         $trace = $e->getTraceAsString();
         $text = "`$type` in $file on line $line with message: $message\n$trace";
-        $this->logger->error($text);
-        if (http_response_code() === false) { // cli
-            $this->finish();
-        }
         if (!$this->config) {
             throw new AppException("Couldn't instantiate Config::class");
         }
         if (!$this->logger) {
             throw new AppException("Couldn't instantiate Logger::class");
+        }
+        $this->logger->error($text);
+        if ($this->isCli()) {
+            $this->finish();
         }
         $content = "<h2>$type</h2>\n<p>In <b>$file</b> on <b>line $line</b> with message: $message</p>\n";
         $content .= "<h3>Stacktrace:</h3>\n<p>".str_replace("\n", "<br>\n", $trace)."</p>";
