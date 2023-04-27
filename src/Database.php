@@ -71,18 +71,28 @@ abstract class Database
         return $this->config->get("database.{$this->configName}.$name", "db_{$name}_missing");
     }
 
-    public function fetch($query, $params = []) {
+    public function fetch($query, $params = [], string $className = '') {
         $stmt = $this->query($query, $params);
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $this->setFetchMode($stmt, $className);
+        $result = $stmt->fetch();
         $stmt->closeCursor();
         return $result;
     }
 
-    public function fetchAll(string $query, array $params = []) {
+    public function fetchAll(string $query, array $params = [], string $className = '') {
         $stmt = $this->query($query, $params);
-        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $this->setFetchMode($stmt, $className);
+        $result = $stmt->fetchAll();
         $stmt->closeCursor();
         return $result;
+    }
+
+    protected function setFetchMode(\PDOStatement $stmt, string $className) {
+        if ($className) {
+            $stmt->setFetchMode(\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE, $className);
+        } else {
+            $stmt->setFetchMode(\PDO::FETCH_ASSOC);
+        }
     }
 
     public function fetchColumn(string $query, array $params = []) {

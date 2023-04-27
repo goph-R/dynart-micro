@@ -14,10 +14,14 @@ use Dynart\Micro\App;
 class AnnotationProcessor implements Middleware {
 
     /** @var string[] */
-    protected $classes = [];
+    protected $annotationClasses = [];
 
-    /** @var Annotation[] */
-    protected $annotations = [];
+    /** @var Annotation[][] */
+    protected $annotations = [
+        Annotation::TYPE_CLASS    => [],
+        Annotation::TYPE_PROPERTY => [],
+        Annotation::TYPE_METHOD   => []
+    ];
 
     /** @var string[] */
     protected $namespaces = [];
@@ -29,13 +33,13 @@ class AnnotationProcessor implements Middleware {
      * it will throw an AppException.
      *
      * @throws AppException if the given class does not implement the Annotation
-     * @param string $class The class name
+     * @param string $className The class name
      */
-    public function add(string $class) {
-        if (!is_subclass_of($class, Annotation::class)) {
-            throw new AppException("$class doesn't implement the Annotation interface");
+    public function add(string $className) {
+        if (!is_subclass_of($className, Annotation::class)) {
+            throw new AppException("$className doesn't implement the Annotation interface");
         }
-        $this->classes[] = $class;
+        $this->annotationClasses[] = $className;
     }
 
     /**
@@ -50,47 +54,50 @@ class AnnotationProcessor implements Middleware {
     }
 
     /**
-     * Creates the annotations then processes all interfaces or those that are in the given namespaces.
+     * Creates the annotations then processes all interfaces in the App or those that are in the given namespaces.
      */
     public function run() {
         $app = App::instance();
-        $this->createAnnotations($app);
-        $this->processInterfaces($app);
+        $this->createAnnotationsPerType($app);
+        $this->processAll($app);
     }
 
     /**
-     * Creates the annotation instances
+     * Creates the annotation instances and puts them in the right `$annotations` array
      * @param App $app
      */
-    protected function createAnnotations(App $app): void {
-        foreach ($this->classes as $interface) {
-            $this->annotations[] = $app->get($interface);
+    protected function createAnnotationsPerType(App $app): void {
+        foreach ($this->annotationClasses as $className) {
+            $annotation = $app->get($className);
+            foreach ($annotation->types() as $type) {
+                $this->annotations[$type][] = $annotation;
+            }
         }
     }
 
     /**
-     * Processes all interfaces or those that are in the given namespaces
+     * Processes all interfaces in the App or those that are in the given namespaces
      * @param App $app
      */
-    protected function processInterfaces(App $app): void {
-        foreach ($app->interfaces() as $interface) {
-            if ($this->isProcessAllowed($interface)) {
-                $this->processInterface($interface);
+    protected function processAll(App $app): void {
+        foreach ($app->interfaces() as $className) {
+            if ($this->isProcessAllowed($className)) {
+                $this->process($className);
             }
         }
     }
 
     /**
      * If no namespace added returns true, otherwise checks the namespace and returns true if the interface is in it.
-     * @param string $interface The name of the interface
+     * @param string $className The name of the class
      * @return bool Should we process this interface?
      */
-    protected function isProcessAllowed(string $interface): bool {
+    protected function isProcessAllowed(string $className): bool {
         if (empty($this->namespaces)) {
             return true;
         }
         foreach ($this->namespaces as $namespace) {
-            if (substr($interface, 0, strlen($namespace)) == $namespace) {
+            if (substr($className, 0, strlen($namespace)) == $namespace) {
                 return true;
             }
         }
@@ -98,43 +105,71 @@ class AnnotationProcessor implements Middleware {
     }
 
     /**
-     * Processes one interface with the given name
-     * @param string $interface The name of the interface
+     * Processes one class with the given name
+     * @param string $className The name of the class
      */
-    protected function processInterface(string $interface): void {
+    protected function process(string $className): void {
         try {
-            $class = new \ReflectionClass($interface);
+            $refClass = new \ReflectionClass($className);
         } catch (\ReflectionException $ignore) {
-            throw new AppException("Can't create reflection for: $interface");
+            throw new AppException("Can't create reflection for: $className");
         }
-        $this->processSubject(Annotation::TYPE_CLASS, $interface, $class);
-        foreach ($class->getProperties() as $property) {
-            $this->processSubject(Annotation::TYPE_PROPERTY, $interface, $property);
-        }
-        foreach ($class->getMethods() as $method) {
-            $this->processSubject(Annotation::TYPE_METHOD, $interface, $method);
+        $this->processClass($refClass);
+        $this->processProperties($refClass);
+        $this->processMethods($refClass);
+    }
+
+    /**
+     * Processes all class type annotations for the class
+     * @param $refClass
+     */
+    protected function processClass(\ReflectionClass $refClass): void {
+        foreach ($this->annotations[Annotation::TYPE_CLASS] as $annotation) {
+            $this->processSubject($annotation, Annotation::TYPE_CLASS, $refClass->getName(), $refClass);
         }
     }
 
     /**
+     * Processes all property type annotations for all the properties of a class
+     * @param $refClass
+     */
+    protected function processProperties(\ReflectionClass $refClass): void {
+        $refProperties = $refClass->getProperties();
+        foreach ($this->annotations[Annotation::TYPE_PROPERTY] as $annotation) {
+            foreach ($refProperties as $refProperty) {
+                $this->processSubject($annotation, Annotation::TYPE_PROPERTY, $refClass->getName(), $refProperty);
+            }
+        }
+    }
+
+    /**
+     * Processes all method type annotations for all the methods of a class
+     * @param $refClass
+     */
+    protected function processMethods(\ReflectionClass $refClass): void {
+        $refMethods = $refClass->getMethods();
+        foreach ($this->annotations[Annotation::TYPE_METHOD] as $annotation) {
+            foreach ($refMethods as $refMethod) {
+                $this->processSubject($annotation, Annotation::TYPE_METHOD, $refClass->getName(), $refMethod);
+            }
+        }
+    }
+
+    /**
+     * @param Annotation $annotation
      * @param string $type
-     * @param string $interface
+     * @param string $className
      * @param \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject
      */
-    protected function processSubject(string $type, string $interface, $subject) {
+    protected function processSubject(Annotation $annotation, string $type, string $className, $subject) {
         $comment = $subject->getDocComment();
-        foreach ($this->annotations as $annotation) {
-            if (!in_array($type, $annotation->types())) {
-                continue;
-            }
-            $has = strpos($comment, '* @'.$annotation->name()) !== false;
-            if ($has) {
-                $matches = [];
-                $commentWithoutNewLines = str_replace(array("\r", "\n"), ' ', $comment);
-                $fullRegex = '/\*\s@'.$annotation->name().'\s'.$annotation->regex().'\s\*/U';
-                preg_match($fullRegex, $commentWithoutNewLines, $matches);
-                $annotation->process($type, $interface, $subject, $commentWithoutNewLines, $matches);
-            }
+        $has = strpos($comment, '* @'.$annotation->name()) !== false;
+        if ($has) {
+            $matches = [];
+            $commentWithoutNewLines = str_replace(array("\r", "\n"), ' ', $comment);
+            $fullRegex = '/\*\s@'.$annotation->name().'\s'.$annotation->regex().'\s\*/U';
+            preg_match($fullRegex, $commentWithoutNewLines, $matches);
+            $annotation->process($type, $className, $subject, $commentWithoutNewLines, $matches);
         }
     }
 }

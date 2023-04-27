@@ -53,10 +53,10 @@ interface Annotation {
      * matches from the regular expression
      *
      * @param string $type The type of the annotation (can be: class, property, method)
-     * @param string $interface The name of the interface
+     * @param string $className The name of the interface
      * @param mixed $subject The reflected class/property/method
      * @param string $comment The full comment
      * @param array $matches The matches from the regex
      */
-    public function process(string $type, string $interface, $subject, string $comment, array $matches): void;
+    public function process(string $type, string $className, $subject, string $comment, array $matches): void;
 }
