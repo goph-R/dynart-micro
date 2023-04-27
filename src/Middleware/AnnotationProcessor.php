@@ -8,7 +8,7 @@ use Dynart\Micro\AppException;
 use Dynart\Micro\App;
 
 /**
- * Processes the annotations that are in the PHP document comments
+ * Processes the annotations that are in the PHPDoc comments
  * @package Dynart\Micro
  */
 class AnnotationProcessor implements Middleware {
@@ -63,7 +63,7 @@ class AnnotationProcessor implements Middleware {
     }
 
     /**
-     * Creates the annotation instances and puts them in the right `$annotations` array
+     * Creates the annotation instances and puts them into the right `$annotations` array
      * @param App $app
      */
     protected function createAnnotationsPerType(App $app): void {
@@ -76,7 +76,7 @@ class AnnotationProcessor implements Middleware {
     }
 
     /**
-     * Processes all interfaces in the App or those that are in the given namespaces
+     * Processes all interfaces in the App or those are in the given namespaces
      * @param App $app
      */
     protected function processAll(App $app): void {
@@ -90,7 +90,7 @@ class AnnotationProcessor implements Middleware {
     /**
      * If no namespace added returns true, otherwise checks the namespace and returns true if the interface is in it.
      * @param string $className The name of the class
-     * @return bool Should we process this interface?
+     * @return bool Should we process this class?
      */
     protected function isProcessAllowed(string $className): bool {
         if (empty($this->namespaces)) {
@@ -156,10 +156,16 @@ class AnnotationProcessor implements Middleware {
     }
 
     /**
-     * @param Annotation $annotation
-     * @param string $type
-     * @param string $className
-     * @param \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject
+     * Processes a class, property or a method annotation
+     *
+     * Gets the PHPDoc comment from the subject, search for the annotation name in it.
+     * If the annotation name present does the regular expression search and calls the `Annotation::process()`
+     * with the results.
+     *
+     * @param Annotation $annotation The annotation
+     * @param string $type The type of the annotation
+     * @param string $className The class name
+     * @param \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject The reflection class, property or method
      */
     protected function processSubject(Annotation $annotation, string $type, string $className, $subject) {
         $comment = $subject->getDocComment();
