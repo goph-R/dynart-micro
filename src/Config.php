@@ -2,6 +2,13 @@
 
 namespace Dynart\Micro;
 
+/**
+ * Config handler
+ *
+ * Loads INI files, caches the retrieved values
+ *
+ * @package Dynart\Micro
+ */
 class Config {
 
     private $config = [];
@@ -9,6 +16,14 @@ class Config {
 
     public function __construct() {}
 
+    /**
+     * Loads an INI file and merges with current config
+     *
+     * It does NOT process sections! The "true", "false", "no", "yes", "on", "off" values
+     * will be replaced with true and false values.
+     *
+     * @param string $path The path of the INI file
+     */
     public function load(string $path) {
         $this->config = array_merge($this->config, parse_ini_file($path, false, INI_SCANNER_TYPED));
     }
@@ -18,58 +33,91 @@ class Config {
             return $this->cached[$name];
         }
         if (getenv($name) !== false) {
-            $value = getenv($name);
-        } else {
-            $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
-            if ($value !== null) {
-                $matches = [];
-                preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches);
-                if ($matches) {
-                    $vars = array_unique($matches[1]);
-                    foreach ($vars as $var) {
-                        $value = str_replace('{{' . $var . '}}', getenv($var), $value);
-                    }
-                }
-            }
+            return $this->cacheAndReturn($name, getenv($name), $useCache);
         }
-        if ($useCache) {
-            $this->cached[$name] = $value;
-        }
-        return $value;
+        $value = array_key_exists($name, $this->config) ? $this->config[$name] : $default;
+        return $this->cacheAndReturn($name, $this->replaceEnvValue($value), $useCache);
     }
 
-    public function getCommaSeparatedValues($name) {
+    /**
+     * Returns with an array from a comma separated string config value
+     *
+     * For example: "1, 2, 3" will result in ['1', '2', '3']
+     *
+     * @param string $name The config name
+     * @param bool $useCache Use the cache for retrieving the value?
+     * @return array The result in array
+     */
+    public function getCommaSeparatedValues(string $name, bool $useCache = true): array {
         $values = explode(',', $this->get($name));
-        return array_map(function ($e) { return trim($e); }, $values);
+        $result = array_map([$this, 'getArrayItemValue'], $values);
+        return $this->cacheAndReturn($name, $result, $useCache);
     }
 
-    public function getArray($prefix, $default = []) {
+    /**
+     * Returns with an array from the config
+     *
+     * For example: with the following config:
+     *
+     * <pre>
+     * persons.0.name = "name1"
+     * persons.0.age = "32"
+     * persons.1.name = "name2"
+     * persons.1.age = "42"
+     * </pre>
+     *
+     * the result will be for `$config->getArray('persons')`:
+     *
+     * <pre>
+     * [
+     *   "0" => [
+     *      "name" => "name1",
+     *      "age" => "32"
+     *   ],
+     *   "1" => [
+     *      "name" => "name2",
+     *      "age" => "42"
+     *   ]
+     * ]
+     * </pre>
+     *
+     * @param $prefix
+     * @param array $default
+     * @param bool $useCache
+     * @return array
+     */
+    public function getArray(string $prefix, array $default = [], bool $useCache = true): array {
         global $_ENV;
-        if (array_key_exists($prefix, $this->cached)) {
+        if ($useCache && array_key_exists($prefix, $this->cached)) {
             return $this->cached[$prefix];
         }
         $result = $default;
         $len = strlen($prefix);
         $keys = array_merge(array_keys($this->config), array_keys($_ENV));
         foreach ($keys as $key) {
-            if (substr($key, 0, $len) == $prefix) {
-                $configKey = substr($key, $len + 1, strlen($key));
-                $parts = explode('.', $configKey);
-                $current = &$result;
-                foreach ($parts as $part) {
-                    if (!array_key_exists($part, $current)) {
-                        $current[$part] = [];
-                    }
-                    $current = &$current[$part];
-                }
-                $current = $this->get($key, null, false);
+            if (substr($key, 0, $len) != $prefix) {
+                continue;
             }
+            $configKey = substr($key, $len + 1, strlen($key));
+            $parts = explode('.', $configKey);
+            $current = &$result;
+            foreach ($parts as $part) {
+                if (!array_key_exists($part, $current)) {
+                    $current[$part] = [];
+                }
+                $current = &$current[$part];
+            }
+            $current = $this->get($key, null, false);
         }
-        $this->cached[$prefix] = $result;
-        return $result;
+        return $this->cacheAndReturn($prefix, $result, $useCache);
     }
 
-    public function isCached(string $name) {
+    /**
+     * Returns true if the config value is cached
+     * @param string $name Name of the config
+     * @return bool Is the config value cached?
+     */
+    public function isCached(string $name): bool {
         return array_key_exists($name, $this->cached);
     }
 
@@ -80,6 +128,52 @@ class Config {
      */
     public function getFullPath(string $path): string {
         return str_replace('~', $this->get(App::CONFIG_ROOT_PATH), $path);
+    }
+
+    /**
+     * Trims and replaces variables to environment variable values in a string
+     * @param string $value The value for trim and replace
+     * @return string The trimmed and replaced value
+     */
+    protected function getArrayItemValue(string $value) {
+        $result = trim($value);
+        $this->replaceEnvValue($result);
+        return $result;
+    }
+
+    /**
+     * Caches a value if the `$useCache` is true and returns with it
+     * @param string|null $name The config name
+     * @param string|array|null $value The value
+     * @param bool $useCache Use the cache?
+     * @return mixed
+     */
+    protected function cacheAndReturn($name, $value, $useCache = true) {
+        if ($useCache) {
+            $this->cached[$name] = $value;
+        }
+        return $value;
+    }
+
+    /**
+     * Replaces the {{name}} formatted variables in a string with environment variable values
+     * @param string|null $value The value
+     * @return mixed|null The replaced string
+     */
+    protected function replaceEnvValue($value) {
+        if (!$value) {
+            return $value;
+        }
+        $matches = [];
+        preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches);
+        if (!$matches) {
+            return $value;
+        }
+        $vars = array_unique($matches[1]);
+        foreach ($vars as $var) {
+            $value = str_replace('{{' . $var . '}}', getenv($var), $value);
+        }
+        return $value;
     }
 
 }

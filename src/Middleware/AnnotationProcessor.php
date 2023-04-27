@@ -103,32 +103,38 @@ class AnnotationProcessor implements Middleware {
      */
     protected function processInterface(string $interface): void {
         try {
-            $reflectionClass = new \ReflectionClass($interface);
+            $class = new \ReflectionClass($interface);
         } catch (\ReflectionException $ignore) {
             throw new AppException("Can't create reflection for: $interface");
         }
-        foreach ($reflectionClass->getMethods() as $method) {
-            $this->processMethod($interface, $method);
+        $this->processSubject(Annotation::TYPE_CLASS, $interface, $class);
+        foreach ($class->getProperties() as $property) {
+            $this->processSubject(Annotation::TYPE_PROPERTY, $interface, $property);
+        }
+        foreach ($class->getMethods() as $method) {
+            $this->processSubject(Annotation::TYPE_METHOD, $interface, $method);
         }
     }
 
     /**
-     * Processes one method of an interface
-     * @param string $interface The name of the interface
-     * @param \ReflectionMethod $method The method of the interface
+     * @param string $type
+     * @param string $interface
+     * @param \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject
      */
-    protected function processMethod(string $interface, \ReflectionMethod $method) {
-        $comment = $method->getDocComment();
+    protected function processSubject(string $type, string $interface, $subject) {
+        $comment = $subject->getDocComment();
         foreach ($this->annotations as $annotation) {
+            if (!in_array($type, $annotation->types())) {
+                continue;
+            }
             $has = strpos($comment, '* @'.$annotation->name()) !== false;
             if ($has) {
                 $matches = [];
                 $commentWithoutNewLines = str_replace(array("\r", "\n"), ' ', $comment);
                 $fullRegex = '/\*\s@'.$annotation->name().'\s'.$annotation->regex().'\s\*/U';
                 preg_match($fullRegex, $commentWithoutNewLines, $matches);
-                $annotation->process($interface, $method, $commentWithoutNewLines, $matches);
+                $annotation->process($type, $interface, $subject, $commentWithoutNewLines, $matches);
             }
         }
     }
-
 }

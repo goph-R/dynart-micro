@@ -21,6 +21,10 @@ class RouteAnnotation implements Annotation {
         $this->router = $router;
     }
 
+    public function types(): array {
+        return [Annotation::TYPE_METHOD];
+    }
+
     public function name(): string {
         return 'route';
     }
@@ -29,10 +33,10 @@ class RouteAnnotation implements Annotation {
         return '(GET|POST|OPTIONS|PUT|DELETE|PATCH|BOTH)\s(.*)';
     }
 
-    public function process(string $interface, \ReflectionMethod $method, string $comment, array $matches): void {
+    public function process(string $type, string $interface, $subject, string $comment, array $matches): void {
         if ($matches) {
             $route = str_replace(' ', '', $matches[2]); // remove spaces
-            $this->router->add($route, [$interface, $method->getName()], $matches[1]);
+            $this->router->add($route, [$interface, $subject->getName()], $matches[1]);
         } else {
             throw new AppException("Can't find valid route in: $comment\nA valid route example: @route GET /api/something");
         }

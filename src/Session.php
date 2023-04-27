@@ -9,10 +9,12 @@ namespace Dynart\Micro;
 class Session {
 
     /**
-     * Starts the session
+     * Starts the session (only once)
      */
     public function __construct() {
-        session_start();
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
     }
 
     /**

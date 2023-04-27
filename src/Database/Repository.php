@@ -34,7 +34,7 @@ abstract class Repository {
         $fields = ['c' => ['count(1)']];
         $sql = $this->getSelect($fields, $params);
         $sql .= $this->getWhere($params);
-        return $this->db->fetchColumn($sql, $this->sqlParams);
+        return $this->db->fetchOne($sql, $this->sqlParams);
     }
 
     public function deleteById(int $id) {

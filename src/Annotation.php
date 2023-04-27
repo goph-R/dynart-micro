@@ -7,6 +7,20 @@ namespace Dynart\Micro;
  * @package Dynart\Micro
  */
 interface Annotation {
+
+    const TYPE_CLASS = 'class';
+    const TYPE_PROPERTY = 'property';
+    const TYPE_METHOD = 'method';
+
+    /**
+     * The types of the annotation
+     *
+     * Can be: class, property, method
+     *
+     * @return array
+     */
+    public function types(): array;
+
     /**
      * The name of the annotation
      *
@@ -38,10 +52,11 @@ interface Annotation {
      * from the original method, the `$comment` is the full comment and the `$matches` contains the
      * matches from the regular expression
      *
+     * @param string $type The type of the annotation (can be: class, property, method)
      * @param string $interface The name of the interface
-     * @param \ReflectionMethod $method The reflected method of the interface
+     * @param mixed $subject The reflected class/property/method
      * @param string $comment The full comment
      * @param array $matches The matches from the regex
      */
-    public function process(string $interface, \ReflectionMethod $method, string $comment, array $matches): void;
+    public function process(string $type, string $interface, $subject, string $comment, array $matches): void;
 }

@@ -6,7 +6,7 @@ use Dynart\Micro\Database;
 
 class MariaDatabase extends Database {
 
-    protected function connect() {
+    protected function connect(): void {
         if ($this->connected()) {
             return;
         }
@@ -22,8 +22,9 @@ class MariaDatabase extends Database {
         $this->query("set names 'utf8'");
     }
 
-    public function escapeName(string $name) {
+    public function escapeName(string $name): string {
         $parts = explode('.', $name);
         return '`'.join('`.`', $parts).'`';
     }
+
 }
