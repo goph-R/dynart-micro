@@ -2,9 +2,10 @@
 
 namespace Dynart\Micro;
 
+use Dynart\Micro\Database\PdoBuilder;
+
 abstract class Database
 {
-
     protected $configName = 'default';
     protected $connected = false;
 
@@ -17,11 +18,8 @@ abstract class Database
     /** @var Logger */
     protected $logger;
 
-    /** @var Database\PdoBuilder */
+    /** @var PdoBuilder */
     protected $pdoBuilder;
-
-    protected $varNames = [];
-    protected $varValues = [];
 
     abstract protected function connect(): void;
     abstract public function escapeName(string $name): string;
@@ -36,11 +34,6 @@ abstract class Database
         return $this->connected;
     }
 
-    public function addConfigVar(string $name) {
-        $this->varNames[$name] = '/*'.$name.'*/';
-        $this->varValues[$name] = $this->config->get('database.'.$this->configName.'.'.$name);
-    }
-
     protected function setConnected(bool $value): void {
         $this->connected = $value;
     }
@@ -48,7 +41,8 @@ abstract class Database
     public function query(string $query, array $params = [], bool $closeCursor = false) {
         try {
             $this->connect();
-            $stmt = $this->pdo->prepare($this->replaceConfigVars($query));
+            list($query, $params) = $this->replaceNamedPlaceholders($query, $params);
+            $stmt = $this->pdo->prepare($query);
             $stmt->execute($params);
             if ($this->logger->level() == Logger::DEBUG) { // because of the json_encode
                 $this->logger->debug("Query: $query" . $this->getParametersString($params));
@@ -61,6 +55,21 @@ abstract class Database
             $stmt->closeCursor();
         }
         return $stmt;
+    }
+
+    /**
+     * @param string $query
+     * @param array $params
+     * @return array
+     */
+    protected function replaceNamedPlaceholders(string $query, array $params): array {
+        foreach ($params as $n => $v) {
+            if ($n[0] == '!') {
+                $query = preg_replace('/(?<!["\'])\\'.$n.'\b/', $v, $query);
+                unset($params[$n]);
+            }
+        }
+        return array($query, $params);
     }
 
     protected function getParametersString($params): string {
@@ -171,8 +180,14 @@ abstract class Database
         return $this->pdo->rollBack();
     }
 
-    public function replaceConfigVars(string $sql) {
-        return str_replace($this->varNames, $this->varValues, $sql);
+    public function runInTransaction($callable) {
+        try {
+            $this->beginTransaction();
+            call_user_func($callable);
+            $this->commit();
+        } catch (\RuntimeException $e) {
+            $this->rollBack();
+            throw $e;
+        }
     }
-
 }

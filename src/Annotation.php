@@ -8,9 +8,9 @@ namespace Dynart\Micro;
  */
 interface Annotation {
 
-    const TYPE_CLASS = 'class';
+    const TYPE_CLASS    = 'class';
     const TYPE_PROPERTY = 'property';
-    const TYPE_METHOD = 'method';
+    const TYPE_METHOD   = 'method';
 
     /**
      * The types of the annotation
@@ -24,22 +24,23 @@ interface Annotation {
     /**
      * The name of the annotation
      *
-     * For example: 'route', then the AnnotationProcessor will search for '@route' in the comments
+     * For example, if the name is 'route', then
+     * the AnnotationProcessor will search for '* @route ' in the comments first.
      *
      * @return string
      */
     public function name(): string;
 
     /**
-     * The regular expression for processing the annotation
+     * The regular expression for processing the annotation if the name was found
      *
      * It will be used like this:
+     *
+     * Asterisk Space @`name` Space `regex` Space Asterisk in non greedy mode
      *
      * <pre>
      * /\&ast;\s\@{$this->name()}\s{$this->regex()}\s\&ast;/U
      * </pre>
-     *
-     * So: Space Asterisk Space @{NAME} Space {REGEX} Space Asterisk in non greedy mode
      *
      * @return string
      */
@@ -48,14 +49,10 @@ interface Annotation {
     /**
      * Processes the annotation
      *
-     * The `$interface` will be the name of the interface (Something::class), the `$method` is the ReflectionMethod
-     * from the original method, the `$comment` is the full comment and the `$matches` contains the
-     * matches from the regular expression
-     *
      * @param string $type The type of the annotation (can be: class, property, method)
-     * @param string $className The name of the interface
-     * @param mixed $subject The reflected class/property/method
-     * @param string $comment The full comment
+     * @param string $className The name of the class
+     * @param mixed $subject The reflected class/property/method (depends on the `$type`)
+     * @param string $comment The full comment without new lines
      * @param array $matches The matches from the regex
      */
     public function process(string $type, string $className, $subject, string $comment, array $matches): void;
