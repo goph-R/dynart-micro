@@ -11,6 +11,8 @@ abstract class App {
 
     const CONFIG_BASE_URL = 'app.base_url';
     const CONFIG_ROOT_PATH = 'app.root_path';
+    const CONFIG_ENVIRONMENT = 'app.environment';
+    const DEFAULT_ENVIRONMENT = 'prod';
 
     private static $instance;
 
@@ -25,7 +27,7 @@ abstract class App {
     /**
      * Runs the application and sets the instance
      *
-     * Calls the init() and process() methods of the $app
+     * Calls the `fullInit()` and `fullProcess()` methods of the $app
      *
      * @throws AppException if the instance was set before
      * @param App $app The application for init and process
@@ -35,8 +37,8 @@ abstract class App {
             throw new AppException("App was instantiated before!");
         }
         self::$instance = $app;
-        $app->init();
-        $app->process();
+        $app->fullInit();
+        $app->fullProcess();
     }
 
     /**
@@ -46,10 +48,58 @@ abstract class App {
     protected $classes = [];
 
     /**
+     * Stores the middleware class names in a list
+     * @var Middleware[]
+     */
+    protected $middlewares = [];
+
+    /**
      * Stores the instances in [interface => instance] format
      * @var array
      */
     protected $instances = [];
+
+    /** @var Config */
+    protected $config;
+
+    /** @var Logger */
+    protected $logger;
+
+    /** @var string[] */
+    protected $configPaths;
+
+    public function __construct(array $configPaths) {
+        $this->configPaths = $configPaths;
+        $this->add(Config::class);
+        $this->add(Logger::class);
+    }
+
+    /**
+     * Creates the `Config`, loads the configs, creates the `Logger`, calls the `init()` method
+     * then runs all of the middlewares. If an exception happens, handles it with the `handleException()` method.
+     */
+    public function fullInit() {
+        try {
+            $this->config = $this->get(Config::class);
+            $this->loadConfigs();
+            $this->logger = $this->get(Logger::class);
+            $this->init();
+            $this->runMiddlewares();
+        } catch (\Exception $e) {
+            $this->handleException($e);
+        }
+    }
+
+    /**
+     * Calls the `process()` method within a try/catch, handles exception with the `handleException()` method
+     */
+    public function fullProcess() {
+        try {
+            $this->process();
+        } catch (\Exception $e) {
+            $this->handleException($e);
+        }
+    }
 
     /**
      * Abstract function for initialize the application
@@ -64,10 +114,28 @@ abstract class App {
     abstract public function process();
 
     /**
-     * Finishes the application
-     * @param string $content Content for the output
+     * Adds a middleware
+     * @param string $interface
      */
-    public function finish(string $content = '') {
+    public function addMiddleware(string $interface) {
+        $this->add($interface);
+        $this->middlewares[] = $interface;
+    }
+
+    /**
+     * Runs all of the added middlewares
+     */
+    protected function runMiddlewares() {
+        foreach ($this->middlewares as $m) {
+            $this->get($m)->run();
+        }
+    }
+
+    /**
+     * Finishes the application
+     * @param string|int $content Content for the output
+     */
+    public function finish($content = 0) {
         exit($content);
     }
 
@@ -134,6 +202,14 @@ abstract class App {
         $result = $this->create($this->getClass($interface), $parameters, $dependencyStack);
         $this->instances[$interface] = $result;
         return $result;
+    }
+
+    /**
+     * Returns with all of the interfaces in an array
+     * @return array All of the added interfaces
+     */
+    public function interfaces() {
+        return array_keys($this->classes);
     }
 
     /**
@@ -206,7 +282,7 @@ abstract class App {
      * @param array $dependencyStack
      * @return array The created singleton instances
      */
-    private function createDependencies(string $class, \ReflectionClass $reflectionClass, array $dependencyStack = []) {
+    protected function createDependencies(string $class, \ReflectionClass $reflectionClass, array $dependencyStack = []) {
         $result = [];
         $constructor = $reflectionClass->getConstructor();
         if (!$constructor) {
@@ -228,11 +304,35 @@ abstract class App {
     }
 
     /**
-     * Returns with all of the interfaces in an array
-     * @return array All of the added interfaces
+     * Loads all of the configs by the `$configPaths`
      */
-    public function interfaces() {
-        return array_keys($this->classes);
+    protected function loadConfigs() {
+        foreach ($this->configPaths as $path) {
+            $this->config->load($path);
+        }
     }
 
+    /**
+     * Handles the exception
+     *
+     * Writes out the type, the line, the exception message and the stacktrace.
+     * If it's a CLI call finishes the application.
+     *
+     * @param \Exception $e The exception
+     */
+    protected function handleException(\Exception $e) {
+        $type = get_class($e);
+        $file = $e->getFile();
+        $line = $e->getLine();
+        $message = $e->getMessage();
+        $trace = $e->getTraceAsString();
+        $text = "`$type` in $file on line $line with message: $message\n$trace";
+        if (!$this->config) {
+            throw new AppException("Couldn't instantiate Config::class");
+        }
+        if (!$this->logger) {
+            throw new AppException("Couldn't instantiate Logger::class");
+        }
+        $this->logger->error($text);
+    }
 }

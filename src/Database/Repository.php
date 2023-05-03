@@ -4,6 +4,8 @@ namespace Dynart\Micro\Database;
 
 use \Dynart\Micro\Database;
 
+// TODO: rethink
+
 abstract class Repository {
 
     /** @var Database */

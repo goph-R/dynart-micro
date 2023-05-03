@@ -9,19 +9,11 @@ namespace Dynart\Micro;
 class WebApp extends App {
 
     const CONFIG_ERROR_PAGES_FOLDER = 'app.error_pages_folder';
-    const CONFIG_ENVIRONMENT = 'app.environment';
-    const DEFAULT_ENVIRONMENT = 'prod';
     const HEADER_CONTENT_TYPE = 'Content-Type';
     const HEADER_LOCATION = 'Location';
     const CONTENT_TYPE_HTML = 'text/html; charset=UTF-8';
     const CONTENT_TYPE_JSON = 'application/json';
     const ERROR_CONTENT_PLACEHOLDER = '<!-- content -->';
-
-    /** @var Config */
-    protected $config;
-
-    /** @var Logger */
-    protected $logger;
 
     /** @var Router */
     protected $router;
@@ -29,16 +21,8 @@ class WebApp extends App {
     /** @var Response */
     protected $response;
 
-    /** @var string[] */
-    protected $configPaths;
-
-    /** @var Middleware[] */
-    protected $middlewares = [];
-
     public function __construct(array $configPaths) {
-        $this->configPaths = $configPaths;
-        $this->add(Config::class);
-        $this->add(Logger::class);
+        parent::__construct($configPaths);
         $this->add(Request::class);
         $this->add(Response::class);
         $this->add(Router::class);
@@ -46,38 +30,21 @@ class WebApp extends App {
         $this->add(View::class);
     }
 
-    public function addMiddleware(string $interface) {
-        $this->add($interface);
-        $this->middlewares[] = $interface;
-    }
-
     public function init() {
-        try {
-            $this->config = $this->get(Config::class);
-            $this->loadConfigs();
-            $this->logger = $this->get(Logger::class);
-            $this->router = $this->get(Router::class);
-            $this->response = $this->get(Response::class);
-            $this->runMiddlewares();
-        } catch (\Exception $e) {
-            $this->handleException($e);
-        }
+        $this->router = $this->get(Router::class);
+        $this->response = $this->get(Response::class);
     }
 
     public function process() {
-        try {
-            list($callable, $params) = $this->router->matchCurrentRoute();
-            if ($callable) {
-                if (is_array($callable) && is_string($callable[0])) {
-                    $callable = [$this->get($callable[0]), $callable[1]];
-                }
-                $content = call_user_func_array($callable, $params);
-                $this->sendContent($content);
-            } else {
-                $this->sendError(404);
+        list($callable, $params) = $this->router->matchCurrentRoute();
+        if ($callable) {
+            if (is_array($callable) && is_string($callable[0])) {
+                $callable = [$this->get($callable[0]), $callable[1]];
             }
-        } catch (\Exception $e) {
-            $this->handleException($e);
+            $content = call_user_func_array($callable, $params);
+            $this->sendContent($content);
+        } else {
+            $this->sendError(404);
         }
     }
 
@@ -110,18 +77,6 @@ class WebApp extends App {
         $this->finish($pageContent);
     }
 
-    protected function loadConfigs() {
-        foreach ($this->configPaths as $path) {
-            $this->config->load($path);
-        }
-    }
-
-    protected function runMiddlewares() {
-        foreach ($this->middlewares as $m) {
-            $this->get($m)->run();
-        }
-    }
-
     protected function loadErrorPageContent(int $code) {
         $dir = $this->config->get(self::CONFIG_ERROR_PAGES_FOLDER);
         if ($dir) {
@@ -133,27 +88,24 @@ class WebApp extends App {
         return self::ERROR_CONTENT_PLACEHOLDER;
     }
 
+    /**
+     * Returns true if the call happened in the command line interface
+     * @return bool
+     */
     protected function isCli() {
         return http_response_code() === false;
     }
 
     protected function handleException(\Exception $e) {
+        parent::handleException($e);
+        if ($this->isCli()) {
+            $this->finish();
+        }
         $type = get_class($e);
         $file = $e->getFile();
         $line = $e->getLine();
         $message = $e->getMessage();
         $trace = $e->getTraceAsString();
-        $text = "`$type` in $file on line $line with message: $message\n$trace";
-        if (!$this->config) {
-            throw new AppException("Couldn't instantiate Config::class");
-        }
-        if (!$this->logger) {
-            throw new AppException("Couldn't instantiate Logger::class");
-        }
-        $this->logger->error($text);
-        if ($this->isCli()) {
-            $this->finish();
-        }
         $content = "<h2>$type</h2>\n<p>In <b>$file</b> on <b>line $line</b> with message: $message</p>\n";
         $content .= "<h3>Stacktrace:</h3>\n<p>".str_replace("\n", "<br>\n", $trace)."</p>";
         $env = $this->config->get(self::CONFIG_ENVIRONMENT, self::DEFAULT_ENVIRONMENT);
