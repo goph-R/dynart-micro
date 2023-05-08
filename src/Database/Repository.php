@@ -66,13 +66,13 @@ abstract class Repository {
         $select = [];
         $this->orderByFields = [];
         foreach ($fields as $as => $name) {
-            $escapedName = is_array($name) ? $name[0] : $this->db->escapeName($name);
+            $safeName = is_array($name) ? $name[0] : $this->db->escapeName($name);
             if (is_int($as)) {
                 $this->orderByFields[] = $name;
-                $select[] = $escapedName;
+                $select[] = $safeName;
             } else {
                 $this->orderByFields[] = $as;
-                $select[] = $escapedName.' as '.$this->db->escapeName($as);
+                $select[] = $safeName.' as '.$this->db->escapeName($as);
             }
         }
         $sql = 'select '.join(', ', $select).' from '.$this->safeTableName();

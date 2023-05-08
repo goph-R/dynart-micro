@@ -11,9 +11,13 @@ class CliApp extends App {
     /** @var CliCommands */
     protected $commands;
 
+    /** @var CliOutput */
+    protected $output;
+
     public function __construct(array $configPaths) {
         parent::__construct($configPaths);
         $this->add(CliCommands::class);
+        $this->add(CliOutput::class);
     }
 
     public function init() {
@@ -42,4 +46,6 @@ class CliApp extends App {
         parent::handleException($e);
         $this->finish(1);
     }
+
+
 }
