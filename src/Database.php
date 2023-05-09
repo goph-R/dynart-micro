@@ -181,8 +181,8 @@ abstract class Database
     }
 
     public function runInTransaction($callable) {
+        $this->beginTransaction();
         try {
-            $this->beginTransaction();
             call_user_func($callable);
             $this->commit();
         } catch (\RuntimeException $e) {

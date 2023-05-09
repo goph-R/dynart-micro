@@ -46,6 +46,4 @@ class CliApp extends App {
         parent::handleException($e);
         $this->finish(1);
     }
-
-
 }
