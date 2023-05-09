@@ -183,9 +183,13 @@ abstract class Database
     public function runInTransaction($callable) {
         $this->beginTransaction();
         try {
-            call_user_func($callable);
-            $this->commit();
+            call_user_func($callable); // here the CREATE/DROP table can COMMIT implicitly
+            $this->commit(); // here it drops an exception because of that
         } catch (\RuntimeException $e) {
+            // ignore "There is no active transaction"
+            if ($e->getMessage() == "There is no active transaction") {
+                return;
+            }
             $this->rollBack();
             throw $e;
         }
