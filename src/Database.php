@@ -23,6 +23,7 @@ abstract class Database
 
     abstract protected function connect(): void;
     abstract public function escapeName(string $name): string;
+    abstract public function namedPlaceholderRegex(string $name): string;
 
     public function __construct(Config $config, Logger $logger, Database\PdoBuilder $pdoBuilder) {
         $this->config = $config;
@@ -65,7 +66,7 @@ abstract class Database
     protected function replaceNamedPlaceholders(string $query, array $params): array {
         foreach ($params as $n => $v) {
             if ($n[0] == '!') {
-                $query = preg_replace('/(?<!["\'])\\'.$n.'\b/', $v, $query);
+                $query = preg_replace($this->namedPlaceholderRegex($n), $v, $query);
                 unset($params[$n]);
             }
         }

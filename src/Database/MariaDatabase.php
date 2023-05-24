@@ -27,4 +27,8 @@ class MariaDatabase extends Database {
         return '`'.join('`.`', $parts).'`';
     }
 
+    public function namedPlaceholderRegex(string $name): string {
+        return '/(?<!["\'])\\'.$name.'/';
+    }
+
 }
