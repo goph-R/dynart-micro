@@ -25,6 +25,7 @@ class CliOutput {
 
     protected $color = null;
     protected $bgColor = null;
+    protected $useColor = true;
 
     public function setColor($color, $bgColor = null) {
         if (is_int($color)) {
@@ -39,16 +40,24 @@ class CliOutput {
         }
     }
 
+    public function setUseColor(bool $value): void {
+        $this->useColor = $value;
+    }
+
     public function write(string $text) {
-        if ($this->bgColor) {
-            echo $this->bgColor;
-        }
-        if ($this->color) {
-            echo $this->color;
-        }
-        echo $text;
-        if ($this->color || $this->bgColor) {
-            echo self::COLOR_OFF;
+        if ($this->useColor) {
+            if ($this->bgColor) {
+                echo $this->bgColor;
+            }
+            if ($this->color) {
+                echo $this->color;
+            }
+            echo $text;
+            if ($this->color || $this->bgColor) {
+                echo self::COLOR_OFF;
+            }
+        } else {
+            echo $text;
         }
     }
 
