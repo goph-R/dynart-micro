@@ -12,22 +12,26 @@ abstract class App {
     const CONFIG_BASE_URL = 'app.base_url';
     const CONFIG_ROOT_PATH = 'app.root_path';
     const CONFIG_ENVIRONMENT = 'app.environment';
-    const DEFAULT_ENVIRONMENT = 'prod';
+    const PRODUCTION_ENVIRONMENT = 'prod';
 
+    /**
+     * Holds the instance of the application
+     * @var App
+     */
     private static $instance;
 
     /**
      * Returns the instance of the application
-     * @return mixed The singleton instance of the application
+     * @return mixed The instance of the application
      */
     public static function instance() {
         return self::$instance;
     }
 
     /**
-     * Runs the application and sets the instance
+     * Sets the application instance and runs it
      *
-     * Calls the `fullInit()` and `fullProcess()` methods of the $app
+     * First it sets the instance, then calls the `fullInit()` and `fullProcess()` methods of the `$app`.
      *
      * @throws AppException if the instance was set before
      * @param App $app The application for init and process
@@ -75,6 +79,18 @@ abstract class App {
     }
 
     /**
+     * Abstract function for initialize the application
+     * @return mixed
+     */
+    abstract public function init();
+
+    /**
+     * Abstract function for processing the application
+     * @return mixed
+     */
+    abstract public function process();
+
+    /**
      * Creates the `Config`, loads the configs, creates the `Logger`, calls the `init()` method
      * then runs all of the middlewares. If an exception happens, handles it with the `handleException()` method.
      */
@@ -102,18 +118,6 @@ abstract class App {
     }
 
     /**
-     * Abstract function for initialize the application
-     * @return mixed
-     */
-    abstract public function init();
-
-    /**
-     * Abstract function for processing the application
-     * @return mixed
-     */
-    abstract public function process();
-
-    /**
      * Adds a middleware
      * @param string $interface
      */
@@ -133,7 +137,7 @@ abstract class App {
 
     /**
      * Finishes the application
-     * @param string|int $content Content for the output
+     * @param string|int $content Content for the output. If it's an int, it is the return code of the process.
      */
     public function finish($content = 0) {
         exit($content);
@@ -166,7 +170,7 @@ abstract class App {
 
     /**
      * @param string $interface
-     * @return bool Is the interface was set?
+     * @return bool Is the interface was added?
      */
     public function hasInterface(string $interface) {
         return array_key_exists($interface, $this->classes);
@@ -188,10 +192,10 @@ abstract class App {
     /**
      * Creates the singleton instance for the given interface, stores it in `$instances`, then returns with it
      *
-     * It will return instantly if the instance was stored before.
+     * It returns instantly if the instance was stored before.
      *
      * @param string $interface The interface
-     * @param array $parameters The parameters for the constructor. Important: only the parameters that are not injected
+     * @param array $parameters The parameters for the constructor. Important: only the parameters that are not injected!
      * @param array $dependencyStack
      * @return mixed
      */
@@ -253,7 +257,7 @@ abstract class App {
      * If the class has a `postConstruct()` method it will be called after creation. It can be used for lazy injection.
      *
      * @param string $class The name of the class
-     * @param array $parameters Parameters for the constructor. Important: only the parameters that are not injected
+     * @param array $parameters Parameters for the constructor. Important: only the parameters that are not injected!
      * @param array $dependencyStack
      * @return mixed
      */
@@ -315,10 +319,11 @@ abstract class App {
     /**
      * Handles the exception
      *
-     * Writes out the type, the line, the exception message and the stacktrace.
-     * If it's a CLI call finishes the application.
+     * Sends the type, the line, the exception message and the stacktrace to the standard error output.
+     * If the `Config` or the `Logger` wasn't initialised throws and `AppException`.
      *
      * @param \Exception $e The exception
+     * @throws AppException
      */
     protected function handleException(\Exception $e) {
         $type = get_class($e);

@@ -72,12 +72,22 @@ class WebApp extends App {
      * @param string $content The error content
      */
     public function sendError(int $code, $content = '') {
+        if ($this->isCli()) {
+            $this->finish(1);
+        }
         http_response_code($code);
         $pageContent = str_replace(self::ERROR_CONTENT_PLACEHOLDER, $content, $this->loadErrorPageContent($code));
         $this->finish($pageContent);
     }
 
-    protected function loadErrorPageContent(int $code) {
+    /**
+     * If it exists, loads the content of an error HTML page otherwise
+     * returns the HTML comment for the error placeholder
+     *
+     * @param int $code The HTTP status code for the error
+     * @return string The content of the HTML file or the HTML comment for the error placeholder
+     */
+    protected function loadErrorPageContent(int $code): string {
         $dir = $this->config->get(self::CONFIG_ERROR_PAGES_FOLDER);
         if ($dir) {
             $path = $this->config->getFullPath($dir.'/'.$code.'.html');
@@ -96,20 +106,29 @@ class WebApp extends App {
         return http_response_code() === false;
     }
 
-    protected function handleException(\Exception $e) {
+    /**
+     * Handles the exception
+     *
+     * Calls the parent exception handler, then calls the sendError with HTTP error 500.
+     * Sets the content for the error placeholder if the environment is not production.
+     *
+     * @param \Exception $e The exception for handling
+     */
+    protected function handleException(\Exception $e): void {
         parent::handleException($e);
-        if ($this->isCli()) {
-            $this->finish();
+        $env = $this->config->get(App::CONFIG_ENVIRONMENT, App::PRODUCTION_ENVIRONMENT);
+        if ($env != App::PRODUCTION_ENVIRONMENT) {
+            $type = get_class($e);
+            $file = $e->getFile();
+            $line = $e->getLine();
+            $message = $e->getMessage();
+            $trace = $e->getTraceAsString();
+            $content = "<h2>$type</h2>\n<p>In <b>$file</b> on <b>line $line</b> with message: $message</p>\n";
+            $content .= "<h3>Stacktrace:</h3>\n<p>".str_replace("\n", "<br>\n", $trace)."</p>";
+        } else {
+            $content = '';
         }
-        $type = get_class($e);
-        $file = $e->getFile();
-        $line = $e->getLine();
-        $message = $e->getMessage();
-        $trace = $e->getTraceAsString();
-        $content = "<h2>$type</h2>\n<p>In <b>$file</b> on <b>line $line</b> with message: $message</p>\n";
-        $content .= "<h3>Stacktrace:</h3>\n<p>".str_replace("\n", "<br>\n", $trace)."</p>";
-        $env = $this->config->get(self::CONFIG_ENVIRONMENT, self::DEFAULT_ENVIRONMENT);
-        $this->sendError(500, $env != self::DEFAULT_ENVIRONMENT ? $content : '');
+        $this->sendError(500, $content);
     }
 
 }

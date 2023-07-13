@@ -212,7 +212,7 @@ class Form {
      * Returns a value for a field
      * @param string $name The name of the field
      * @param bool $escape Should the value to be escaped for a HTML attribute?
-     * @return mixed|null|string The value of the field
+     * @return null|string The value of the field
      */
     public function value(string $name, $escape = false) {
         $value = null;
