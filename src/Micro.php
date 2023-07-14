@@ -19,13 +19,13 @@ class Micro {
      * Stores the classes in [interface => class] format, the class can be null
      * @var array
      */
-    protected static $classes = [];
+    private static $classes = [];
 
     /**
      * Stores the instances in [interface => instance] format
      * @var array
      */
-    protected static $instances = [];
+    private static $instances = [];
 
     /**
      * Sets the application instance and runs it
@@ -58,13 +58,13 @@ class Micro {
      * For example:
      *
      * <pre>
-     * $app->add(ConfigInterface::class, Config::class);
+     * Micro::add(ConfigInterface::class, Config::class);
      * </pre>
      *
      * or
      *
      * <pre>
-     * $app->add(Config::class);
+     * Micro::add(Config::class);
      * </pre>
      *
      * @param string $interface The interface
@@ -132,6 +132,7 @@ class Micro {
      * and the 'someParameterValue' in the `$someParameter`.
      *
      * <pre>
+     * use Dynart\Micro\Micro;
      * use Dynart\Micro\App;
      * use Dynart\Micro\Config;
      *
@@ -149,12 +150,12 @@ class Micro {
      * class MyApp extends App {
      *   private $something;
      *   public function __construct() {
-     *     $this->add(Config::class);
-     *     $this->add(Something::class);
+     *     Micro::add(Config::class);
+     *     Micro::add(Something::class);
      *   }
      *
      *   public function init() {
-     *     $this->something = $this->create(Something::class, ['someParameterValue']);
+     *     $this->something = Micro::create(Something::class, ['someParameterValue']);
      *   }
      *
      *   public function process() {
@@ -195,7 +196,7 @@ class Micro {
      * @param array $dependencyStack
      * @return array The created singleton instances
      */
-    protected static function createDependencies(string $class, \ReflectionClass $reflectionClass, array $dependencyStack = []) {
+    private static function createDependencies(string $class, \ReflectionClass $reflectionClass, array $dependencyStack = []) {
         $result = [];
         $constructor = $reflectionClass->getConstructor();
         if (!$constructor) {
