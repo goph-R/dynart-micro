@@ -1,6 +1,8 @@
 <?php
 
 namespace Dynart\Micro;
+use Dynart\Micro\Annotation\RouteAnnotation;
+use Dynart\Micro\Middleware\AnnotationProcessor;
 
 /**
  * Handles HTTP request/response
@@ -75,6 +77,16 @@ class WebApp extends App {
         }
         $pageContent = str_replace(self::ERROR_CONTENT_PLACEHOLDER, $content, $this->loadErrorPageContent($code));
         $this->finish($pageContent);
+    }
+
+    /**
+     * Call this if you want to use &#64;route annotations
+     */
+    public function useRouteAnnotations() {
+        $this->addMiddleware(AnnotationProcessor::class);
+        Micro::add(RouteAnnotation::class);
+        $annotations = Micro::get(AnnotationProcessor::class);
+        $annotations->add(RouteAnnotation::class);
     }
 
     /**

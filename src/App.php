@@ -79,8 +79,10 @@ abstract class App {
      * @param string $interface
      */
     public function addMiddleware(string $interface) {
-        Micro::add($interface);
-        $this->middlewares[] = $interface;
+        if (!in_array($interface, $this->middlewares)) {
+            Micro::add($interface);
+            $this->middlewares[] = $interface;
+        }
     }
 
     /**
