@@ -2,10 +2,10 @@
 
 namespace Dynart\Micro\Middleware;
 
+use Dynart\Micro\Micro;
 use Dynart\Micro\Middleware;
 use Dynart\Micro\Annotation;
-use Dynart\Micro\AppException;
-use Dynart\Micro\App;
+use Dynart\Micro\MicroException;
 
 /**
  * Processes the annotations that are in the PHPDoc comments
@@ -30,14 +30,14 @@ class AnnotationProcessor implements Middleware {
      * Adds an annotation for processing
      *
      * The given class name should implement the Annotation interface, otherwise
-     * it will throw an AppException.
+     * it will throw an MicroException.
      *
-     * @throws AppException if the given class does not implement the Annotation
+     * @throws MicroException if the given class does not implement the Annotation
      * @param string $className The class name
      */
     public function add(string $className) {
         if (!is_subclass_of($className, Annotation::class)) {
-            throw new AppException("$className doesn't implement the Annotation interface");
+            throw new MicroException("$className doesn't implement the Annotation interface");
         }
         $this->annotationClasses[] = $className;
     }
@@ -57,18 +57,16 @@ class AnnotationProcessor implements Middleware {
      * Creates the annotations then processes all interfaces in the App or those that are in the given namespaces.
      */
     public function run() {
-        $app = App::instance();
-        $this->createAnnotationsPerType($app);
-        $this->processAll($app);
+        $this->createAnnotationsPerType();
+        $this->processAll();
     }
 
     /**
      * Creates the annotation instances and puts them into the right `$annotations` array
-     * @param App $app
      */
-    protected function createAnnotationsPerType(App $app): void {
+    protected function createAnnotationsPerType(): void {
         foreach ($this->annotationClasses as $className) {
-            $annotation = $app->get($className);
+            $annotation = Micro::get($className);
             foreach ($annotation->types() as $type) {
                 $this->annotations[$type][] = $annotation;
             }
@@ -77,10 +75,9 @@ class AnnotationProcessor implements Middleware {
 
     /**
      * Processes all interfaces in the App or those are in the given namespaces
-     * @param App $app
      */
-    protected function processAll(App $app): void {
-        foreach ($app->interfaces() as $className) {
+    protected function processAll(): void {
+        foreach (Micro::interfaces() as $className) {
             if ($this->isProcessAllowed($className)) {
                 $this->process($className);
             }
@@ -112,7 +109,7 @@ class AnnotationProcessor implements Middleware {
         try {
             $refClass = new \ReflectionClass($className);
         } catch (\ReflectionException $ignore) {
-            throw new AppException("Can't create reflection for: $className");
+            throw new MicroException("Can't create reflection for: $className");
         }
         $this->processClass($refClass);
         $this->processProperties($refClass);

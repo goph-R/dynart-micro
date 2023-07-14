@@ -4,7 +4,7 @@ namespace Dynart\Micro\Annotation;
 
 use Dynart\Micro\Annotation;
 use Dynart\Micro\Router;
-use Dynart\Micro\AppException;
+use Dynart\Micro\MicroException;
 
 /**
  * The @route annotation
@@ -38,7 +38,7 @@ class RouteAnnotation implements Annotation {
             $route = str_replace(' ', '', $matches[2]); // remove spaces
             $this->router->add($route, [$className, $subject->getName()], $matches[1]);
         } else {
-            throw new AppException("Can't find valid route in: $comment\nA valid route example: @route GET /api/something");
+            throw new MicroException("Can't find valid route in: $comment\nA valid route example: @route GET /api/something");
         }
     }
 }

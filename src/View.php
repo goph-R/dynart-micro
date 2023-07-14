@@ -245,7 +245,7 @@ class View {
         $this->includeFunctions();
         $__path = $this->getRealPath($__viewPath).'.phtml';
         if (!file_exists($__path)) {
-            throw new AppException("Can't find view: $__viewPath, $__path");
+            throw new MicroException("Can't find view: $__viewPath, $__path");
         }
         extract($this->data);
         extract($__vars);
@@ -276,7 +276,7 @@ class View {
      * and the `app.root_path` config value is '/var/www/example.com'
      * the result will be '/var/www/example.com/views/example/index.phtml'
      *
-     * @throws AppException If the view path has a namespace but a folder wasn't added for it
+     * @throws MicroException If the view path has a namespace but a folder wasn't added for it
      * @param string $path The view path
      * @return string The real path to the template file
      */
@@ -285,7 +285,7 @@ class View {
         if ($dotPos !== false) {
             $namespace = substr($path, 0, $dotPos);
             if (!isset($this->folders[$namespace])) {
-                throw new AppException("Folder wasn't added with namespace: $namespace");
+                throw new MicroException("Folder wasn't added with namespace: $namespace");
             }
             $folder = $this->folders[$namespace];
             $name = substr($path, $dotPos + 1);
@@ -305,7 +305,7 @@ class View {
     }
 
     /**
-     * Includes the functions.php of the theme, the app and the framework
+     * Includes the functions.php of the theme, of the app and of the framework
      */
     protected function includeFunctions() {
         if ($this->functionsIncluded) {

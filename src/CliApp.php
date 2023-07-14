@@ -16,20 +16,18 @@ class CliApp extends App {
 
     public function __construct(array $configPaths) {
         parent::__construct($configPaths);
-        $this->add(CliCommands::class);
-        $this->add(CliOutput::class);
+        Micro::add(CliCommands::class);
+        Micro::add(CliOutput::class);
     }
 
     public function init() {
-        $this->commands = $this->get(CliCommands::class);
+        $this->commands = Micro::get(CliCommands::class);
     }
 
     public function process() {
         list($callable, $params) = $this->commands->matchCurrent();
         if ($callable) {
-            if (is_array($callable) && is_string($callable[0])) {
-                $callable = [$this->get($callable[0]), $callable[1]];
-            }
+            $callable = Micro::getCallable($callable);
             if (empty($params)) {
                 $content = call_user_func($callable);
             } else {

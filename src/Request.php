@@ -156,21 +156,21 @@ class Request {
     /**
      * Returns with the request body as an associative array parsed from JSON
      *
-     * Throws an AppException if the JSON is invalid.
+     * Throws an MicroException if the JSON is invalid.
      *
-     * @throws AppException
+     * @throws MicroException
      * @return mixed|null Returns with an associative array from parsed JSON or null if the request body is empty
      */
     public function bodyAsJson() {
         $json = $this->body();
-        if ($json) {
-            $result = json_decode($json, true);
-            if ($result) {
-                return $result;
-            }
-            throw new AppException("The request body is not a valid JSON: ".$json);
+        if (!$json) {
+            return null;
         }
-        return null;
+        $result = json_decode($json, true);
+        if ($result) {
+            return $result;
+        }
+        throw new MicroException("The request body is not a valid JSON: ".$json);
     }
 
     /**
@@ -226,7 +226,7 @@ class Request {
      * @return UploadedFile The UploadedFile instance
      */
     protected function createUploadedFile(array $file): UploadedFile {
-        return App::instance()->create(UploadedFile::class, [
+        return Micro::create(UploadedFile::class, [
             $file['name'], $file['tmp_name'], $file['error'], $file['type'], $file['size']
         ]);
     }

@@ -23,24 +23,22 @@ class WebApp extends App {
 
     public function __construct(array $configPaths) {
         parent::__construct($configPaths);
-        $this->add(Request::class);
-        $this->add(Response::class);
-        $this->add(Router::class);
-        $this->add(Session::class);
-        $this->add(View::class);
+        Micro::add(Request::class);
+        Micro::add(Response::class);
+        Micro::add(Router::class);
+        Micro::add(Session::class);
+        Micro::add(View::class);
     }
 
     public function init() {
-        $this->router = $this->get(Router::class);
-        $this->response = $this->get(Response::class);
+        $this->router = Micro::get(Router::class);
+        $this->response = Micro::get(Response::class);
     }
 
     public function process() {
         list($callable, $params) = $this->router->matchCurrentRoute();
         if ($callable) {
-            if (is_array($callable) && is_string($callable[0])) {
-                $callable = [$this->get($callable[0]), $callable[1]];
-            }
+            $callable = Micro::getCallable($callable);
             $content = call_user_func_array($callable, $params);
             $this->sendContent($content);
         } else {
@@ -67,15 +65,14 @@ class WebApp extends App {
     }
 
     /**
-     * Sends an error as the response
+     * Sends an error response
      * @param int $code The error code
      * @param string $content The error content
      */
     public function sendError(int $code, $content = '') {
-        if ($this->isCli()) {
-            $this->finish(1);
+        if ($this->isWeb()) { // cli testing
+            http_response_code($code);
         }
-        http_response_code($code);
         $pageContent = str_replace(self::ERROR_CONTENT_PLACEHOLDER, $content, $this->loadErrorPageContent($code));
         $this->finish($pageContent);
     }
@@ -99,11 +96,11 @@ class WebApp extends App {
     }
 
     /**
-     * Returns true if the call happened in the command line interface
+     * Returns true if the call is from the web
      * @return bool
      */
-    protected function isCli() {
-        return http_response_code() === false;
+    protected function isWeb() {
+        return http_response_code() !== false;
     }
 
     /**
