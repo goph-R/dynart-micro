@@ -48,6 +48,8 @@ abstract class App {
     abstract public function process();
 
     /**
+     * Fully initializes the application
+     *
      * Creates the `Config`, loads the configs, creates the `Logger`, calls the `init()` method
      * then runs all of the middlewares. If an exception happens, handles it with the `handleException()` method.
      */

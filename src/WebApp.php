@@ -72,7 +72,7 @@ class WebApp extends App {
      * @param string $content The error content
      */
     public function sendError(int $code, $content = '') {
-        if ($this->isWeb()) { // cli testing
+        if ($this->isWeb()) { // because of testing in cli
             http_response_code($code);
         }
         $pageContent = str_replace(self::ERROR_CONTENT_PLACEHOLDER, $content, $this->loadErrorPageContent($code));

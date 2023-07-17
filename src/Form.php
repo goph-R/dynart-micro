@@ -45,7 +45,7 @@ class Form {
     protected $errors = [];
 
     /**
-     * Validators for the fields in [name => [validator]] format
+     * Validators for the fields in [name => [validator1, validator2]] format
      * @var Validator[][]
      */
     protected $validators = [];
@@ -57,11 +57,11 @@ class Form {
     protected $request;
 
     /**
-     * Creates the form with given name and if `$csrf` is true, it will add a CSRF value at the end of the `process()`
-     * @param Request $request
-     * @param Session $session
-     * @param string $name
-     * @param bool $csrf
+     * Creates the form with given name and `$csrf` value
+     * @param Request $request The HTTP request
+     * @param Session $session The session used for the CSRF check
+     * @param string $name The name of the form, can be an empty string (usually for filter forms)
+     * @param bool $csrf Is the form should use a CSRF field and validate it on `process()`?
      */
     public function __construct(Request $request, Session $session, string $name = 'form', bool $csrf = true) {
         $this->request = $request;
@@ -72,6 +72,7 @@ class Form {
 
     /**
      * If the `$csrf` is true, generates a CSRF field and a CSRF value in the session
+     * @throws MicroException If couldn't gather sufficient entropy for random_bytes
      */
     public function generateCsrf() {
         if (!$this->csrf) {
@@ -80,7 +81,7 @@ class Form {
         try {
             $value = bin2hex(random_bytes(128));
         } catch (\Exception $e) {
-            throw new \RuntimeException("Couldn't gather sufficient entropy");
+            throw new MicroException("Couldn't gather sufficient entropy");
         }
         $this->addFields([$this->csrfName() => ['type' => 'hidden']]);
         $this->setValues([$this->csrfName() => $value]);
@@ -179,12 +180,13 @@ class Form {
     }
 
     /**
-     * Processes a form if the request method is POST, otherwise just adds the CSRF field if `$csrf` is true
+     * Processes a form if the request method is `$httpMethod`, adds the CSRF field if `$csrf` is true
+     * @param string $httpMethod The required HTTP method
      * @return bool Returns true if the form is valid
      */
-    public function process(): bool {
+    public function process(string $httpMethod = 'POST'): bool {
         $result = false;
-        if ($this->request->httpMethod() == 'POST') {
+        if ($this->request->httpMethod() == $httpMethod) {
             $this->bind();
             $result = $this->validate();
         }
@@ -234,10 +236,18 @@ class Form {
     }
 
     /**
-     * Sets the values for the fields (merges them with the existing ones)
+     * Sets the values for the fields (clears the previous ones)
      * @param array $values
      */
     public function setValues(array $values): void {
+        $this->values = $values;
+    }
+
+    /**
+     * Adds the values for the fields (merges them with the existing ones)
+     * @param array $values
+     */
+    public function addValues(array $values): void {
         $this->values = array_merge($this->values, $values);
     }
 
@@ -253,7 +263,7 @@ class Form {
     }
 
     /**
-     * Runs the validators per field if the field is required and sets the errors
+     * Runs the validators per field if the field is required or has value
      *
      * If one validator fails for a field the other validators will NOT run for that field.
      *

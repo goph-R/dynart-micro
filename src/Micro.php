@@ -13,19 +13,19 @@ class Micro {
      * Holds the instance of the application
      * @var App
      */
-    private static $instance;
+    protected static $instance;
 
     /**
      * Stores the classes in [interface => class] format, the class can be null
      * @var array
      */
-    private static $classes = [];
+    protected static $classes = [];
 
     /**
      * Stores the instances in [interface => instance] format
      * @var array
      */
-    private static $instances = [];
+    protected static $instances = [];
 
     /**
      * Sets the application instance and runs it
@@ -219,7 +219,7 @@ class Micro {
 
 
     /**
-     * Converts the callable if needed, then returns with it
+     * Creates and instance of the callable if needed, then returns with it
      * @param $callable
      * @return mixed
      */
@@ -229,16 +229,22 @@ class Micro {
 
     /**
      * Returns true if the `$callable` is a Micro Framework callable
+     *
+     * Micro Framework callable means: an array with two strings.
+     * The first one is the class name, the second is the method name.
+     *
+     * Example:
+     * <pre>
+     * [Something::class, 'theMethodName']
+     * </pre>
+     *
      * @param $callable mixed The callable for the check
      * @return bool
      */
     public static function isMicroCallable($callable): bool {
-        return is_array($callable) && is_string($callable[0]);
-    }
-
-    public static function reset() {
-        self::$instance = null;
-        self::$instances = [];
-        self::$classes = [];
+        return is_array($callable)
+            && count($callable) == 2
+            && is_string($callable[0])
+            && is_string($callable[1]);
     }
 }
