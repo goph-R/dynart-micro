@@ -81,6 +81,9 @@ abstract class App {
 
     /**
      * Adds a middleware
+     *
+     * It adds only if it isn't in the middlewares yet
+     *
      * @param string $interface
      */
     public function addMiddleware(string $interface) {
@@ -101,6 +104,9 @@ abstract class App {
 
     /**
      * Finishes the application
+     *
+     * If the `$exitOnFinish` true (default) calls the exit, otherwise just prints out the content.
+     *
      * @param string|int $content Content for the output. If it's an int, it is the return code of the process.
      * @return null
      */
