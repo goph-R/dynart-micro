@@ -22,7 +22,7 @@ class EventService {
             return false;
         }
         foreach ($this->subscriptions[$event] as $c) {
-            if ($c === $callable) {
+            if ($c === $callable) { // TODO: not working on arrays with same values
                 $key = array_search($c, $this->subscriptions[$event]);
                 unset($this->subscriptions[$event][$key]);
                 if (empty($this->subscriptions[$event])) {
@@ -37,7 +37,7 @@ class EventService {
     public function emit(string $event, array $args): void {
         if (array_key_exists($event, $this->subscriptions)) {
             foreach ($this->subscriptions[$event] as $callable) {
-                call_user_func_array($callable, $args);
+                call_user_func_array(Micro::getCallable($callable), $args);
             }
         }
     }

@@ -165,8 +165,7 @@ class Config {
             return $value;
         }
         $matches = [];
-        preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches);
-        if (!$matches) {
+        if (!preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches)) {
             return $value;
         }
         $vars = array_unique($matches[1]);
