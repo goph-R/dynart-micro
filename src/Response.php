@@ -48,7 +48,7 @@ class Response {
      * @param string $content The body content of the response
      */
     public function send($content = ''): void {
-        $sendHeaderFunction = function_exists('header') ? function ($n, $v) { header($n.': '.$v); } : function($n, $v) {}; // ugly, but because of test coverage
+        $sendHeaderFunction = function_exists('header') ? function ($n, $v) { header($n.': '.$v); } : function($n, $v) {}; // because of CLI
         foreach ($this->headers as $name => $value) {
             $sendHeaderFunction($name, $value);
         }

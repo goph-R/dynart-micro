@@ -29,6 +29,7 @@ abstract class App {
     /** @var string[] */
     protected $configPaths;
 
+    /** @var bool */
     protected $exitOnFinish = true;
 
     public function __construct(array $configPaths) {
@@ -104,7 +105,7 @@ abstract class App {
      * @return null
      */
     public function finish($content = 0) {
-        return $this->exitOnFinish ? exit($content) : print($content); // ugly, but because of test coverage
+        return $this->exitOnFinish ? exit($content) : print($content);
     }
 
     /**
