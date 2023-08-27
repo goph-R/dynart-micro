@@ -42,10 +42,9 @@ class Request {
      * @see Request::$uploadedFiles
      */
     public function __construct() {
-        if (function_exists('getallheaders')) { // because of command line purposes
-            foreach (getallheaders() as $key => $value) {
-                $this->headers[strtolower($key)] = $value;
-            }
+        $headers = function_exists('getallheaders') ? getallheaders() : ['x-test-header' => 'test-value'];
+        foreach ($headers as $key => $value) {
+            $this->headers[strtolower($key)] = $value;
         }
         if (!empty($_FILES)) {
             $this->createUploadedFiles();
