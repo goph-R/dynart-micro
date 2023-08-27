@@ -29,6 +29,8 @@ abstract class App {
     /** @var string[] */
     protected $configPaths;
 
+    protected $exitOnFinish = true;
+
     public function __construct(array $configPaths) {
         $this->configPaths = $configPaths;
         Micro::add(Config::class);
@@ -99,9 +101,10 @@ abstract class App {
     /**
      * Finishes the application
      * @param string|int $content Content for the output. If it's an int, it is the return code of the process.
+     * @return null
      */
     public function finish($content = 0) {
-        exit($content);
+        return $this->exitOnFinish ? exit($content) : print($content); // ugly, but because of test coverage
     }
 
     /**
