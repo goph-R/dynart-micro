@@ -13,7 +13,7 @@ class Micro {
      * Holds the instance of the application
      * @var App
      */
-    protected static $instance;
+    protected static $app;
 
     /**
      * Stores the classes in [interface => class] format, the class can be null
@@ -36,10 +36,10 @@ class Micro {
      * @param App $app The application for init and process
      */
     public static function run(App $app): void {
-        if (self::$instance) {
+        if (self::$app) {
             throw new MicroException("App was instantiated before!");
         }
-        self::$instance = $app;
+        self::$app = $app;
         $app->fullInit();
         $app->fullProcess();
     }
@@ -48,8 +48,8 @@ class Micro {
      * Returns the instance of the application
      * @return mixed The instance of the application
      */
-    public static function instance() {
-        return self::$instance;
+    public static function app() {
+        return self::$app;
     }
 
     /**
@@ -67,8 +67,14 @@ class Micro {
      * Micro::add(Config::class);
      * </pre>
      *
+     * or
+     *
+     * <pre>
+     * Micro::add(Config::class, null, new Config());
+     * </pre>
+     *
      * @param string $interface The interface
-     * @param null $class The class, it can be null, then the interface itself a class
+     * @param string|null $class The class, it can be null, then the interface itself a class
      */
     public static function add(string $interface, $class = null) {
         if ($class != null && !(is_subclass_of($class, $interface))) {
