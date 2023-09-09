@@ -82,7 +82,7 @@ abstract class App {
     /**
      * Adds a middleware
      *
-     * It adds only if it isn't in the middlewares yet
+     * It adds only if not presents.
      *
      * @param string $interface
      */

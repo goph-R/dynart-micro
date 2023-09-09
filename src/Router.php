@@ -314,4 +314,8 @@ class Router
     public function routes() {
         return $this->routes;
     }
+
+    public function prefixVariables() {
+        return $this->prefixVariables;
+    }
 }
