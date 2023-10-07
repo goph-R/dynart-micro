@@ -67,12 +67,6 @@ class Micro {
      * Micro::add(Config::class);
      * </pre>
      *
-     * or
-     *
-     * <pre>
-     * Micro::add(Config::class, null, new Config());
-     * </pre>
-     *
      * @param string $interface The interface
      * @param string|null $class The class, it can be null, then the interface itself a class
      */

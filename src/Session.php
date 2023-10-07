@@ -26,6 +26,13 @@ class Session {
     }
 
     /**
+     * @return mixed The session ID
+     */
+    public function id() {
+        return session_id();
+    }
+
+    /**
      * Returns with a session value by name or default
      * @param string $name The name of the session variable
      * @param mixed|null $default The default value if the name does not exist
@@ -43,5 +50,4 @@ class Session {
     public function set(string $name, $value) {
         $_SESSION[$name] = $value;
     }
-
 }
