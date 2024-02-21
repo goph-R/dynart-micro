@@ -133,18 +133,18 @@ abstract class App {
      * @throws MicroException
      */
     protected function handleException(\Exception $e) {
-        if (!$this->config) {
-            throw new MicroException("Couldn't instantiate Config::class");
-        }
-        if (!$this->logger) {
-            throw new MicroException("Couldn't instantiate Logger::class");
-        }
         $type = get_class($e);
         $file = $e->getFile();
         $line = $e->getLine();
         $message = $e->getMessage();
         $trace = $e->getTraceAsString();
         $text = "`$type` in $file on line $line with message: $message\n$trace";
+        if (!$this->config) {
+            throw new MicroException("Couldn't instantiate Config::class, original exception:\n".$text);
+        }
+        if (!$this->logger) {
+            throw new MicroException("Couldn't instantiate Logger::class, original exception:\n".$text);
+        }
         $this->logger->error($text);
     }
 
