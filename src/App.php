@@ -2,6 +2,8 @@
 
 namespace Dynart\Micro;
 
+use Exception;
+
 /**
  * Micro PHP Application
  *
@@ -54,7 +56,7 @@ abstract class App {
      * Fully initializes the application
      *
      * Creates the `Config`, loads the configs, creates the `Logger`, calls the `init()` method
-     * then runs all of the middlewares. If an exception happens, handles it with the `handleException()` method.
+     * then runs all the middlewares. If an exception happens, handles it with the `handleException()` method.
      */
     public function fullInit() {
         try {
@@ -63,7 +65,7 @@ abstract class App {
             $this->logger = Micro::get(Logger::class);
             $this->init();
             $this->runMiddlewares();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->handleException($e);
         }
     }
@@ -74,7 +76,7 @@ abstract class App {
     public function fullProcess() {
         try {
             $this->process();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->handleException($e);
         }
     }
@@ -94,7 +96,7 @@ abstract class App {
     }
 
     /**
-     * Runs all of the added middlewares
+     * Runs all the added middlewares
      */
     protected function runMiddlewares() {
         foreach ($this->middlewares as $m) {
@@ -108,14 +110,13 @@ abstract class App {
      * If the `$exitOnFinish` true (default) calls the exit, otherwise just prints out the content.
      *
      * @param string|int $content Content for the output. If it's an int, it is the return code of the process.
-     * @return null
      */
-    public function finish($content = 0) {
-        return $this->exitOnFinish ? exit($content) : print($content);
+    public function finish($content = 0): void {
+        $this->exitOnFinish ? exit($content) : print($content);
     }
 
     /**
-     * Loads all of the configs by the `$configPaths`
+     * Loads all the configs by the `$configPaths`
      */
     protected function loadConfigs() {
         foreach ($this->configPaths as $path) {
@@ -129,10 +130,10 @@ abstract class App {
      * Sends the type, the line, the exception message and the stacktrace to the standard error output.
      * If the `Config` or the `Logger` wasn't initialised throws a `MicroException`.
      *
-     * @param \Exception $e The exception
+     * @param Exception $e The exception
      * @throws MicroException
      */
-    protected function handleException(\Exception $e) {
+    protected function handleException(Exception $e) {
         $type = get_class($e);
         $file = $e->getFile();
         $line = $e->getLine();

@@ -2,6 +2,9 @@
 
 namespace Dynart\Micro;
 
+use ReflectionClass;
+use ReflectionException;
+
 /**
  * Micro PHP Dependency Injection
  *
@@ -11,7 +14,7 @@ class Micro {
 
     /**
      * Holds the instance of the application
-     * @var App
+     * @var mixed
      */
     protected static $app;
 
@@ -81,7 +84,7 @@ class Micro {
      * @param string $interface
      * @return bool Is the interface was added?
      */
-    public static function hasInterface(string $interface) {
+    public static function hasInterface(string $interface): bool {
         return array_key_exists($interface, self::$classes);
     }
 
@@ -91,11 +94,11 @@ class Micro {
      * @param string $interface The interface
      * @return string The class for the interface
      */
-    public static function getClass(string $interface) {
+    public static function getClass(string $interface): string {
         if (!self::hasInterface($interface)) {
             throw new MicroException("$interface was not added");
         }
-        return isset(self::$classes[$interface]) ? self::$classes[$interface] : $interface;
+        return self::$classes[$interface] ?? $interface;
     }
 
     /**
@@ -107,6 +110,7 @@ class Micro {
      * @param array $parameters The parameters for the constructor. Important: only the parameters that are not injected!
      * @param array $dependencyStack
      * @return mixed
+     * @throws MicroException
      */
     public static function get(string $interface, array $parameters = [], array $dependencyStack = []) {
         if (array_key_exists($interface, self::$instances)) {
@@ -118,10 +122,10 @@ class Micro {
     }
 
     /**
-     * Returns with all of the interfaces in an array
-     * @return array All of the added interfaces
+     * Returns with all the interfaces in an array
+     * @return array All the added interfaces
      */
-    public static function interfaces() {
+    public static function interfaces(): array {
         return array_keys(self::$classes);
     }
 
@@ -170,6 +174,7 @@ class Micro {
      * @param array $parameters Parameters for the constructor. Important: only the parameters that are not injected!
      * @param array $dependencyStack
      * @return mixed
+     * @throws MicroException
      */
     public static function create(string $class, array $parameters = [], array $dependencyStack = []) {
         if (in_array($class, $dependencyStack)) {
@@ -177,12 +182,16 @@ class Micro {
         }
         $dependencyStack[] = $class;
         try {
-            $reflectionClass = new \ReflectionClass($class);
-        } catch (\ReflectionException $e) {
-            throw new MicroException("Couldn't create reflection class for $class");
+            $reflectionClass = new ReflectionClass($class);
+        } catch (ReflectionException $e) {
+            throw new MicroException("Couldn't create reflection class for `$class`");
         }
         $dependencies = self::createDependencies($class, $reflectionClass, $dependencyStack);
-        $result = $reflectionClass->newInstanceArgs(array_merge($dependencies, $parameters));
+        try {
+            $result = $reflectionClass->newInstanceArgs(array_merge($dependencies, $parameters));
+        } catch (ReflectionException $e) {
+            throw new MicroException("Couldn't create class `$class`:\nMessage: ".$e->getMessage()."\n".$e->getTraceAsString());
+        }
         if (method_exists($result, 'postConstruct')) {
             $result->postConstruct();
         }
@@ -192,11 +201,12 @@ class Micro {
     /**
      * Creates the singleton dependencies for a given class and returns with it as an array
      * @param string $class The class name
-     * @param \ReflectionClass $reflectionClass
+     * @param ReflectionClass $reflectionClass
      * @param array $dependencyStack
      * @return array The created singleton instances
+     * @throws MicroException
      */
-    private static function createDependencies(string $class, \ReflectionClass $reflectionClass, array $dependencyStack = []) {
+    private static function createDependencies(string $class, ReflectionClass $reflectionClass, array $dependencyStack = []): array {
         $result = [];
         $constructor = $reflectionClass->getConstructor();
         if (!$constructor) {
@@ -219,9 +229,10 @@ class Micro {
 
 
     /**
-     * Creates and instance of the callable if needed, then returns with it
+     * Creates an instance of the callable if needed, then returns with it
      * @param $callable
      * @return mixed
+     * @throws MicroException
      */
     public static function getCallable($callable) {
         return self::isMicroCallable($callable) ? [Micro::get($callable[0]), $callable[1]] : $callable;
