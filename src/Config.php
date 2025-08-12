@@ -70,11 +70,11 @@ class Config {
      *
      * <pre>
      * [
-     *   "0" => [
+     *   0 => [
      *      "name" => "name1",
      *      "age" => "32"
      *   ],
-     *   "1" => [
+     *   1 => [
      *      "name" => "name2",
      *      "age" => "42"
      *   ]
@@ -102,6 +102,9 @@ class Config {
             $parts = explode('.', $configKey);
             $current = &$result;
             foreach ($parts as $part) {
+                if (ctype_digit($part)) {
+                    $part = (int)$part;
+                }
                 if (!array_key_exists($part, $current)) {
                     $current[$part] = [];
                 }

@@ -17,7 +17,8 @@
     ],
     "require": {
         "php": ">=7.1.0",
-        "katzgrau/klogger": "dev-master"
+        "katzgrau/klogger": "dev-master",
+        "ext-ctype": "*"
     },
     "minimum-stability": "dev"
 }
