@@ -11,8 +11,8 @@ namespace Dynart\Micro;
  */
 class Config {
 
-    private $config = [];
-    private $cached = [];
+    private array $config = [];
+    private array $cached = [];
 
     public function __construct() {}
 
@@ -24,11 +24,28 @@ class Config {
      *
      * @param string $path The path of the INI file
      */
-    public function load(string $path) {
+    public function load(string $path): void {
         $this->config = array_merge($this->config, parse_ini_file($path, false, INI_SCANNER_TYPED));
     }
 
-    public function get($name, $default = null, $useCache = true) {
+    /**
+     * Clears the in-memory cache
+     *
+     * @return void
+     */
+    public function clearCache(): void {
+        $this->cached = [];
+    }
+
+    /**
+     * Returns with value from the configuration
+     *
+     * @param string $name The config name
+     * @param mixed $default The return value if the name does not exist in the configuration
+     * @param bool $useCache Use the cache for retrieving the value?
+     * @return mixed The value
+     */
+    public function get(string $name, mixed $default = null, bool $useCache = true): mixed {
         if ($useCache && array_key_exists($name, $this->cached)) {
             return $this->cached[$name];
         }
@@ -46,7 +63,7 @@ class Config {
      *
      * @param string $name The config name
      * @param bool $useCache Use the cache for retrieving the value?
-     * @return array The result in array
+     * @return array The value in array
      */
     public function getCommaSeparatedValues(string $name, bool $useCache = true): array {
         $values = explode(',', $this->get($name));
@@ -117,6 +134,7 @@ class Config {
 
     /**
      * Returns true if the config value is cached
+     *
      * @param string $name Name of the config
      * @return bool Is the config value cached?
      */
@@ -127,11 +145,12 @@ class Config {
     /**
      * Replaces the ~ symbol at the beginning of the path
      * with the `app.root_path` config value
+     *
      * @param string $path
      * @return string
      */
     public function getFullPath(string $path): string {
-        if (strpos($path, '~') === 0) {
+        if (str_starts_with($path, '~')) {
             return $this->get(App::CONFIG_ROOT_PATH) . substr($path, 1);
         }
         return $path;
@@ -139,6 +158,7 @@ class Config {
 
     /**
      * Trims and replaces variables to environment variable values in a string
+     *
      * @param string $value The value for trim and replace
      * @return string The trimmed and replaced value
      */
@@ -150,12 +170,13 @@ class Config {
 
     /**
      * Caches a value if the `$useCache` is true and returns with it
+     *
      * @param string|null $name The config name
-     * @param mixed|null $value The value
+     * @param mixed $value The value
      * @param bool $useCache Use the cache?
-     * @return mixed|null
+     * @return mixed
      */
-    protected function cacheAndReturn(?string $name, $value, bool $useCache = true) {
+    protected function cacheAndReturn(?string $name, mixed $value, bool $useCache = true): mixed {
         if ($useCache) {
             $this->cached[$name] = $value;
         }
@@ -164,10 +185,11 @@ class Config {
 
     /**
      * Replaces the {{name}} formatted variables in a string with environment variable values
-     * @param mixed|null $value The value
-     * @return mixed|null The replaced string
+     *
+     * @param mixed $value The value
+     * @return mixed The value or the replaced string
      */
-    protected function replaceEnvValue($value) {
+    protected function replaceEnvValue(mixed $value): mixed {
         if (!is_string($value)) {
             return $value; // don’t touch non-strings
         }

@@ -10,54 +10,46 @@ class Form {
 
     /**
      * Stores the name of the form
-     * @var string
      */
-    protected $name = 'form';
+    protected string $name = 'form';
 
     /**
      * Is this form uses CSRF?
-     * @var bool
      */
-    protected $csrf = true;
+    protected bool $csrf = true;
 
     /**
      * Holds the fields
-     * @var array
      */
-    protected $fields = [];
+    protected array $fields = [];
 
     /**
      * A list of the required field names
-     * @var array
      */
-    protected $required = [];
+    protected array $required = [];
 
     /**
      * The values of the fields in [name => value] format
-     * @var array
      */
-    protected $values = [];
+    protected array $values = [];
 
     /**
      * The error messages of the fields in [name => message] format
-     * @var array
      */
-    protected $errors = [];
+    protected array $errors = [];
 
     /**
      * Validators for the fields in [name => [validator1, validator2]] format
-     * @var Validator[][]
      */
-    protected $validators = [];
+    protected array $validators = [];
 
-    /** @var Session */
-    protected $session;
+    protected Session $session;
 
-    /** @var Request */
-    protected $request;
+    protected Request $request;
 
     /**
      * Creates the form with given name and `$csrf` value
+     *
      * @param Request $request The HTTP request
      * @param Session $session The session used for the CSRF check
      * @param string $name The name of the form, can be an empty string (usually for filter forms)
@@ -72,9 +64,9 @@ class Form {
 
     /**
      * If the `$csrf` is true, generates a CSRF field and a CSRF value in the session
-     * @throws MicroException If couldn't gather sufficient entropy for random_bytes
+     * @throws MicroException If it couldn't gather sufficient entropy for random_bytes
      */
-    public function generateCsrf() {
+    public function generateCsrf(): void {
         if (!$this->csrf) {
             return;
         }
@@ -90,52 +82,46 @@ class Form {
 
     /**
      * Returns with the CSRF session name
-     * @return string
      */
-    public function csrfSessionName() {
+    public function csrfSessionName(): string {
         return 'form.'.$this->name.'.csrf';
     }
 
     /**
      * Returns with the CSRF field name
-     * @return string
      */
-    public function csrfName() {
+    public function csrfName(): string {
         return '_csrf';
     }
 
     /**
      * Returns true if the CSRF session value equals with the CSRF field value
-     * @return bool
      */
-    public function validateCsrf() {
-        return $this->csrf
-            ? $this->session->get($this->csrfSessionName()) == $this->value($this->csrfName())
-            : true;
+    public function validateCsrf(): bool {
+        return !$this->csrf || $this->session->get($this->csrfSessionName()) == $this->value($this->csrfName());
     }
 
     /**
      * Returns the name of this form
-     * @return string
      */
-    public function name() {
+    public function name(): string {
         return $this->name;
     }
 
     /**
      * Returns the fields of this form in [name => [field_data]] format
-     * @return array
      */
-    public function fields() {
+    public function fields(): array {
         return $this->fields;
     }
 
     /**
      * Adds fields to the form (merges them with the existing ones)
+     *
      * @param array $fields The fields in [name => [field_data]] format
      * @param bool $required Is this field required to be filled out?
      */
-    public function addFields(array $fields, $required = true) {
+    public function addFields(array $fields, bool $required = true): void {
         $this->fields = array_merge($this->fields, $fields);
         if ($required) {
             $this->required = array_merge($this->required, array_keys($fields));
@@ -143,20 +129,21 @@ class Form {
     }
 
     /**
-     * Returns wether a field must be filled or not
+     * Returns if a field must be filled or not
      * @param string $name
-     * @return bool If true the field must be filled out
+     * @return bool
      */
-    public function required(string $name) {
+    public function required(string $name): bool {
         return in_array($name, $this->required);
     }
 
     /**
      * Sets a field to be required or not
+     *
      * @param string $name The name of the field
      * @param bool $required Is it required?
      */
-    public function setRequired(string $name, bool $required) {
+    public function setRequired(string $name, bool $required): void {
         if ($required) {
             if (!in_array($name, $this->required)) {
                 $this->required[] = $name;
@@ -168,10 +155,11 @@ class Form {
 
     /**
      * Adds a validator for a field
+     *
      * @param string $name The name of the field
      * @param Validator $validator The validator
      */
-    public function addValidator(string $name, Validator $validator) {
+    public function addValidator(string $name, Validator $validator): void {
         if (!isset($this->validators[$name])) {
             $this->validators[$name] = [];
         }
@@ -181,6 +169,7 @@ class Form {
 
     /**
      * Processes a form if the request method is `$httpMethod`, adds the CSRF field if `$csrf` is true
+     *
      * @param string $httpMethod The required HTTP method
      * @return bool Returns true if the form is valid
      */
@@ -213,10 +202,10 @@ class Form {
     /**
      * Returns a value for a field
      * @param string $name The name of the field
-     * @param bool $escape Should the value to be escaped for a HTML attribute?
+     * @param bool $escape Should the value to be escaped for an HTML attribute?
      * @return null|string The value of the field
      */
-    public function value(string $name, $escape = false) {
+    public function value(string $name, bool $escape = false): ?string {
         $value = null;
         if (array_key_exists($name, $this->values)) {
             $value = $this->values[$name];
@@ -297,11 +286,12 @@ class Form {
 
     /**
      * Returns an error message for a field
+     *
      * @param string $name The field name
      * @return string|null The error message or null
      */
-    public function error(string $name) {
-        return isset($this->errors[$name]) ? $this->errors[$name] : null;
+    public function error(string $name): ?string {
+        return $this->errors[$name] ?? null;
     }
 
 }

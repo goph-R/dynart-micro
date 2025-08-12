@@ -4,7 +4,7 @@ namespace Dynart\Micro;
 
 class EventService {
 
-    protected $subscriptions = [];
+    protected array $subscriptions = [];
 
     public function subscribeWithRef(string $event, &$callable): void {
         if (!array_key_exists($event, $this->subscriptions)) {

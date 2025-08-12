@@ -23,11 +23,11 @@ class CliOutput {
     const CYAN        = 14;
     const WHITE       = 15;
 
-    protected $color = null;
-    protected $bgColor = null;
-    protected $useColor = true;
+    protected ?string $color = null;
+    protected ?string $bgColor = null;
+    protected bool $useColor = true;
 
-    public function setColor($color, $bgColor = null) {
+    public function setColor($color, $bgColor = null): void {
         if (is_int($color)) {
             $this->color = "\033[" . ($color < 8 ? 30 + $color : 90 + $color - 8) . "m";
         } else {
@@ -44,7 +44,7 @@ class CliOutput {
         $this->useColor = $value;
     }
 
-    public function write(string $text) {
+    public function write(string $text): void {
         if ($this->useColor) {
             if ($this->bgColor) {
                 echo $this->bgColor;
@@ -61,7 +61,7 @@ class CliOutput {
         }
     }
 
-    public function writeLine(string $text) {
+    public function writeLine(string $text): void {
         $this->write($text);
         echo "\n";
     }

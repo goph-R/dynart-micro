@@ -4,18 +4,17 @@ namespace Dynart\Micro;
 
 class CliCommands {
 
-    /** @var array */
-    protected $commands = [];
+    protected array $commands = [];
 
-    public function add(string $name, $callable, array $paramNames = [], array $flagNames = []) {
+    public function add(string $name, $callable, array $paramNames = [], array $flagNames = []): void {
         $this->commands[$name] = [$callable, $paramNames, $flagNames];
     }
 
     public function current() {
-        return isset($_SERVER['argv'][1]) ? $_SERVER['argv'][1] : null;
+        return $_SERVER['argv'][1] ?? null;
     }
 
-    public function matchCurrent() {
+    public function matchCurrent(): ?array {
         if (!isset($this->commands[$this->current()])) {
             return null;
         }

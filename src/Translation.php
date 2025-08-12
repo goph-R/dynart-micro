@@ -9,9 +9,9 @@ namespace Dynart\Micro;
  * for the current locale with the help of this class.
  *
  * Related configuration values:
- * * app.root_path - for the ~ symbol in the translations' folder path
- * * translation.all - the all known translation locales seperated with commas, for example: "hu, en"
- * * translation.default - if no locale was set this will be the default, for example: "en"
+ * * app.root_path - used for the `~` symbol in the translations' folder path
+ * * translation.all - the all known translation locales seperated with commas, for example: `hu, en`
+ * * translation.default - if no locale was set this will be the default, for example: `en`
  *
  * @see Config
  * @package Dynart\Micro
@@ -124,7 +124,7 @@ class Translation {
     /**
      * Returns with the text by namespace and text id for the current locale
      *
-     * For translation you have to have multi locale config within your config.ini.php, for example:
+     * You have to have multi locale config within your config.ini.php, for example:
      *
      * <pre>
      * translation.all = en, hu
@@ -169,7 +169,7 @@ class Translation {
      * Hello Joe!
      * </pre>
      *
-     * If the translation doesn't exists, the result will be the `$id` between # symbols:
+     * If the translation doesn't exist, the result will be the `$id` between # symbols:
      *
      * <pre>
      * #test:welcome#
