@@ -19,7 +19,7 @@ namespace Dynart\Micro;
 class Translation {
 
     /**
-     * The configuration name of all of the known translation
+     * The configuration name of all the known translation
      */
     const CONFIG_ALL = 'translation.all';
 
@@ -34,7 +34,7 @@ class Translation {
     const DEFAULT_LOCALE = 'en';
 
     /**
-     * The folders for all of the translations in [namespace => path] format
+     * The folders for all the translations in [namespace => path] format
      * @var array
      */
     protected $folders = [];
@@ -46,13 +46,13 @@ class Translation {
     protected $data = [];
 
     /**
-     * All of the known translations
+     * All the known translations
      * @var array
      */
     protected $allLocales = [];
 
     /**
-     * Is it has a multi locale config?
+     * Has a multi locale config?
      * @var bool
      */
     protected $hasMultiLocales = false;
@@ -90,7 +90,7 @@ class Translation {
     }
 
     /**
-     * Returns with all of the known locales
+     * Returns with all the known locales
      * @return array
      */
     public function allLocales(): array {

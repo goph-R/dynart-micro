@@ -81,7 +81,7 @@ class Config {
      * ]
      * </pre>
      *
-     * @param $prefix
+     * @param string $prefix
      * @param array $default
      * @param bool $useCache
      * @return array
@@ -122,12 +122,16 @@ class Config {
     }
 
     /**
-     * Replaces the ~ symbol with the `app.root_path` config value
+     * Replaces the ~ symbol at the beginning of the path
+     * with the `app.root_path` config value
      * @param string $path
      * @return string
      */
     public function getFullPath(string $path): string {
-        return str_replace('~', $this->get(App::CONFIG_ROOT_PATH), $path);
+        if (strpos($path, '~') === 0) {
+            return $this->get(App::CONFIG_ROOT_PATH) . substr($path, 1);
+        }
+        return $path;
     }
 
     /**
@@ -135,7 +139,7 @@ class Config {
      * @param string $value The value for trim and replace
      * @return string The trimmed and replaced value
      */
-    protected function getArrayItemValue(string $value) {
+    protected function getArrayItemValue(string $value): string {
         $result = trim($value);
         $this->replaceEnvValue($result);
         return $result;
@@ -144,11 +148,11 @@ class Config {
     /**
      * Caches a value if the `$useCache` is true and returns with it
      * @param string|null $name The config name
-     * @param string|array|null $value The value
+     * @param mixed|null $value The value
      * @param bool $useCache Use the cache?
-     * @return mixed
+     * @return mixed|null
      */
-    protected function cacheAndReturn($name, $value, $useCache = true) {
+    protected function cacheAndReturn(?string $name, $value, bool $useCache = true) {
         if ($useCache) {
             $this->cached[$name] = $value;
         }
@@ -157,12 +161,12 @@ class Config {
 
     /**
      * Replaces the {{name}} formatted variables in a string with environment variable values
-     * @param string|null $value The value
+     * @param mixed|null $value The value
      * @return mixed|null The replaced string
      */
     protected function replaceEnvValue($value) {
-        if (!$value) {
-            return $value;
+        if (!is_string($value)) {
+            return $value; // don’t touch non-strings
         }
         $matches = [];
         if (!preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches)) {
