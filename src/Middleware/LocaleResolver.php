@@ -9,16 +9,10 @@ use Dynart\Micro\Translation;
 
 class LocaleResolver implements Middleware {
 
-    /** @var Request */
-    protected $request;
-
-    /** @var Router */
-    protected $router;
-
-    /** @var Translation */
-    protected $translation;
-
-    protected $localeRouteSegment;
+    protected Request $request;
+    protected Router $router;
+    protected Translation $translation;
+    protected int $localeRouteSegment;
 
     public function __construct(Request $request, Router $router, Translation $translation) {
         $this->request = $request;
@@ -26,7 +20,7 @@ class LocaleResolver implements Middleware {
         $this->translation = $translation;
     }
 
-    public function run() {
+    public function run(): void {
         if (!$this->translation->hasMultiLocales()) {
             return;
         }
@@ -35,7 +29,7 @@ class LocaleResolver implements Middleware {
         $this->setLocaleViaParameter();
     }
 
-    protected function setLocaleViaAcceptLanguage() {
+    protected function setLocaleViaAcceptLanguage(): void {
         $acceptLanguage = $this->request->server('HTTP_ACCEPT_LANGUAGE');
         if ($acceptLanguage) {
             $acceptLocale = strtolower(substr($acceptLanguage, 0, 2)); // we use only neutral locale for now
@@ -45,7 +39,7 @@ class LocaleResolver implements Middleware {
         }
     }
 
-    protected function setLocaleViaParameter() {
+    protected function setLocaleViaParameter(): void {
         $locale = $this->router->currentSegment($this->localeRouteSegment);
         if (in_array($locale, $this->translation->allLocales())) {
             $this->translation->setLocale($locale);
