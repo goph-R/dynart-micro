@@ -1,8 +1,8 @@
 <?php
 
 namespace Dynart\Micro;
-use Dynart\Micro\Annotation\RouteAnnotation;
-use Dynart\Micro\Middleware\AnnotationProcessor;
+use Dynart\Micro\AttributeHandler\RouteAttributeHandler;
+use Dynart\Micro\Middleware\AttributeProcessor;
 
 /**
  * Handles HTTP request/response
@@ -80,13 +80,13 @@ class WebApp extends App {
     }
 
     /**
-     * Call this if you want to use &#64;route annotations
+     * Call this if you want to use #[Route] attributes
      */
-    public function useRouteAnnotations() {
-        $this->addMiddleware(AnnotationProcessor::class);
-        Micro::add(RouteAnnotation::class);
-        $annotations = Micro::get(AnnotationProcessor::class);
-        $annotations->add(RouteAnnotation::class);
+    public function useRouteAttributes() {
+        $this->addMiddleware(AttributeProcessor::class);
+        Micro::add(RouteAttributeHandler::class);
+        $processor = Micro::get(AttributeProcessor::class);
+        $processor->add(RouteAttributeHandler::class);
     }
 
     /**
