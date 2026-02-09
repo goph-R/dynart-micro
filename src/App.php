@@ -14,6 +14,7 @@ abstract class App {
     const CONFIG_ENVIRONMENT = 'app.environment';
     const PRODUCTION_ENVIRONMENT = 'prod';
 
+    /** Stores the middleware class names in a list */
     protected array $middlewares = [];
     protected ?Config $config = null;
     protected ?Logger $logger = null;
@@ -27,10 +28,22 @@ abstract class App {
         Micro::add(Logger::class);
     }
 
+    /**
+     * Abstract function for initialize the application
+     */
     abstract public function init(): void;
 
+    /**
+     * Abstract function for processing the application
+     */
     abstract public function process(): void;
 
+    /**
+     * Fully initializes the application
+     *
+     * Creates the `Config`, loads the configs, creates the `Logger`, calls the `init()` method
+     * then runs all the middlewares. If an exception happens, handles it with the `handleException()` method.
+     */
     public function fullInit(): void {
         try {
             $this->config = Micro::get(Config::class);
@@ -43,6 +56,9 @@ abstract class App {
         }
     }
 
+    /**
+     * Calls the `process()` method within a try/catch, handles exception with the `handleException()` method
+     */
     public function fullProcess(): void {
         try {
             $this->process();
@@ -51,6 +67,11 @@ abstract class App {
         }
     }
 
+    /**
+     * Adds a middleware
+     *
+     * It adds only if not presents.
+     */
     public function addMiddleware(string $interface): void {
         if (!in_array($interface, $this->middlewares)) {
             Micro::add($interface);
@@ -58,16 +79,29 @@ abstract class App {
         }
     }
 
+    /**
+     * Runs all the added middlewares
+     */
     protected function runMiddlewares(): void {
         foreach ($this->middlewares as $m) {
             Micro::get($m)->run();
         }
     }
 
+    /**
+     * Finishes the application
+     *
+     * If the `$exitOnFinish` true (default) calls the exit, otherwise just prints out the content.
+     *
+     * @param string|int $content Content for the output. If it's an int, it is the return code of the process.
+     */
     public function finish(string|int $content = 0): void {
         $this->exitOnFinish ? exit($content) : print($content);
     }
 
+    /**
+     * Loads all the configs by the `$configPaths`
+     */
     protected function loadConfigs(): void {
         foreach ($this->configPaths as $path) {
             $this->config->load($path);
@@ -75,6 +109,11 @@ abstract class App {
     }
 
     /**
+     * Handles the exception
+     *
+     * Sends the type, the line, the exception message and the stacktrace to the standard error output.
+     * If the `Config` or the `Logger` wasn't initialised throws a `MicroException`.
+     *
      * @throws MicroException
      */
     protected function handleException(Exception $e): void {
