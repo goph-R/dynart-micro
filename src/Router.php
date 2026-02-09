@@ -265,7 +265,7 @@ class Router
     }
 
     /**
-     * Returns with all of the stored routes
+     * Returns with all the stored routes
      *
      * The result format will be ['HTTP method' => ['/route' => callable]]
      */
