@@ -5,12 +5,21 @@ namespace Dynart\Micro;
 /**
  * Represents the HTTP request
  *
+ * It can be used for getting the information of the HTTP request: the request method (POST, GET, etc.),
+ * the query parameters, the headers, the information that created by the web server, the cookies
+ * and the uploaded files.
+ *
  * @see UploadedFile
  */
 class Request {
 
+    /** The incoming HTTP request headers. */
     protected array $headers = [];
+
+    /** The incoming uploaded files. */
     protected array $uploadedFiles = [];
+
+    /** Stores the request body */
     protected string $body = '';
 
     /**
@@ -27,14 +36,23 @@ class Request {
         $this->body = file_get_contents('php://input') ?: '';
     }
 
+    /**
+     * Returns with a parameter of the request, uses the $_REQUEST array
+     */
     public function get(string $name, mixed $default = null): mixed {
         return array_key_exists($name, $_REQUEST) ? $_REQUEST[$name] : $default;
     }
 
+    /**
+     * Returns with the information that was created by the web server, uses the $_SERVER array
+     */
     public function server(string $name, mixed $default = null): mixed {
         return array_key_exists($name, $_SERVER) ? $_SERVER[$name] : $default;
     }
 
+    /**
+     * Returns the HTTP request method
+     */
     public function httpMethod(): string {
         return $this->server('REQUEST_METHOD');
     }
@@ -55,29 +73,46 @@ class Request {
         return null;
     }
 
+    /**
+     * Sets a request header
+     */
     public function setHeader(string $name, string $value): void {
         $this->headers[strtolower($name)] = $value;
     }
 
+    /**
+     * Returns with a request header by name
+     */
     public function header(string $name, mixed $default = null): mixed {
         $lowerName = strtolower($name);
         return isset($this->headers[$lowerName]) ? $this->headers[$lowerName] : $default;
     }
 
+    /**
+     * Returns with a cookie value by name
+     */
     public function cookie(string $name, mixed $default = null): mixed {
         return array_key_exists($name, $_COOKIE) ? $_COOKIE[$name] : $default;
     }
 
+    /**
+     * Returns with the request body
+     */
     public function body(): string {
         return $this->body;
     }
 
+    /**
+     * Sets the request body
+     */
     public function setBody(string $content): void {
         $this->body = $content;
     }
 
     /**
      * Returns with the request body as an associative array parsed from JSON
+     *
+     * Throws a MicroException if the JSON is invalid.
      *
      * @throws MicroException
      */
@@ -94,12 +129,21 @@ class Request {
     }
 
     /**
+     * Returns with the uploaded file by parameter name
+     *
+     * If the parameter not present it will return with a null.
+     * If only one file uploaded it will return with an UploadedFile instance.
+     * If more than one file uploaded it will return with an array.
+     *
      * @return UploadedFile|UploadedFile[]|null
      */
     public function uploadedFile(string $name): UploadedFile|array|null {
         return isset($this->uploadedFiles[$name]) ? $this->uploadedFiles[$name] : null;
     }
 
+    /**
+     * It will fill up the `uploadedFiles` array
+     */
     protected function createUploadedFiles(): void {
         foreach ($_FILES as $name => $file) {
             if (is_array($file['name'])) {
@@ -110,6 +154,9 @@ class Request {
         }
     }
 
+    /**
+     * It will create an UploadedFile array by parameter name and puts into the `uploadedFiles` array
+     */
     protected function createUploadedFilesFromArray(string $name, array $file): void {
         $this->uploadedFiles[$name] = [];
         foreach (array_keys($file['name']) as $index) {
@@ -123,6 +170,9 @@ class Request {
         }
     }
 
+    /**
+     * It will create an UploadedFile instance by an array (one element from the $_FILES)
+     */
     protected function createUploadedFile(array $file): UploadedFile {
         return Micro::create(UploadedFile::class, [
             $file['name'], $file['tmp_name'], $file['error'], $file['type'], $file['size']

@@ -10,8 +10,13 @@ use ReflectionException;
  */
 class Micro {
 
+    /** Holds the instance of the application */
     protected static ?App $app = null;
+
+    /** Stores the classes in [interface => class] format, the class can be null */
     protected static array $classes = [];
+
+    /** Stores the instances in [interface => instance] format */
     protected static array $instances = [];
 
     /**
@@ -30,6 +35,9 @@ class Micro {
         $app->fullProcess();
     }
 
+    /**
+     * Returns the instance of the application
+     */
     public static function app(): ?App {
         return self::$app;
     }
@@ -62,6 +70,7 @@ class Micro {
 
     /**
      * Returns with the class for the given interface
+     *
      * @throws MicroException If the interface wasn't added
      */
     public static function getClass(string $interface): string {
@@ -87,12 +96,51 @@ class Micro {
         return $result;
     }
 
+    /**
+     * Returns with all the interfaces in an array
+     */
     public static function interfaces(): array {
         return array_keys(self::$classes);
     }
 
     /**
      * Creates an instance for the given class
+     *
+     * In the following example, the `Something` class constructor will get the `Config` instance
+     * and the 'someParameterValue' in the `$someParameter`.
+     *
+     * <pre>
+     * use Dynart\Micro\Micro;
+     * use Dynart\Micro\App;
+     * use Dynart\Micro\Config;
+     *
+     * class Something {
+     *   private $someParameter;
+     *   public function __construct(Config $config, $someParameter) {
+     *     $this->someParameter = $someParameter;
+     *   }
+     *
+     *   public function someParameter() {
+     *     return $this->someParameter;
+     *   }
+     * }
+     *
+     * class MyApp extends App {
+     *   private $something;
+     *   public function __construct() {
+     *     Micro::add(Config::class);
+     *     Micro::add(Something::class);
+     *   }
+     *
+     *   public function init() {
+     *     $this->something = Micro::create(Something::class, ['someParameterValue']);
+     *   }
+     *
+     *   public function process() {
+     *     echo $this->something->someParameter();
+     *   }
+     * }
+     * </pre>
      *
      * If the class has a `postConstruct()` method it will be called after creation. It can be used for lazy injection.
      *
@@ -120,6 +168,11 @@ class Micro {
         return $result;
     }
 
+    /**
+     * Creates the singleton dependencies for a given class and returns with it as an array
+     *
+     * @throws MicroException
+     */
     private static function createDependencies(string $class, ReflectionClass $reflectionClass, array $dependencyStack = []): array {
         $result = [];
         $constructor = $reflectionClass->getConstructor();
@@ -141,6 +194,11 @@ class Micro {
         return $result;
     }
 
+    /**
+     * Creates an instance of the callable if needed, then returns with it
+     *
+     * @throws MicroException
+     */
     public static function getCallable(mixed $callable): mixed {
         return self::isMicroCallable($callable) ? [Micro::get($callable[0]), $callable[1]] : $callable;
     }
@@ -150,6 +208,11 @@ class Micro {
      *
      * Micro Framework callable means: an array with two strings.
      * The first one is the class name, the second is the method name.
+     *
+     * Example:
+     * <pre>
+     * [Something::class, 'theMethodName']
+     * </pre>
      */
     public static function isMicroCallable(mixed $callable): bool {
         return is_array($callable)
