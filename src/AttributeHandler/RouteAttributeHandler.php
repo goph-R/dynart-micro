@@ -14,12 +14,7 @@ use Dynart\Micro\Router;
  */
 class RouteAttributeHandler implements AttributeHandler {
 
-    /** @var Router */
-    private $router;
-
-    public function __construct(Router $router) {
-        $this->router = $router;
-    }
+    public function __construct(private Router $router) {}
 
     public function attributeClass(): string {
         return Route::class;

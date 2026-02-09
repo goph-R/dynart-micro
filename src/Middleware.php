@@ -3,5 +3,5 @@
 namespace Dynart\Micro;
 
 interface Middleware {
-    function run();
+    function run(): void;
 }

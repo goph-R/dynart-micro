@@ -8,11 +8,7 @@ namespace Dynart\Micro;
  */
 class Response {
 
-    /**
-     * Stores the headers for the response
-     * @var array
-     */
-    protected $headers = [];
+    protected array $headers = [];
 
     /**
      * Clears the headers
@@ -38,7 +34,7 @@ class Response {
      * @param string|null $default The default value if the header doesn't present
      * @return string|null The header value or default
      */
-    public function header(string $name, $default = null) {
+    public function header(string $name, mixed $default = null): mixed {
         return array_key_exists($name, $this->headers) ? $this->headers[$name] : $default;
     }
 
@@ -47,7 +43,7 @@ class Response {
      *
      * @param string $content The body content of the response
      */
-    public function send($content = ''): void {
+    public function send(string $content = ''): void {
         $sendHeaderFunction = function_exists('header') ? function ($n, $v) { header($n.': '.$v); } : function($n, $v) {}; // because of CLI
         foreach ($this->headers as $name => $value) {
             $sendHeaderFunction($name, $value);

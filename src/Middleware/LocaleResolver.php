@@ -9,16 +9,13 @@ use Dynart\Micro\Translation;
 
 class LocaleResolver implements Middleware {
 
-    protected Request $request;
-    protected Router $router;
-    protected Translation $translation;
     protected int $localeRouteSegment;
 
-    public function __construct(Request $request, Router $router, Translation $translation) {
-        $this->request = $request;
-        $this->router = $router;
-        $this->translation = $translation;
-    }
+    public function __construct(
+        protected Request $request,
+        protected Router $router,
+        protected Translation $translation
+    ) {}
 
     public function run(): void {
         if (!$this->translation->hasMultiLocales()) {

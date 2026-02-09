@@ -27,7 +27,7 @@ class CliOutput {
     protected ?string $bgColor = null;
     protected bool $useColor = true;
 
-    public function setColor($color, $bgColor = null): void {
+    public function setColor(?int $color, ?int $bgColor = null): void {
         if (is_int($color)) {
             $this->color = "\033[" . ($color < 8 ? 30 + $color : 90 + $color - 8) . "m";
         } else {

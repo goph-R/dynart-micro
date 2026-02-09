@@ -6,8 +6,6 @@ use Exception;
 
 /**
  * Micro PHP Application
- *
- * @package Dynart\Micro
  */
 abstract class App {
 
@@ -16,23 +14,12 @@ abstract class App {
     const CONFIG_ENVIRONMENT = 'app.environment';
     const PRODUCTION_ENVIRONMENT = 'prod';
 
-    /**
-     * Stores the middleware class names in a list
-     * @var Middleware[]
-     */
-    protected $middlewares = [];
-
-    /** @var Config */
-    protected $config;
-
-    /** @var Logger */
-    protected $logger;
-
+    protected array $middlewares = [];
+    protected ?Config $config = null;
+    protected ?Logger $logger = null;
     /** @var string[] */
-    protected $configPaths;
-
-    /** @var bool */
-    protected $exitOnFinish = true;
+    protected array $configPaths;
+    protected bool $exitOnFinish = true;
 
     public function __construct(array $configPaths) {
         $this->configPaths = $configPaths;
@@ -40,25 +27,11 @@ abstract class App {
         Micro::add(Logger::class);
     }
 
-    /**
-     * Abstract function for initialize the application
-     * @return mixed
-     */
-    abstract public function init();
+    abstract public function init(): void;
 
-    /**
-     * Abstract function for processing the application
-     * @return mixed
-     */
-    abstract public function process();
+    abstract public function process(): void;
 
-    /**
-     * Fully initializes the application
-     *
-     * Creates the `Config`, loads the configs, creates the `Logger`, calls the `init()` method
-     * then runs all the middlewares. If an exception happens, handles it with the `handleException()` method.
-     */
-    public function fullInit() {
+    public function fullInit(): void {
         try {
             $this->config = Micro::get(Config::class);
             $this->loadConfigs();
@@ -70,10 +43,7 @@ abstract class App {
         }
     }
 
-    /**
-     * Calls the `process()` method within a try/catch, handles exception with the `handleException()` method
-     */
-    public function fullProcess() {
+    public function fullProcess(): void {
         try {
             $this->process();
         } catch (Exception $e) {
@@ -81,59 +51,33 @@ abstract class App {
         }
     }
 
-    /**
-     * Adds a middleware
-     *
-     * It adds only if not presents.
-     *
-     * @param string $interface
-     */
-    public function addMiddleware(string $interface) {
+    public function addMiddleware(string $interface): void {
         if (!in_array($interface, $this->middlewares)) {
             Micro::add($interface);
             $this->middlewares[] = $interface;
         }
     }
 
-    /**
-     * Runs all the added middlewares
-     */
-    protected function runMiddlewares() {
+    protected function runMiddlewares(): void {
         foreach ($this->middlewares as $m) {
             Micro::get($m)->run();
         }
     }
 
-    /**
-     * Finishes the application
-     *
-     * If the `$exitOnFinish` true (default) calls the exit, otherwise just prints out the content.
-     *
-     * @param string|int $content Content for the output. If it's an int, it is the return code of the process.
-     */
-    public function finish($content = 0): void {
+    public function finish(string|int $content = 0): void {
         $this->exitOnFinish ? exit($content) : print($content);
     }
 
-    /**
-     * Loads all the configs by the `$configPaths`
-     */
-    protected function loadConfigs() {
+    protected function loadConfigs(): void {
         foreach ($this->configPaths as $path) {
             $this->config->load($path);
         }
     }
 
     /**
-     * Handles the exception
-     *
-     * Sends the type, the line, the exception message and the stacktrace to the standard error output.
-     * If the `Config` or the `Logger` wasn't initialised throws a `MicroException`.
-     *
-     * @param Exception $e The exception
      * @throws MicroException
      */
-    protected function handleException(Exception $e) {
+    protected function handleException(Exception $e): void {
         $type = get_class($e);
         $file = $e->getFile();
         $line = $e->getLine();

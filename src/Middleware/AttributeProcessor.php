@@ -14,17 +14,17 @@ use Dynart\Micro\MicroException;
 class AttributeProcessor implements Middleware {
 
     /** @var string[] */
-    protected $handlerClasses = [];
+    protected array $handlerClasses = [];
 
     /** @var AttributeHandler[][] */
-    protected $handlers = [
+    protected array $handlers = [
         AttributeHandler::TARGET_CLASS    => [],
         AttributeHandler::TARGET_PROPERTY => [],
         AttributeHandler::TARGET_METHOD   => []
     ];
 
     /** @var string[] */
-    protected $namespaces = [];
+    protected array $namespaces = [];
 
     /**
      * Adds an attribute handler for processing
@@ -35,7 +35,7 @@ class AttributeProcessor implements Middleware {
      * @throws MicroException if the given class does not implement AttributeHandler
      * @param string $className The class name
      */
-    public function add(string $className) {
+    public function add(string $className): void {
         if (!is_subclass_of($className, AttributeHandler::class)) {
             throw new MicroException("$className doesn't implement the AttributeHandler interface");
         }
@@ -49,14 +49,14 @@ class AttributeProcessor implements Middleware {
      *
      * @param string $namespace
      */
-    public function addNamespace(string $namespace) {
+    public function addNamespace(string $namespace): void {
         $this->namespaces[] = $namespace;
     }
 
     /**
      * Creates the handlers then processes all interfaces in the App or those that are in the given namespaces.
      */
-    public function run() {
+    public function run(): void {
         $this->createHandlersPerTarget();
         $this->processAll();
     }
@@ -162,7 +162,7 @@ class AttributeProcessor implements Middleware {
      * @param string $className The class name
      * @param \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject The reflection class, property or method
      */
-    protected function processSubject(AttributeHandler $handler, string $className, $subject): void {
+    protected function processSubject(AttributeHandler $handler, string $className, \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject): void {
         $attributes = $subject->getAttributes($handler->attributeClass());
         foreach ($attributes as $refAttribute) {
             $handler->handle($className, $subject, $refAttribute->newInstance());

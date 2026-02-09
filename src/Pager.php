@@ -4,18 +4,18 @@ namespace Dynart\Micro;
 
 class Pager {
 
-    protected $page = 0;
-    protected $limit = 25;
-    protected $count;
-    protected $max;
-    protected $next;
-    protected $prev;
-    protected $start;
-    protected $end;
-    protected $hideLeft;
-    protected $hideRight;
-    protected $params;
-    protected $route;
+    protected int $page = 0;
+    protected int $limit = 25;
+    protected int $count;
+    protected int $max;
+    protected bool $next;
+    protected bool $prev;
+    protected int $start;
+    protected int $end;
+    protected bool $hideLeft;
+    protected bool $hideRight;
+    protected array $params;
+    protected string $route;
 
     public function __construct(string $route, array $params, int $count, int $pagerLimit = 7) {
         $this->route = $route;
@@ -23,7 +23,7 @@ class Pager {
         $this->page = isset($params['page']) ? (int)$params['page'] : 0;
         $this->count = $count;
         $pageSize = isset($params['page_size']) ? (int)$params['page_size'] : 10;
-        $this->max = ceil($this->count / $pageSize) - 1;
+        $this->max = (int)ceil($this->count / $pageSize) - 1;
         if ($this->page > $this->max) {
             $this->page = $this->max;
         }
@@ -37,7 +37,7 @@ class Pager {
         $this->hideRight = $this->end < $this->max - 1;
     }
 
-    protected function calculateStartAndEnd($pagerLimit) {
+    protected function calculateStartAndEnd(int $pagerLimit): void {
         $limit = (int)floor($pagerLimit / 2);
         $this->start = $this->page - $limit;
         $add = 0;
@@ -57,49 +57,49 @@ class Pager {
         }
     }
 
-    public function route() {
+    public function route(): string {
         return $this->route;
     }
 
-    public function paramsForPage(int $page) {
+    public function paramsForPage(int $page): array {
         $params = $this->params;
         $params['page'] = $page;
         return $params;
     }
 
-    public function hasLeftHidden() {
+    public function hasLeftHidden(): bool {
         return $this->hideLeft;
     }
 
-    public function hasRightHidden() {
+    public function hasRightHidden(): bool {
         return $this->hideRight;
     }
 
-    public function start() {
+    public function start(): int {
         return $this->start;
     }
 
-    public function end() {
+    public function end(): int {
         return $this->end;
     }
 
-    public function page() {
+    public function page(): int {
         return $this->page;
     }
 
-    public function max() {
+    public function max(): int {
         return $this->max;
     }
 
-    public function prev() {
+    public function prev(): bool {
         return $this->prev;
     }
 
-    public function next() {
+    public function next(): bool {
         return $this->next;
     }
 
-    public function params() {
+    public function params(): array {
         return $this->params;
     }
 }

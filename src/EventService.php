@@ -13,7 +13,7 @@ class EventService {
         $this->subscriptions[$event][] = $callable;
     }
 
-    public function subscribe(string $event, $callable): void {
+    public function subscribe(string $event, mixed $callable): void {
         $this->subscribeWithRef($event, $callable);
     }
 
@@ -34,7 +34,7 @@ class EventService {
         return false;
     }
 
-    public function emit(string $event, array $args): void {
+    public function emit(string $event, array $args = []): void {
         if (array_key_exists($event, $this->subscriptions)) {
             foreach ($this->subscriptions[$event] as $callable) {
                 call_user_func_array(Micro::getCallable($callable), $args);

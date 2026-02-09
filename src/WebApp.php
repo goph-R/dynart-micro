@@ -17,11 +17,8 @@ class WebApp extends App {
     const CONTENT_TYPE_JSON = 'application/json';
     const ERROR_CONTENT_PLACEHOLDER = '<!-- content -->';
 
-    /** @var Router */
-    protected $router;
-
-    /** @var Response */
-    protected $response;
+    protected Router $router;
+    protected Response $response;
 
     public function __construct(array $configPaths) {
         parent::__construct($configPaths);
@@ -32,12 +29,12 @@ class WebApp extends App {
         Micro::add(View::class);
     }
 
-    public function init() {
+    public function init(): void {
         $this->router = Micro::get(Router::class);
         $this->response = Micro::get(Response::class);
     }
 
-    public function process() {
+    public function process(): void {
         list($callable, $params) = $this->router->matchCurrentRoute();
         if ($callable) {
             $callable = Micro::getCallable($callable);
@@ -48,7 +45,7 @@ class WebApp extends App {
         }
     }
 
-    public function redirect($location, $params = []) {
+    public function redirect(string $location, array $params = []): void {
         $url = substr($location, 0, 4) == 'http' ? $location : $this->router->url($location, $params);
         $this->response->clearHeaders();
         $this->response->setHeader(self::HEADER_LOCATION, $url);
@@ -56,7 +53,7 @@ class WebApp extends App {
         $this->finish();
     }
 
-    public function sendContent($content) {
+    public function sendContent(mixed $content): void {
         if (is_string($content)) {
             $this->response->setHeader(self::HEADER_CONTENT_TYPE, self::CONTENT_TYPE_HTML);
             $this->response->send($content);
@@ -71,7 +68,7 @@ class WebApp extends App {
      * @param int $code The error code
      * @param string $content The error content
      */
-    public function sendError(int $code, $content = '') {
+    public function sendError(int $code, string $content = ''): void {
         if ($this->isWeb()) { // because of testing in cli
             http_response_code($code);
         }
@@ -82,7 +79,7 @@ class WebApp extends App {
     /**
      * Call this if you want to use #[Route] attributes
      */
-    public function useRouteAttributes() {
+    public function useRouteAttributes(): void {
         $this->addMiddleware(AttributeProcessor::class);
         Micro::add(RouteAttributeHandler::class);
         $processor = Micro::get(AttributeProcessor::class);
@@ -111,7 +108,7 @@ class WebApp extends App {
      * Returns true if the call is from the web
      * @return bool
      */
-    protected function isWeb() {
+    protected function isWeb(): bool {
         return http_response_code() !== false;
     }
 

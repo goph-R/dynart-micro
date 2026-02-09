@@ -20,8 +20,7 @@ class Logger extends KLogger {
     const WARNING = 'warning';
     const ERROR = 'error';
 
-    /** @var string */
-    private $level;
+    private string $level;
 
     public function __construct(Config $config) {
         parent::__construct(

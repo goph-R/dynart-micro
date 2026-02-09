@@ -6,11 +6,11 @@ class CliCommands {
 
     protected array $commands = [];
 
-    public function add(string $name, $callable, array $paramNames = [], array $flagNames = []): void {
+    public function add(string $name, callable|array $callable, array $paramNames = [], array $flagNames = []): void {
         $this->commands[$name] = [$callable, $paramNames, $flagNames];
     }
 
-    public function current() {
+    public function current(): ?string {
         return $_SERVER['argv'][1] ?? null;
     }
 
