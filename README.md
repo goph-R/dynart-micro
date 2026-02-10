@@ -138,10 +138,6 @@ class BookController {
     #[Route('GET', '/books/?')]
     public function show(string $id): array { /* ... */ }
 }
-
-// In your App::init():
-$this->useRouteAttributes();
-Micro::add(BookController::class);
 ```
 
 ### &#x2699;&#xFE0F; Configuration — `Config`
@@ -150,7 +146,7 @@ INI-based with dot-notation keys, environment variable substitution, and path al
 
 ```ini
 app.root_path = /var/www/myapp
-app.base_url = /
+app.base_url = https://myapp.com
 app.environment = prod
 
 ; Environment variable override
@@ -256,15 +252,10 @@ Argument parsing with named params and boolean flags.
 
 ```php
 class MyCliApp extends CliApp {
-
     public function init(): void {
         $commands = Micro::get(CliCommandsInterface::class);
         $commands->add('migrate', [MigrateCommand::class, 'run']);
         $commands->add('seed', [SeedCommand::class, 'run']);
-    }
-
-    public function process(): void {
-        parent::process();
     }
 }
 
