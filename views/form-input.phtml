@@ -1,0 +1,22 @@
+<?php $id = $form->idByNameAndField($name, $field) ?>
+<?php $inputName = $form->name() ? $form->name().'_'.$name : $name ?>
+<?php $type = $field['type'] ?? 'text' ?>
+<?php $attrs = $field['attributes'] ?? [] ?>
+<?php if ($type == 'text'): ?>
+    <input id="<?= $id ?>" name="<?= $inputName ?>" type="text" value="<?= $form->value($inputName, true) ?>"<?= esc_attrs($attrs) ?>>
+<?php elseif ($type == 'password'): ?>
+    <input id="<?= $id ?>" name="<?= $inputName ?>" type="password" value=""<?= esc_attrs($attrs) ?>>
+<?php elseif ($type == 'checkbox'): ?>
+    <?php if (isset($field['text'])): ?><label><?php endif ?>
+    <?php $value = $field['value'] ?? '1' ?>
+    <input id="<?= $id ?>" name="<?= $inputName ?>" type="checkbox" value="<?= $value ?>"<?= $form->value($inputName) == $value ? ' checked' : '' ?><?= esc_attrs($attrs) ?>>
+    <?php if (isset($field['text'])): ?><?= esc_html($field['text']) ?></label><?php endif ?>
+<?php elseif ($type == 'select'): ?>
+    <select id="<?= $id ?>" name="<?= $inputName ?>"<?= esc_attrs($attrs) ?>>
+        <?php foreach ($field['options'] as $value => $text): ?>
+            <option value="<?= esc_attr($value) ?>"<?= $form->value($inputName) == $value ? ' selected' : ''?>><?= esc_html($text) ?></option>
+        <?php endforeach ?>
+    </select>
+<?php elseif ($type == 'hidden'): ?>
+    <input id="<?= $id ?>" name="<?= $inputName ?>" type="hidden" value="<?= $form->value($inputName, true) ?>"<?= esc_attrs($attrs) ?>>
+<?php endif ?>

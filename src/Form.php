@@ -122,10 +122,10 @@ class Form {
      * @param bool $required Is this field required to be filled out?
      */
     public function addFields(array $fields, bool $required = true): void {
-        $this->fields = array_merge($this->fields, $fields);
-        if ($required) {
+        if ($required) { // TODO: possible bug! What if one of the fields are not required?
             $this->required = array_merge($this->required, array_keys($fields));
         }
+        $this->fields = array_merge($this->fields, $fields);
     }
 
     /**
@@ -292,6 +292,48 @@ class Form {
      */
     public function error(string $name): ?string {
         return $this->errors[$name] ?? null;
+    }
+
+    public function fetch(): string {
+        $html = $this->fetchErrors();
+        foreach ($this->fields() as $name => $field) {
+            $html .= $this->fetchField($name, $field);
+        }
+        return $html;
+    }
+
+    public function fetchErrors(): string {
+        /** @var ViewInterface $view */
+        $view = Micro::get(ViewInterface::class);
+        return $view->fetch('form-errors', [
+            'form' => $this
+        ]);
+    }
+
+    public function fetchField(string $name, array $field): string {
+        /** @var ViewInterface $view */
+        $view = Micro::get(ViewInterface::class);
+        return $view->fetch('form-field', [
+            'form' => $this,
+            'name' => $name,
+            'field' => $field
+        ]);
+    }
+
+    public function fetchInput(string $name, array $field): string {
+        /** @var ViewInterface $view */
+        $view = Micro::get(ViewInterface::class);
+        return $view->fetch('form-input', [
+            'form' => $this,
+            'name' => $name,
+            'field' => $field
+        ]);
+    }
+
+    public function idByNameAndField(string $name, array $field): string {
+        return isset($field['id'])
+            ? ($this->name() ? $this->name().'_'.$name : $name)
+            : $field['id'];
     }
 
 }

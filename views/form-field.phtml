@@ -1,0 +1,26 @@
+<?php $inputId = $form->idByNameAndField($name, $field) ?>
+<?php $visible = $field['type'] != 'hidden' && !isset($field['hidden']) ?>
+<?php if ($visible): ?>
+<div id="<?= $inputId ?>_field" class="form-field">
+    <?php if (isset($field['label'])): ?>
+        <label for="<?= $inputId ?>">
+            <?= esc_html($field['label']) ?>
+            <?php if ($form->required($name)): ?>
+                <span class="form-required">*</span>
+            <?php endif ?>
+        </label>
+    <?php endif ?>
+<?php endif ?>
+
+<?= $form->fetchInput($name, $field) ?>
+
+<?php if ($visible): ?>
+    <?php if ($form->error($name)): ?>
+        <small class="form-error"><?= esc_html($form->error($name)) ?></small>
+    <?php endif ?>
+    <?php // Description ?>
+    <?php if (isset($field['description'])): ?>
+        <small class="form-description"><?= esc_html($field['description']) ?></small>
+    <?php endif ?>
+</div>
+<?php endif ?>
