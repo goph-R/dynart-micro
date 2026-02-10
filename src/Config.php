@@ -74,6 +74,10 @@ class Config implements ConfigInterface {
         return $path;
     }
 
+    public function rootPath(): string {
+        return $this->get(App::CONFIG_ROOT_PATH, '');
+    }
+
     /**
      * Trims and replaces variables to environment variable values in a string
      *

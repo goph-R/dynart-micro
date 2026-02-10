@@ -26,7 +26,7 @@ class Router implements RouterInterface
     protected array $routes = [];
 
     /**
-     * Stores callables for the start segments of all of the routes. For example the locale is a
+     * Stores callables for the start segments of all the routes. For example the locale is a
      * prefix variable, because it is always in every route and the value depends on the incoming
      * request.
      *
@@ -38,12 +38,12 @@ class Router implements RouterInterface
      * All segments of the current route
      *
      * For example if the route is '/en/book/123/save'
-     * this will has the following value: ['en', 'book', '123', 'save']
+     * this will have the following value: ['en', 'book', '123', 'save']
      */
     protected array $segments = [];
 
     /**
-     * It will fill up the `$segments` array
+     * Fill up the `$segments` array
      */
     public function __construct(protected ConfigInterface $config, protected RequestInterface $request) {
         $this->segments = explode('/', $this->currentRoute());
@@ -56,7 +56,7 @@ class Router implements RouterInterface
     }
 
     public function currentSegment(int $index, mixed $default = null): mixed {
-        return isset($this->segments[$index]) ? $this->segments[$index] : $default;
+        return $this->segments[$index] ?? $default;
     }
 
     public function addPrefixVariable(callable|array $callable): int {
@@ -141,7 +141,7 @@ class Router implements RouterInterface
 
     public function add(string $route, callable|array $callable, string $method = 'GET'): void {
         if ($method == 'BOTH') {
-            $this->add($route, $callable, 'GET');
+            $this->add($route, $callable); // GET
             $this->add($route, $callable, 'POST');
         } else {
             if (!array_key_exists($method, $this->routes)) {

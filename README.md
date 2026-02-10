@@ -1,10 +1,8 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/PHP-8.0+-8892BF?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.0+"/>
-  <img src="https://img.shields.io/badge/License-Apache_2.0-D22128?style=for-the-badge" alt="License"/>
-  <img src="https://img.shields.io/badge/Version-0.8.0-2ea44f?style=for-the-badge" alt="Version"/>
-</p>
+# Micro PHP Framework
 
-# <samp>dynart-micro</samp>
+![PHP](https://img.shields.io/badge/PHP-8.0+-8892BF)
+![License](https://img.shields.io/badge/License-Apache_2.0-D22128)
+![Version](https://img.shields.io/badge/Version-0.8.0-2ea44f)
 
 A lightweight PHP micro framework with dependency injection, routing, templating, i18n, form handling, and CLI support. No magic, no bloat — just the essentials.
 
@@ -33,6 +31,8 @@ composer require dynart/micro
 
 ## &#x26A1; Quick Start
 
+### index.php
+
 ```php
 <?php
 
@@ -41,27 +41,46 @@ use Dynart\Micro\WebApp;
 
 require 'vendor/autoload.php';
 
-class MyApp extends WebApp {
-
-    public function init(): void {
-        parent::init();
-        Micro::get(RouterInterface::class)->add('/', function () {
-            return '<h1>Hello, World!</h1>';
-        });
-    }
-
-    public function process(): void {
-        parent::process();
-    }
-}
-
-Micro::run(new MyApp([__DIR__.'/config.ini']));
+Micro::run(new WebApp(['config.ini.php']));
 ```
 
+### Controllers/HomeController.php
+
+```php
+namespace MyApp\Controllers;
+
+use Dynart\Micro\Attribute\Route;
+
+class HomeController {
+    #[Route('GET', '/')]
+    public function index(): string {
+        return '<h1>Hello world!</h1>';
+    }
+}
+```
+
+### composer.json
+
+```json
+{
+    "require": {
+        "dynart/micro": "^0.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "MyApp\\": "."
+        }
+    }
+}
+```
+
+### config.ini.php
+
 ```ini
-; config.ini
-app.root_path = .
-app.base_url = /
+;<?php /*
+app.root_path = /full/path/to/your/webapp
+app.base_url = http://url/to/your/webapp
+app.scan_namespaces = MyApp
 ```
 
 ## &#x1F3D7;&#xFE0F; Architecture

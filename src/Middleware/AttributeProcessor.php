@@ -2,10 +2,14 @@
 
 namespace Dynart\Micro\Middleware;
 
+use Dynart\Micro\ConfigInterface;
 use Dynart\Micro\Micro;
 use Dynart\Micro\MiddlewareInterface;
 use Dynart\Micro\AttributeHandlerInterface;
 use Dynart\Micro\MicroException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use ReflectionClass;
 
 /**
  * Processes PHP 8 attributes on registered classes
@@ -24,6 +28,8 @@ class AttributeProcessor implements MiddlewareInterface {
 
     /** @var string[] */
     protected array $namespaces = [];
+
+    public function __construct(protected ?ConfigInterface $config = null) {}
 
     /**
      * Adds an attribute handler for processing
@@ -53,8 +59,107 @@ class AttributeProcessor implements MiddlewareInterface {
     }
 
     public function run(): void {
+        $this->loadNamespacesFromConfig();
+        $this->discoverClassesFromNamespaces();
         $this->createHandlersPerTarget();
         $this->processAll();
+    }
+
+    /**
+     * Reads `app.scan_namespaces` from config and merges with programmatically added namespaces
+     */
+    protected function loadNamespacesFromConfig(): void {
+        if ($this->config === null) {
+            return;
+        }
+        $value = $this->config->get('app.scan_namespaces', '');
+        if ($value) {
+            foreach (explode(',', $value) as $ns) {
+                $ns = trim($ns);
+                if ($ns && !in_array($ns, $this->namespaces)) {
+                    $this->namespaces[] = $ns;
+                }
+            }
+        }
+    }
+
+    /**
+     * Discovers classes from Composer PSR-4 autoload map for configured namespaces
+     *
+     * Scans directories matching the configured namespaces, derives FQCNs from file paths,
+     * and registers them with Micro::add(). Skips interfaces, abstract classes, and traits.
+     */
+    protected function discoverClassesFromNamespaces(): void {
+        if (empty($this->namespaces) || $this->config === null) {
+            return;
+        }
+        $rootPath = $this->config->rootPath();
+        $psr4File = $rootPath . '/vendor/composer/autoload_psr4.php';
+        if (!file_exists($psr4File)) {
+            return;
+        }
+        $psr4Map = require $psr4File;
+        foreach ($psr4Map as $prefix => $dirs) {
+            foreach ($this->namespaces as $namespace) {
+                // Bidirectional matching: configured namespace starts with PSR-4 prefix
+                // or PSR-4 prefix starts with configured namespace
+                $prefixNormalized = rtrim($prefix, '\\');
+                if (!str_starts_with($namespace, $prefixNormalized) && !str_starts_with($prefixNormalized, $namespace)) {
+                    continue;
+                }
+                foreach ($dirs as $dir) {
+                    // If configured namespace is deeper than PSR-4 prefix, scan subdirectory
+                    $subPath = '';
+                    if (strlen($namespace) > strlen($prefixNormalized)) {
+                        $subPath = str_replace('\\', '/', substr($namespace, strlen($prefix)));
+                    }
+                    $scanDir = rtrim($dir, '/') . ($subPath ? '/' . $subPath : '');
+                    if (!is_dir($scanDir)) {
+                        continue;
+                    }
+                    $classes = $this->scanDirectory($scanDir, $prefix, $subPath);
+                    foreach ($classes as $fqcn) {
+                        if (!Micro::hasInterface($fqcn)) {
+                            Micro::add($fqcn);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Recursively scans a directory for PHP files and derives FQCNs
+     *
+     * @param string $dir The directory to scan
+     * @param string $namespacePrefix The PSR-4 namespace prefix (e.g. "App\\")
+     * @param string $subPath Additional sub-path within the namespace (e.g. "Controllers")
+     * @return string[] Array of fully-qualified class names
+     */
+    protected function scanDirectory(string $dir, string $namespacePrefix, string $subPath = ''): array {
+        $classes = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+            $relativePath = substr($file->getPathname(), strlen($dir) + 1);
+            $relativePath = str_replace('\\', '/', $relativePath);
+            $relativeClass = str_replace('/', '\\', substr($relativePath, 0, -4));
+            $fqcn = $namespacePrefix . ($subPath ? str_replace('/', '\\', $subPath) . '\\' : '') . $relativeClass;
+            try {
+                $ref = new ReflectionClass($fqcn);
+                if ($ref->isInterface() || $ref->isAbstract() || $ref->isTrait()) {
+                    continue;
+                }
+            } catch (\ReflectionException $e) {
+                continue;
+            }
+            $classes[] = $fqcn;
+        }
+        return $classes;
     }
 
     /**
@@ -79,6 +184,7 @@ class AttributeProcessor implements MiddlewareInterface {
             }
         }
     }
+
 
     /**
      * If no namespace added returns true, otherwise checks the namespace and returns true if the interface is in it.

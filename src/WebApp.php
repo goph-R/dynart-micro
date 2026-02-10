@@ -11,6 +11,7 @@ use Dynart\Micro\Middleware\AttributeProcessor;
 class WebApp extends App {
 
     const CONFIG_ERROR_PAGES_FOLDER = 'app.error_pages_folder';
+    const CONFIG_USE_ROUTE_ATTRIBUTES = 'app.use_route_attributes';
     const HEADER_CONTENT_TYPE = 'Content-Type';
     const HEADER_LOCATION = 'Location';
     const CONTENT_TYPE_HTML = 'text/html; charset=UTF-8';
@@ -33,6 +34,9 @@ class WebApp extends App {
     public function init(): void {
         $this->router = Micro::get(RouterInterface::class);
         $this->response = Micro::get(ResponseInterface::class);
+        if ($this->config?->get(self::CONFIG_USE_ROUTE_ATTRIBUTES, true) ?? true) {
+            $this->useRouteAttributes();
+        }
     }
 
     public function process(): void {
@@ -48,7 +52,7 @@ class WebApp extends App {
     }
 
     public function redirect(string $location, array $params = []): void {
-        $url = substr($location, 0, 4) == 'http' ? $location : $this->router->url($location, $params);
+        $url = str_starts_with($location, 'http') ? $location : $this->router->url($location, $params);
         $this->response->clearHeaders();
         $this->response->setHeader(self::HEADER_LOCATION, $url);
         $this->response->send();
@@ -78,9 +82,6 @@ class WebApp extends App {
         $this->finish($pageContent);
     }
 
-    /**
-     * Call this if you want to use #[Route] attributes
-     */
     public function useRouteAttributes(): void {
         $this->addMiddleware(AttributeProcessor::class);
         Micro::add(RouteAttributeHandler::class);

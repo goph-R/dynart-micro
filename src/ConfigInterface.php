@@ -84,4 +84,9 @@ interface ConfigInterface {
      * with the `app.root_path` config value
      */
     public function getFullPath(string $path): string;
+
+    /**
+     * Returns the application root path (`app.root_path` config value)
+     */
+    public function rootPath(): string;
 }

@@ -18,7 +18,8 @@
     "require": {
         "php": ">=8.0",
         "katzgrau/klogger": "dev-master",
-        "ext-ctype": "*"
+        "ext-ctype": "*",
+      "ext-pdo": "*"
     },
     "minimum-stability": "dev"
 }
