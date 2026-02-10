@@ -9,7 +9,6 @@ use Dynart\Micro\MicroException;
 
 /**
  * Processes PHP 8 attributes on registered classes
- * @package Dynart\Micro
  */
 class AttributeProcessor implements MiddlewareInterface {
 
@@ -53,9 +52,6 @@ class AttributeProcessor implements MiddlewareInterface {
         $this->namespaces[] = $namespace;
     }
 
-    /**
-     * Creates the handlers then processes all interfaces in the App or those that are in the given namespaces.
-     */
     public function run(): void {
         $this->createHandlersPerTarget();
         $this->processAll();

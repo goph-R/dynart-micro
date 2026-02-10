@@ -2,13 +2,6 @@
 
 namespace Dynart\Micro;
 
-/**
- * Config handler
- *
- * Loads INI files, caches the retrieved values
- *
- * @package Dynart\Micro
- */
 class Config implements ConfigInterface {
 
     private array $config = [];
@@ -16,35 +9,14 @@ class Config implements ConfigInterface {
 
     public function __construct() {}
 
-    /**
-     * Loads an INI file and merges with current config
-     *
-     * It does NOT process sections! The "true", "false", "no", "yes", "on", "off" values
-     * will be replaced with true and false values.
-     *
-     * @param string $path The path of the INI file
-     */
     public function load(string $path): void {
         $this->config = array_merge($this->config, parse_ini_file($path, false, INI_SCANNER_TYPED));
     }
 
-    /**
-     * Clears the in-memory cache
-     *
-     * @return void
-     */
     public function clearCache(): void {
         $this->cached = [];
     }
 
-    /**
-     * Returns with value from the configuration
-     *
-     * @param string $name The config name
-     * @param mixed $default The return value if the name does not exist in the configuration
-     * @param bool $useCache Use the cache for retrieving the value?
-     * @return mixed The value
-     */
     public function get(string $name, mixed $default = null, bool $useCache = true): mixed {
         if ($useCache && array_key_exists($name, $this->cached)) {
             return $this->cached[$name];
@@ -56,53 +28,12 @@ class Config implements ConfigInterface {
         return $this->cacheAndReturn($name, $this->replaceEnvValue($value), $useCache);
     }
 
-    /**
-     * Returns with an array from a comma separated string config value
-     *
-     * For example: "1, 2, 3" will result in ['1', '2', '3']
-     *
-     * @param string $name The config name
-     * @param bool $useCache Use the cache for retrieving the value?
-     * @return array The value in array
-     */
     public function getCommaSeparatedValues(string $name, bool $useCache = true): array {
         $values = explode(',', $this->get($name));
         $result = array_map([$this, 'getArrayItemValue'], $values);
         return $this->cacheAndReturn($name, $result, $useCache);
     }
 
-    /**
-     * Returns with an array from the config
-     *
-     * For example: with the following config:
-     *
-     * <pre>
-     * persons.0.name = "name1"
-     * persons.0.age = "32"
-     * persons.1.name = "name2"
-     * persons.1.age = "42"
-     * </pre>
-     *
-     * the result will be for `$config->getArray('persons')`:
-     *
-     * <pre>
-     * [
-     *   0 => [
-     *      "name" => "name1",
-     *      "age" => "32"
-     *   ],
-     *   1 => [
-     *      "name" => "name2",
-     *      "age" => "42"
-     *   ]
-     * ]
-     * </pre>
-     *
-     * @param string $prefix
-     * @param array $default
-     * @param bool $useCache
-     * @return array
-     */
     public function getArray(string $prefix, array $default = [], bool $useCache = true): array {
         global $_ENV;
         if ($useCache && array_key_exists($prefix, $this->cached)) {
@@ -132,23 +63,10 @@ class Config implements ConfigInterface {
         return $this->cacheAndReturn($prefix, $result, $useCache);
     }
 
-    /**
-     * Returns true if the config value is cached
-     *
-     * @param string $name Name of the config
-     * @return bool Is the config value cached?
-     */
     public function isCached(string $name): bool {
         return array_key_exists($name, $this->cached);
     }
 
-    /**
-     * Replaces the ~ symbol at the beginning of the path
-     * with the `app.root_path` config value
-     *
-     * @param string $path
-     * @return string
-     */
     public function getFullPath(string $path): string {
         if (str_starts_with($path, '~')) {
             return $this->get(App::CONFIG_ROOT_PATH) . substr($path, 1);
@@ -191,7 +109,7 @@ class Config implements ConfigInterface {
      */
     protected function replaceEnvValue(mixed $value): mixed {
         if (!is_string($value)) {
-            return $value; // don’t touch non-strings
+            return $value; // don't touch non-strings
         }
         $matches = [];
         if (!preg_match_all('/{{\s*(\w+)\s*}}/', $value, $matches)) {
