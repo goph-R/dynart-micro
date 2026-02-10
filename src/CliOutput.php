@@ -2,7 +2,7 @@
 
 namespace Dynart\Micro;
 
-class CliOutput {
+class CliOutput implements CliOutputInterface {
     
     const COLOR_OFF = "\033[0m";
 

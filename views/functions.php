@@ -1,9 +1,9 @@
 <?php
 
 use Dynart\Micro\Micro;
-use Dynart\Micro\Config;
-use Dynart\Micro\Translation;
-use Dynart\Micro\Router;
+use Dynart\Micro\ConfigInterface;
+use Dynart\Micro\TranslationInterface;
+use Dynart\Micro\RouterInterface;
 
 if (!function_exists('base_url')) {
     /**
@@ -12,7 +12,7 @@ if (!function_exists('base_url')) {
      * @return string The base URL
      */
     function base_url() {
-        return Micro::get(Config::class)->get('app.base_url');
+        return Micro::get(ConfigInterface::class)->get('app.base_url');
     }
 }
 
@@ -33,7 +33,7 @@ if (!function_exists('url')) {
     function url(string $uri, bool $withMTime = true) {
         $result = base_url().$uri;
         if ($withMTime) {
-            $result .= '?'.filemtime(Micro::get(Config::class)->get('app.root_path').$uri);
+            $result .= '?'.filemtime(Micro::get(ConfigInterface::class)->get('app.root_path').$uri);
         }
         return $result;
     }
@@ -56,7 +56,7 @@ if (!function_exists('route_url')) {
      * @return string The full URL for the route
      */
     function route_url(string $route, array $params = [], string $amp = '&amp;') {
-        return Micro::get(Router::class)->url($route, $params, $amp);
+        return Micro::get(RouterInterface::class)->url($route, $params, $amp);
     }
 }
 
@@ -146,6 +146,6 @@ if (!function_exists('tr')) {
      * @return string The translated text
      */
     function tr($id) {
-        return Micro::get(Translation::class)->get($id);
+        return Micro::get(TranslationInterface::class)->get($id);
     }
 }

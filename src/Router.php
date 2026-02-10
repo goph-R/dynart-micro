@@ -12,7 +12,7 @@ namespace Dynart\Micro;
  * * GET /books/123 - returns the details of a book with ID 123
  * * POST /books/123/save - saves the details of a book with ID 123
  */
-class Router
+class Router implements RouterInterface
 {
     /**
      * Constant used for the case when no route found
@@ -55,7 +55,7 @@ class Router
     /**
      * It will fill up the `$segments` array
      */
-    public function __construct(protected Config $config, protected Request $request) {
+    public function __construct(protected ConfigInterface $config, protected RequestInterface $request) {
         $this->segments = explode('/', $this->currentRoute());
         array_shift($this->segments);
     }

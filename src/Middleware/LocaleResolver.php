@@ -2,19 +2,19 @@
 
 namespace Dynart\Micro\Middleware;
 
-use Dynart\Micro\Middleware;
-use Dynart\Micro\Request;
-use Dynart\Micro\Router;
-use Dynart\Micro\Translation;
+use Dynart\Micro\MiddlewareInterface;
+use Dynart\Micro\RequestInterface;
+use Dynart\Micro\RouterInterface;
+use Dynart\Micro\TranslationInterface;
 
-class LocaleResolver implements Middleware {
+class LocaleResolver implements MiddlewareInterface {
 
     protected int $localeRouteSegment;
 
     public function __construct(
-        protected Request $request,
-        protected Router $router,
-        protected Translation $translation
+        protected RequestInterface $request,
+        protected RouterInterface $router,
+        protected TranslationInterface $translation
     ) {}
 
     public function run(): void {

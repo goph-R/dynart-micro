@@ -5,7 +5,7 @@ namespace Dynart\Micro;
 /**
  * Session handler
  */
-class Session {
+class Session implements SessionInterface {
 
     /**
      * Starts the session (only once)

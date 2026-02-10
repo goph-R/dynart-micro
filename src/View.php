@@ -7,11 +7,11 @@ namespace Dynart\Micro;
  *
  * This class is used for server side HTML rendering with the help of PHP.
  */
-class View {
+class View implements ViewInterface {
 
     const CONFIG_DEFAULT_FOLDER = 'view.default_folder';
 
-    protected Config $config;
+    protected ConfigInterface $config;
 
     /** The layout for the currently fetched template */
     protected string $layout = '';
@@ -40,7 +40,7 @@ class View {
     /** The functions were included? */
     protected bool $functionsIncluded = false;
 
-    public function __construct(Config $config) {
+    public function __construct(ConfigInterface $config) {
         $this->config = $config;
     }
 

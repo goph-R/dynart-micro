@@ -16,16 +16,16 @@ abstract class App {
 
     /** Stores the middleware class names in a list */
     protected array $middlewares = [];
-    protected ?Config $config = null;
-    protected ?Logger $logger = null;
+    protected ?ConfigInterface $config = null;
+    protected ?LoggerInterface $logger = null;
     /** @var string[] */
     protected array $configPaths;
     protected bool $exitOnFinish = true;
 
     public function __construct(array $configPaths) {
         $this->configPaths = $configPaths;
-        Micro::add(Config::class);
-        Micro::add(Logger::class);
+        Micro::add(ConfigInterface::class, Config::class);
+        Micro::add(LoggerInterface::class, Logger::class);
     }
 
     /**
@@ -46,9 +46,9 @@ abstract class App {
      */
     public function fullInit(): void {
         try {
-            $this->config = Micro::get(Config::class);
+            $this->config = Micro::get(ConfigInterface::class);
             $this->loadConfigs();
-            $this->logger = Micro::get(Logger::class);
+            $this->logger = Micro::get(LoggerInterface::class);
             $this->init();
             $this->runMiddlewares();
         } catch (Exception $e) {

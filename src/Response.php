@@ -5,7 +5,7 @@ namespace Dynart\Micro;
 /**
  * Represents the HTTP response
  */
-class Response {
+class Response implements ResponseInterface {
 
     /** Stores the headers for the response */
     protected array $headers = [];

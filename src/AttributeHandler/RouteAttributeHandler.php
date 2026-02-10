@@ -2,9 +2,9 @@
 
 namespace Dynart\Micro\AttributeHandler;
 
-use Dynart\Micro\AttributeHandler;
+use Dynart\Micro\AttributeHandlerInterface;
 use Dynart\Micro\Attribute\Route;
-use Dynart\Micro\Router;
+use Dynart\Micro\RouterInterface;
 
 /**
  * Handles #[Route] attributes
@@ -12,16 +12,16 @@ use Dynart\Micro\Router;
  * @see AttributeHandler
  * @package Dynart\Micro
  */
-class RouteAttributeHandler implements AttributeHandler {
+class RouteAttributeHandler implements AttributeHandlerInterface {
 
-    public function __construct(private Router $router) {}
+    public function __construct(private RouterInterface $router) {}
 
     public function attributeClass(): string {
         return Route::class;
     }
 
     public function targets(): array {
-        return [AttributeHandler::TARGET_METHOD];
+        return [AttributeHandlerInterface::TARGET_METHOD];
     }
 
     public function handle(string $className, mixed $subject, object $attribute): void {

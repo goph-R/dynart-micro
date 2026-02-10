@@ -2,7 +2,7 @@
 
 namespace Dynart\Micro;
 
-class EventService {
+class EventService implements EventServiceInterface {
 
     protected array $subscriptions = [];
 

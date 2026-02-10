@@ -3,24 +3,24 @@
 namespace Dynart\Micro\Middleware;
 
 use Dynart\Micro\Micro;
-use Dynart\Micro\Middleware;
-use Dynart\Micro\AttributeHandler;
+use Dynart\Micro\MiddlewareInterface;
+use Dynart\Micro\AttributeHandlerInterface;
 use Dynart\Micro\MicroException;
 
 /**
  * Processes PHP 8 attributes on registered classes
  * @package Dynart\Micro
  */
-class AttributeProcessor implements Middleware {
+class AttributeProcessor implements MiddlewareInterface {
 
     /** @var string[] */
     protected array $handlerClasses = [];
 
-    /** @var AttributeHandler[][] */
+    /** @var AttributeHandlerInterface[][] */
     protected array $handlers = [
-        AttributeHandler::TARGET_CLASS    => [],
-        AttributeHandler::TARGET_PROPERTY => [],
-        AttributeHandler::TARGET_METHOD   => []
+        AttributeHandlerInterface::TARGET_CLASS    => [],
+        AttributeHandlerInterface::TARGET_PROPERTY => [],
+        AttributeHandlerInterface::TARGET_METHOD   => []
     ];
 
     /** @var string[] */
@@ -36,8 +36,8 @@ class AttributeProcessor implements Middleware {
      * @param string $className The class name
      */
     public function add(string $className): void {
-        if (!is_subclass_of($className, AttributeHandler::class)) {
-            throw new MicroException("$className doesn't implement the AttributeHandler interface");
+        if (!is_subclass_of($className, AttributeHandlerInterface::class)) {
+            throw new MicroException("$className doesn't implement the AttributeHandlerInterface interface");
         }
         $this->handlerClasses[] = $className;
     }
@@ -121,7 +121,7 @@ class AttributeProcessor implements Middleware {
      * @param \ReflectionClass $refClass
      */
     protected function processClass(\ReflectionClass $refClass): void {
-        foreach ($this->handlers[AttributeHandler::TARGET_CLASS] as $handler) {
+        foreach ($this->handlers[AttributeHandlerInterface::TARGET_CLASS] as $handler) {
             $this->processSubject($handler, $refClass->getName(), $refClass);
         }
     }
@@ -132,7 +132,7 @@ class AttributeProcessor implements Middleware {
      */
     protected function processProperties(\ReflectionClass $refClass): void {
         $refProperties = $refClass->getProperties();
-        foreach ($this->handlers[AttributeHandler::TARGET_PROPERTY] as $handler) {
+        foreach ($this->handlers[AttributeHandlerInterface::TARGET_PROPERTY] as $handler) {
             foreach ($refProperties as $refProperty) {
                 $this->processSubject($handler, $refClass->getName(), $refProperty);
             }
@@ -145,7 +145,7 @@ class AttributeProcessor implements Middleware {
      */
     protected function processMethods(\ReflectionClass $refClass): void {
         $refMethods = $refClass->getMethods();
-        foreach ($this->handlers[AttributeHandler::TARGET_METHOD] as $handler) {
+        foreach ($this->handlers[AttributeHandlerInterface::TARGET_METHOD] as $handler) {
             foreach ($refMethods as $refMethod) {
                 $this->processSubject($handler, $refClass->getName(), $refMethod);
             }
@@ -162,7 +162,7 @@ class AttributeProcessor implements Middleware {
      * @param string $className The class name
      * @param \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject The reflection class, property or method
      */
-    protected function processSubject(AttributeHandler $handler, string $className, \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject): void {
+    protected function processSubject(AttributeHandlerInterface $handler, string $className, \ReflectionClass|\ReflectionProperty|\ReflectionMethod $subject): void {
         $attributes = $subject->getAttributes($handler->attributeClass());
         foreach ($attributes as $refAttribute) {
             $handler->handle($className, $subject, $refAttribute->newInstance());

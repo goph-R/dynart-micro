@@ -15,7 +15,7 @@ namespace Dynart\Micro;
  *
  * @see Config
  */
-class Translation {
+class Translation implements TranslationInterface {
 
     /** The configuration name of all the known translation */
     const CONFIG_ALL = 'translation.all';
@@ -41,12 +41,12 @@ class Translation {
     /** The current locale */
     protected string $locale = 'en';
 
-    protected Config $config;
+    protected ConfigInterface $config;
 
     /**
      * Sets the `$locale`, the `$allLocales` and `$hasMultiLocales` members via the `$config`
      */
-    public function __construct(Config $config) {
+    public function __construct(ConfigInterface $config) {
         $this->config = $config;
         $this->locale = $config->get(self::CONFIG_DEFAULT, self::DEFAULT_LOCALE);
         $this->allLocales = $config->getCommaSeparatedValues(self::CONFIG_ALL);

@@ -9,7 +9,7 @@ namespace Dynart\Micro;
  *
  * @package Dynart\Micro
  */
-class Config {
+class Config implements ConfigInterface {
 
     private array $config = [];
     private array $cached = [];

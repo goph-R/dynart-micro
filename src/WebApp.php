@@ -17,21 +17,21 @@ class WebApp extends App {
     const CONTENT_TYPE_JSON = 'application/json';
     const ERROR_CONTENT_PLACEHOLDER = '<!-- content -->';
 
-    protected Router $router;
-    protected Response $response;
+    protected RouterInterface $router;
+    protected ResponseInterface $response;
 
     public function __construct(array $configPaths) {
         parent::__construct($configPaths);
-        Micro::add(Request::class);
-        Micro::add(Response::class);
-        Micro::add(Router::class);
-        Micro::add(Session::class);
-        Micro::add(View::class);
+        Micro::add(RequestInterface::class, Request::class);
+        Micro::add(ResponseInterface::class, Response::class);
+        Micro::add(RouterInterface::class, Router::class);
+        Micro::add(SessionInterface::class, Session::class);
+        Micro::add(ViewInterface::class, View::class);
     }
 
     public function init(): void {
-        $this->router = Micro::get(Router::class);
-        $this->response = Micro::get(Response::class);
+        $this->router = Micro::get(RouterInterface::class);
+        $this->response = Micro::get(ResponseInterface::class);
     }
 
     public function process(): void {

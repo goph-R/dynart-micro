@@ -4,7 +4,7 @@ namespace Dynart\Micro;
 
 use Katzgrau\KLogger\Logger as KLogger;
 
-class Logger extends KLogger {
+class Logger extends KLogger implements LoggerInterface {
 
     const CONFIG_DIR = 'log.dir';
     const DEFAULT_DIR = 'logs';
@@ -22,7 +22,7 @@ class Logger extends KLogger {
 
     private string $level;
 
-    public function __construct(Config $config) {
+    public function __construct(ConfigInterface $config) {
         parent::__construct(
             $config->get(self::CONFIG_DIR, self::DEFAULT_DIR),
             $config->get(self::CONFIG_LEVEL, self::DEFAULT_LEVEL),

@@ -43,9 +43,9 @@ class Form {
      */
     protected array $validators = [];
 
-    protected Session $session;
+    protected SessionInterface $session;
 
-    protected Request $request;
+    protected RequestInterface $request;
 
     /**
      * Creates the form with given name and `$csrf` value
@@ -55,7 +55,7 @@ class Form {
      * @param string $name The name of the form, can be an empty string (usually for filter forms)
      * @param bool $csrf Is the form should use a CSRF field and validate it on `process()`?
      */
-    public function __construct(Request $request, Session $session, string $name = 'form', bool $csrf = true) {
+    public function __construct(RequestInterface $request, SessionInterface $session, string $name = 'form', bool $csrf = true) {
         $this->request = $request;
         $this->session = $session;
         $this->name = $name;

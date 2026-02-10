@@ -2,7 +2,7 @@
 
 namespace Dynart\Micro;
 
-class CliCommands {
+class CliCommands implements CliCommandsInterface {
 
     protected array $commands = [];
 

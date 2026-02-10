@@ -11,7 +11,7 @@ namespace Dynart\Micro;
  *
  * @see UploadedFile
  */
-class Request {
+class Request implements RequestInterface {
 
     /** The incoming HTTP request headers. */
     protected array $headers = [];

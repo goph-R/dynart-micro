@@ -8,18 +8,18 @@ namespace Dynart\Micro;
  */
 class CliApp extends App {
 
-    protected CliCommands $commands;
+    protected CliCommandsInterface $commands;
 
-    protected CliOutput $output;
+    protected CliOutputInterface $output;
 
     public function __construct(array $configPaths) {
         parent::__construct($configPaths);
-        Micro::add(CliCommands::class);
-        Micro::add(CliOutput::class);
+        Micro::add(CliCommandsInterface::class, CliCommands::class);
+        Micro::add(CliOutputInterface::class, CliOutput::class);
     }
 
     public function init(): void {
-        $this->commands = Micro::get(CliCommands::class);
+        $this->commands = Micro::get(CliCommandsInterface::class);
     }
 
     public function process(): void {
