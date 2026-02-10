@@ -8,6 +8,8 @@ namespace Dynart\Micro;
  */
 class CliApp extends App {
 
+    const EVENT_COMMAND_MATCHED = 'cliapp.command_matched';
+
     protected CliCommandsInterface $commands;
 
     protected CliOutputInterface $output;
@@ -26,6 +28,7 @@ class CliApp extends App {
         list($callable, $params) = $this->commands->matchCurrent();
         if ($callable) {
             $callable = Micro::getCallable($callable);
+            Micro::get(EventServiceInterface::class)->emit(self::EVENT_COMMAND_MATCHED, [$callable, $params]);
             if (empty($params)) {
                 $content = call_user_func($callable);
             } else {

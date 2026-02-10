@@ -16,6 +16,7 @@ class WebApp extends App {
     const CONTENT_TYPE_HTML = 'text/html; charset=UTF-8';
     const CONTENT_TYPE_JSON = 'application/json';
     const ERROR_CONTENT_PLACEHOLDER = '<!-- content -->';
+    const EVENT_ROUTE_MATCHED = 'webapp.route_matched';
 
     protected RouterInterface $router;
     protected ResponseInterface $response;
@@ -38,6 +39,7 @@ class WebApp extends App {
         list($callable, $params) = $this->router->matchCurrentRoute();
         if ($callable) {
             $callable = Micro::getCallable($callable);
+            Micro::get(EventServiceInterface::class)->emit(self::EVENT_ROUTE_MATCHED, [$callable, $params]);
             $content = call_user_func_array($callable, $params);
             $this->sendContent($content);
         } else {

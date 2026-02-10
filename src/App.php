@@ -13,6 +13,7 @@ abstract class App {
     const CONFIG_ROOT_PATH = 'app.root_path';
     const CONFIG_ENVIRONMENT = 'app.environment';
     const PRODUCTION_ENVIRONMENT = 'prod';
+    const EVENT_INIT_FINISHED = 'app.init_finished';
 
     /** Stores the middleware class names in a list */
     protected array $middlewares = [];
@@ -26,6 +27,7 @@ abstract class App {
         $this->configPaths = $configPaths;
         Micro::add(ConfigInterface::class, Config::class);
         Micro::add(LoggerInterface::class, Logger::class);
+        Micro::add(EventServiceInterface::class, EventService::class);
     }
 
     /**
@@ -51,6 +53,7 @@ abstract class App {
             $this->logger = Micro::get(LoggerInterface::class);
             $this->init();
             $this->runMiddlewares();
+            Micro::get(EventServiceInterface::class)->emit(self::EVENT_INIT_FINISHED);
         } catch (Exception $e) {
             $this->handleException($e);
         }
