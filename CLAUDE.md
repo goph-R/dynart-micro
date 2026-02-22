@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**dynart-micro** is a micro PHP framework (v0.6.0) providing dependency injection, routing, templating, form handling, i18n, and CLI support. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`.
+**dynart-micro** is a micro PHP framework (v0.8.0) providing dependency injection, routing, templating, form handling, i18n, CLI support, and JWT-based authentication. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`. Requires `firebase/php-jwt ^7.0`.
 
 The test suite lives in a **separate repository** at `../dynart-micro-test/`. That project symlinks this library via a Composer path repository (`vendor/dynart/micro` → `../dynart-micro`). Always treat both folders as a single codebase.
 
@@ -63,7 +63,7 @@ Two app types: `WebApp` (HTTP: router + views + sessions + error pages) and `Cli
 
 Routes registered via `Router::add(path, callable, method)` or `@route` PHPDoc annotations / `#[Route]` PHP 8 attributes. Path variables use `?` wildcards (e.g., `/users/?/posts/?`). Controller methods returning a string send HTML; returning an array sends JSON.
 
-`WebApp::useRouteAnnotations()` enables annotation-based routing by adding the `AnnotationProcessor` middleware.
+`WebApp::useRouteAttributes()` enables attribute-based routing by adding the `AttributeProcessor` middleware.
 
 ### Config
 
@@ -88,6 +88,16 @@ Implement `Middleware` interface (single `run()` method), register with `$app->a
 - **EventService**: Pub/sub observer pattern
 - **CliCommands**: CLI argument/flag parsing with named params (`-name value`) and boolean flags
 - **Pager**: Pagination helper with URL generation
+- **JwtAuth**: JWT authorization service — decodes Bearer tokens, resolves `sub` → `JwtUserInterface` via user resolver callback, enforces `#[Authorize]`/`#[AllowAnonymous]` attributes on controllers
+- **JwtValidator**: Middleware that extracts and validates the `Authorization: Bearer` header using `firebase/php-jwt`
+- **AuthorizationException**: Thrown by `JwtAuth::checkAuthorization()`, carries HTTP code (401 or 403); caught in `WebApp::handleException()` before logging
+
+### JWT Auth Implementation Notes
+
+- `JwtAuth` subscribes to `WebApp::EVENT_ROUTE_MATCHED` using `[$this, 'onRouteMatched']`, **not** `[self::class, 'onRouteMatched']`. The singleton is registered under `JwtAuthInterface::class` in the DI container; using `self::class` would cause `Micro::getCallable()` to look up `JwtAuth::class` which is not a registered key, and fail.
+- `callable` cannot be used as a typed property in PHP — use `mixed` for nullable callable properties.
+- `WebApp::useJwtAuth()` calls `$this->addMiddleware(AttributeProcessor::class)` itself (idempotent), so `useRouteAttributes()` does not need to be called first, though it typically is for route registration.
+- `firebase/php-jwt` v6 has a security advisory (`PKSA-y2cr-5h3j-g3ys`); use `^7.0`. v7 also enforces a minimum 32-byte key for HS256.
 
 ## Test Project Structure (`../dynart-micro-test/`)
 

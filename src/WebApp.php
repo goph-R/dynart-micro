@@ -1,8 +1,11 @@
 <?php
 
 namespace Dynart\Micro;
+use Dynart\Micro\AttributeHandler\AllowAnonymousAttributeHandler;
+use Dynart\Micro\AttributeHandler\AuthorizeAttributeHandler;
 use Dynart\Micro\AttributeHandler\RouteAttributeHandler;
 use Dynart\Micro\Middleware\AttributeProcessor;
+use Dynart\Micro\Middleware\JwtValidator;
 
 /**
  * Handles HTTP request/response
@@ -89,6 +92,17 @@ class WebApp extends App {
         $processor->add(RouteAttributeHandler::class);
     }
 
+    public function useJwtAuth(): void {
+        $this->addMiddleware(AttributeProcessor::class);
+        $this->addMiddleware(JwtValidator::class);
+        Micro::add(JwtAuthInterface::class, JwtAuth::class);
+        Micro::add(AuthorizeAttributeHandler::class);
+        Micro::add(AllowAnonymousAttributeHandler::class);
+        $processor = Micro::get(AttributeProcessor::class);
+        $processor->add(AuthorizeAttributeHandler::class);
+        $processor->add(AllowAnonymousAttributeHandler::class);
+    }
+
     /**
      * If it exists, loads the content of an error HTML page otherwise
      * returns the HTML comment for the error placeholder
@@ -124,6 +138,10 @@ class WebApp extends App {
      * @param \Exception $e The exception for handling
      */
     protected function handleException(\Exception $e): void {
+        if ($e instanceof AuthorizationException) {
+            $this->sendError($e->getCode());
+            return;
+        }
         parent::handleException($e);
         $env = $this->config->get(App::CONFIG_ENVIRONMENT, App::PRODUCTION_ENVIRONMENT);
         if ($env != App::PRODUCTION_ENVIRONMENT) {

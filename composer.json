@@ -18,8 +18,9 @@
     "require": {
         "php": ">=8.0",
         "katzgrau/klogger": "dev-master",
+        "firebase/php-jwt": "^7.0",
         "ext-ctype": "*",
-      "ext-pdo": "*"
+        "ext-pdo": "*"
     },
     "minimum-stability": "dev"
 }

@@ -15,7 +15,7 @@ A lightweight PHP micro framework with dependency injection, routing, templating
 </td>
 <td>
 
-[API Docs](https://micro.dynart.net/docs/api/) &#x2022; [Coverage Report](https://micro.dynart.net/reports/coverage-html/) &#x2022; [Test Repo](https://github.com/goph-R/dynart-micro-test)
+[API Docs](https://micro.dynart.net/docs/api/) • [Coverage Report](https://micro.dynart.net/reports/coverage-html/) • [Test Repo](https://github.com/goph-R/dynart-micro-test)
 
 </td>
 </tr>
@@ -23,13 +23,13 @@ A lightweight PHP micro framework with dependency injection, routing, templating
 
 ---
 
-## &#x1F4E6; Installation
+## 📦 Installation
 
 ```bash
 composer require dynart/micro
 ```
 
-## &#x26A1; Quick Start
+## ⚡ Quick Start
 
 ### index.php
 
@@ -83,7 +83,7 @@ app.base_url = http://url/to/your/webapp
 app.scan_namespaces = MyApp
 ```
 
-## &#x1F3D7;&#xFE0F; Architecture
+## 🏗️ Architecture
 
 ```
 Micro::run(App)
@@ -97,9 +97,9 @@ Micro::run(App)
       └── App::process()        ← dispatch route / CLI command
 ```
 
-## &#x1F9F1; Components
+## 🧱 Components
 
-### &#x1F4A1; DI Container — `Micro`
+### 💡 DI Container — `Micro`
 
 Static service locator with reflection-based auto-wiring. All services are singletons.
 
@@ -117,7 +117,7 @@ $instance = Micro::create(MyService::class, ['extraParam']);
 
 Classes with a `postConstruct()` method get it called automatically after creation.
 
-### &#x1F6E3;&#xFE0F; Routing — `Router`
+### 🛣️ Routing — `Router`
 
 Path variables use `?` wildcards. Controller methods return `string` for HTML or `array` for JSON.
 
@@ -140,7 +140,7 @@ class BookController {
 }
 ```
 
-### &#x2699;&#xFE0F; Configuration — `Config`
+### ⚙️ Configuration — `Config`
 
 INI-based with dot-notation keys, environment variable substitution, and path aliases.
 
@@ -166,7 +166,7 @@ $config->getArray('database');                       // nested array
 $config->getFullPath('~/uploads');                   // /var/www/myapp/uploads
 ```
 
-### &#x1F3A8; View / Templating — `View`
+### 🎨 View / Templating — `View`
 
 PHP templates (`.phtml`) with namespaces, layouts, blocks, and theme overrides.
 
@@ -198,7 +198,7 @@ $html = $view->fetch('admin:dashboard', ['user' => $user]);
 <?php $this->endBlock(); ?>
 ```
 
-### &#x1F4DD; Forms — `Form`
+### 📝 Forms — `Form`
 
 CSRF protection, field binding, validators, error tracking.
 *Work in progress*
@@ -217,7 +217,7 @@ if ($form->bind() && $form->validate()) {
 }
 ```
 
-### &#x1F310; Internationalization — `Translation`
+### 🌐 Internationalization — `Translation`
 
 INI-based locale files with variable substitution.
 
@@ -238,7 +238,7 @@ $this->addMiddleware(LocaleResolver::class);
 // Routes become: /en/books, /hu/books, etc.
 ```
 
-### &#x1F4E1; Events — `EventService`
+### 📡 Events — `EventService`
 
 Pub/sub observer pattern with DI-compatible callables.
 
@@ -249,7 +249,7 @@ $events->emit('user.created', [$user]);
 
 Built-in events: `app.init_finished`, `webapp.route_matched`, `cliapp.command_matched`
 
-### &#x1F4BB; CLI Support — `CliApp`
+### 💻 CLI Support — `CliApp`
 
 Argument parsing with named params and boolean flags.
 
@@ -265,7 +265,66 @@ class MyCliApp extends CliApp {
 // Usage: php cli.php migrate -step 5 --fresh
 ```
 
-### &#x1F50C; Middleware
+### 🔐 JWT Authentication — `JwtAuth`
+
+Attribute-driven authorization backed by JWT tokens. Enable with `useJwtAuth()` (requires `useRouteAttributes()` to be active).
+
+```php
+class MyApp extends WebApp {
+    public function init(): void {
+        parent::init();
+        $this->useRouteAttributes();
+        $this->useJwtAuth();
+
+        // Map sub → permissions (your DB lookup)
+        Micro::get(JwtAuthInterface::class)->setUserResolver(
+            function(string $sub, object $payload): JwtUserInterface {
+                $perms = Micro::get(UserService::class)->getPermissionsForSub($sub);
+                return new JwtUser($sub, $perms);
+            }
+        );
+    }
+}
+```
+
+**Controller annotations:**
+
+```php
+#[Authorize]               // class-level: all methods require authentication
+class AdminController {
+
+    #[Route('GET', '/api/admin/stats')]
+    public function stats(): array { /* inherits class-level auth */ }
+
+    #[Route('GET', '/api/admin/ping')]
+    #[AllowAnonymous]                  // overrides class-level
+    public function ping(): array { return ['ok' => true]; }
+}
+
+class ApiController {
+
+    #[Route('GET', '/api/books')]
+    #[Authorize]                       // any authenticated user
+    public function list(): array { /* ... */ }
+
+    #[Route('DELETE', '/api/books/?')]
+    #[Authorize('admin')]              // requires 'admin' permission
+    public function delete(string $id): array { /* ... */ }
+}
+```
+
+**Config:**
+
+```ini
+jwt.secret = {{JWT_SECRET}}
+jwt.algorithm = HS256
+```
+
+The framework only validates the token and resolves permissions. Issuing tokens (e.g. after OAuth with Google/Facebook) is the application's responsibility. Requires [`firebase/php-jwt`](https://github.com/firebase/php-jwt) `^7.0`.
+
+**Events emitted by `JwtAuth`:** `jwtauth.user_set`, `jwtauth.authorization_granted`, `jwtauth.authorization_denied`
+
+### 🔌 Middleware
 
 Implement `MiddlewareInterface` and register. Runs after `init()`, before `process()`.
 
@@ -280,7 +339,7 @@ class AuthMiddleware implements MiddlewareInterface {
 $this->addMiddleware(AuthMiddleware::class);
 ```
 
-## &#x1F5C2;&#xFE0F; Project Structure
+## 🗂️ Project Structure
 
 ```
 src/
@@ -301,21 +360,29 @@ src/
 ├── Pager.php                 Pagination helper
 ├── Validator.php             Abstract validator base
 ├── UploadedFile.php          File upload wrapper
+├── JwtAuth.php               JWT authorization service
+├── JwtUser.php               Default JWT user value object
+├── AuthorizationException.php  401/403 exception
 ├── Attribute/
-│   └── Route.php             #[Route] attribute
+│   ├── Route.php             #[Route] attribute
+│   ├── Authorize.php         #[Authorize('permission')] attribute
+│   └── AllowAnonymous.php    #[AllowAnonymous] attribute
 ├── AttributeHandler/
-│   └── RouteAttributeHandler.php
+│   ├── RouteAttributeHandler.php
+│   ├── AuthorizeAttributeHandler.php
+│   └── AllowAnonymousAttributeHandler.php
 └── Middleware/
     ├── AttributeProcessor.php
+    ├── JwtValidator.php      Decodes Bearer token, resolves user
     └── LocaleResolver.php
 ```
 
-## &#x1F50D; Related Packages
+## 🔍 Related Packages
 
 | Package | Description |
 |---------|-------------|
 | [dynart-micro-entities](https://github.com/goph-R/dynart-micro-entities) | ORM / entity layer with PDO, query builder, dirty tracking |
 
-## &#x1F4C4; License
+## 📄 License
 
 [Apache 2.0](LICENSE)
