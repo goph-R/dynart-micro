@@ -17,6 +17,7 @@ abstract class AbstractApp {
 
     /** Stores the middleware class names in a list */
     protected array $middlewares = [];
+    protected array $middlewareRegistry = [];
     protected ?ConfigInterface $config = null;
     protected ?LoggerInterface $logger = null;
     protected ?EventServiceInterface $eventService = null;
@@ -44,8 +45,8 @@ abstract class AbstractApp {
     /**
      * Fully initializes the application
      *
-     * Creates the `Config`, loads the configs, creates the `Logger`, calls the `init()` method
-     * then runs all the middlewares. If an exception happens, handles it with the `handleException()` method.
+     * Creates the `Config`, loads the configs, creates the `Logger` and the `eventService`, calls the `init()` method
+     * then runs all the middlewares. If an exception happens handles in the `handleException()` method.
      */
     public function fullInit(): void {
         try {
@@ -73,23 +74,38 @@ abstract class AbstractApp {
     }
 
     /**
+     * Returns true if the middleware is already registered
+     */
+    public function hasMiddleware(string $interface): bool {
+        return in_array($interface, $this->middlewareRegistry);
+    }
+
+    /**
      * Adds a middleware
      *
      * It adds only if not presents.
      */
-    public function addMiddleware(string $interface): void {
-        if (!in_array($interface, $this->middlewares)) {
-            Micro::add($interface);
-            $this->middlewares[] = $interface;
+    public function addMiddleware(string $interface, int $priority = 50): void {
+        if (in_array($interface, $this->middlewareRegistry)) {
+            return;
         }
+        Micro::add($interface);
+        $this->middlewareRegistry[] = $interface;
+        if (!isset($this->middlewares[$priority])) {
+            $this->middlewares[$priority] = [];
+        }
+        $this->middlewares[$priority][] = $interface;
     }
 
     /**
      * Runs all the added middlewares
      */
     protected function runMiddlewares(): void {
-        foreach ($this->middlewares as $m) {
-            Micro::get($m)->run();
+        ksort($this->middlewares);
+        foreach ($this->middlewares as $middlewares) {
+            foreach ($middlewares as $m) {
+                Micro::get($m)->run();
+            }
         }
     }
 

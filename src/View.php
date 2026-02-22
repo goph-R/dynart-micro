@@ -26,11 +26,12 @@ class View implements ViewInterface {
     /** Holds the view variables */
     protected array $data = [];
 
-    /** Holds the scripts for the view */
+    /** Holds the scripts in [priority => [src => attributes]] form */
     protected array $scripts = [];
-
-    /** Holds the styles for the view */
+    protected array $scriptsRegistry = [];
+    /** Holds the styles in [priority => [src => attributes]] form */
     protected array $styles = [];
+    protected array $stylesRegistry = [];
 
     /** The functions were included? */
     protected bool $functionsIncluded = false;
@@ -47,20 +48,48 @@ class View implements ViewInterface {
         $this->data[$name] = $value;
     }
 
-    public function addScript(string $src, array $attributes=[]): void {
-        $this->scripts[$src] = $attributes;
+    public function addScript(string $src, array $attributes=[], int $priority = 50): void {
+        if (in_array($src, $this->scriptsRegistry)) {
+            return;
+        }
+        $this->scriptsRegistry[] = $src;
+        if (!isset($this->scripts[$priority])) {
+            $this->scripts[$priority] = [];
+        }
+        $this->scripts[$priority][$src] = $attributes;
     }
 
     public function scripts(): array {
-        return $this->scripts;
+        ksort($this->scripts);
+        $flattened = [];
+        foreach ($this->scripts as $priorityGroup) {
+            foreach ($priorityGroup as $src => $attributes) {
+                $flattened[$src] = $attributes;
+            }
+        }
+        return $flattened;
     }
 
-    public function addStyle(string $src, array $attributes=[]): void {
-        $this->styles[$src] = $attributes;
+    public function addStyle(string $src, array $attributes=[], int $priority = 50): void {
+        if (in_array($src, $this->stylesRegistry)) {
+            return;
+        }
+        $this->stylesRegistry[] = $src;
+        if (!isset($this->styles[$priority])) {
+            $this->styles[$priority] = [];
+        }
+        $this->styles[$priority][$src] = $attributes;
     }
 
     public function styles(): array {
-        return $this->styles;
+        ksort($this->styles);
+        $flattened = [];
+        foreach ($this->styles as $priorityGroup) {
+            foreach ($priorityGroup as $src => $attributes) {
+                $flattened[$src] = $attributes;
+            }
+        }
+        return $flattened;
     }
 
     public function useLayout(string $path): void {
