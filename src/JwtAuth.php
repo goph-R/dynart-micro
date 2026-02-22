@@ -4,9 +4,9 @@ namespace Dynart\Micro;
 
 class JwtAuth implements JwtAuthInterface {
 
-    const EVENT_USER_SET = 'jwtauth.user_set';
-    const EVENT_AUTHORIZATION_GRANTED = 'jwtauth.authorization_granted';
-    const EVENT_AUTHORIZATION_DENIED = 'jwtauth.authorization_denied';
+    const EVENT_USER_SET = 'jwtauth:user_set';
+    const EVENT_AUTHORIZATION_GRANTED = 'jwtauth:authorization_granted';
+    const EVENT_AUTHORIZATION_DENIED = 'jwtauth:authorization_denied';
 
     private ?JwtUserInterface $currentUser = null;
     private mixed $userResolver = null;

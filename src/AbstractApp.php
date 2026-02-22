@@ -13,7 +13,7 @@ abstract class AbstractApp {
     const CONFIG_ROOT_PATH = 'app.root_path';
     const CONFIG_ENVIRONMENT = 'app.environment';
     const PRODUCTION_ENVIRONMENT = 'prod';
-    const EVENT_INIT_FINISHED = 'app.init_finished';
+    const EVENT_INIT_FINISHED = 'app:init_finished';
 
     /** Stores the middleware class names in a list */
     protected array $middlewares = [];

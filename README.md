@@ -247,7 +247,7 @@ $events->subscribe('user.created', [NotificationService::class, 'onUserCreated']
 $events->emit('user.created', [$user]);
 ```
 
-Built-in events: `app.init_finished`, `webapp.route_matched`, `cliapp.command_matched`
+Built-in events: `app:init_finished`, `webapp:route_matched`, `cliapp:command_matched`
 
 ### 💻 CLI Support — `CliApp`
 
@@ -321,7 +321,7 @@ jwt.algorithm = HS256
 
 The framework only validates the token and resolves permissions. Issuing tokens (e.g. after OAuth with Google/Facebook) is the application's responsibility. Requires [`firebase/php-jwt`](https://github.com/firebase/php-jwt) `^7.0`.
 
-**Events emitted by `JwtAuth`:** `jwtauth.user_set`, `jwtauth.authorization_granted`, `jwtauth.authorization_denied`
+**Events emitted by `JwtAuth`:** `jwtauth:user_set`, `jwtauth:authorization_granted`, `jwtauth:authorization_denied`
 
 ### 🔌 Middleware
 

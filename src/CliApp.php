@@ -8,7 +8,7 @@ namespace Dynart\Micro;
  */
 class CliApp extends AbstractApp {
 
-    const EVENT_COMMAND_MATCHED = 'cliapp.command_matched';
+    const EVENT_COMMAND_MATCHED = 'cliapp:command_matched';
 
     protected CliCommandsInterface $commands;
 

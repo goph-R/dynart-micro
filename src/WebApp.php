@@ -20,7 +20,7 @@ class WebApp extends AbstractApp {
     const CONTENT_TYPE_HTML = 'text/html; charset=UTF-8';
     const CONTENT_TYPE_JSON = 'application/json';
     const ERROR_CONTENT_PLACEHOLDER = '<!-- content -->';
-    const EVENT_ROUTE_MATCHED = 'webapp.route_matched';
+    const EVENT_ROUTE_MATCHED = 'webapp:route_matched';
 
     protected RouterInterface $router;
     protected ResponseInterface $response;
