@@ -1,6 +1,7 @@
 <?php
 
 namespace Dynart\Micro;
+
 use Dynart\Micro\AttributeHandler\AllowAnonymousAttributeHandler;
 use Dynart\Micro\AttributeHandler\AuthorizeAttributeHandler;
 use Dynart\Micro\AttributeHandler\RouteAttributeHandler;
@@ -34,6 +35,12 @@ class WebApp extends AbstractApp {
         Micro::add(ViewInterface::class, View::class);
     }
 
+    /**
+     * Inits the WebApp
+     *
+     * Gets the `$router` and the `$response` instances and initializes the RouteAttributeHandler
+     * if the `app.use_route_attributes` is true (default).
+     */
     public function init(): void {
         $this->router = Micro::get(RouterInterface::class);
         $this->response = Micro::get(ResponseInterface::class);
@@ -42,11 +49,19 @@ class WebApp extends AbstractApp {
         }
     }
 
+    /**
+     * Runs the current route
+     *
+     * Matches the current route,  emits the `webapp:route_matched` signal
+     * then calls the right callable and sends back the returned content.
+     *
+     * If no route found sends a 404.
+     */
     public function process(): void {
         list($callable, $params) = $this->router->matchCurrentRoute();
         if ($callable) {
             $callable = Micro::getCallable($callable);
-            Micro::get(EventServiceInterface::class)->emit(self::EVENT_ROUTE_MATCHED, [$callable, $params]);
+            $this->eventService->emit(self::EVENT_ROUTE_MATCHED, [$callable, $params]);
             $content = call_user_func_array($callable, $params);
             $this->sendContent($content);
         } else {
@@ -54,6 +69,12 @@ class WebApp extends AbstractApp {
         }
     }
 
+    /**
+     * Redirects to the give location and parameters
+     *
+     * Clears the current headers, then sends back a `Location` header and empty body, then finishes the request.
+     * If `$location` NOT starts with `http` will be converted to a full URL with `Router::url`
+     */
     public function redirect(string $location, array $params = []): void {
         $url = str_starts_with($location, 'http') ? $location : $this->router->url($location, $params);
         $this->response->clearHeaders();
@@ -62,14 +83,23 @@ class WebApp extends AbstractApp {
         $this->finish();
     }
 
+    /**
+     * Sends the content
+     *
+     * If the `$content` is an array will be encoded to a JSON string.
+     * If no `Content-Type` header was added will be set to
+     * `html/text; charset=UTF-8` (string) or `application/json` (array).
+     */
     public function sendContent(mixed $content): void {
-        if (is_string($content)) {
-            $this->response->setHeader(self::HEADER_CONTENT_TYPE, self::CONTENT_TYPE_HTML);
-            $this->response->send($content);
-        } else if (is_array($content)) {
-            $this->response->setHeader(self::HEADER_CONTENT_TYPE, self::CONTENT_TYPE_JSON);
-            $this->response->send(json_encode($content));
+        $rawContent = is_array($content)
+            ? json_encode($content)
+            : $content;
+        if (!$this->response->header(self::HEADER_CONTENT_TYPE)) {
+            $this->response->setHeader(self::HEADER_CONTENT_TYPE, is_array($content)
+                ? self::CONTENT_TYPE_JSON
+                : self::CONTENT_TYPE_HTML);
         }
+        $this->response->send($rawContent);
     }
 
     /**
@@ -78,13 +108,16 @@ class WebApp extends AbstractApp {
      * @param string $content The error content
      */
     public function sendError(int $code, string $content = ''): void {
-        if ($this->isWeb()) { // because of testing in cli
+        if ($this->isWeb()) { // Because of testing in cli (fastest solution)
             http_response_code($code);
         }
         $pageContent = str_replace(self::ERROR_CONTENT_PLACEHOLDER, $content, $this->loadErrorPageContent($code));
         $this->finish($pageContent);
     }
 
+    /**
+     * Initializes the RouteAttributeHandler for the Route attributes
+     */
     public function useRouteAttributes(): void {
         $this->addMiddleware(AttributeProcessor::class);
         Micro::add(RouteAttributeHandler::class);
@@ -92,6 +125,10 @@ class WebApp extends AbstractApp {
         $processor->add(RouteAttributeHandler::class);
     }
 
+    /**
+     * Initializes the JwtValidator middleware and the Authorize and AllowAnonymous attributes,
+     * adds the JwtAuthInterface.
+     */
     public function useJwtAuth(): void {
         $this->addMiddleware(AttributeProcessor::class);
         $this->addMiddleware(JwtValidator::class);

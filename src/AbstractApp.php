@@ -19,6 +19,7 @@ abstract class AbstractApp {
     protected array $middlewares = [];
     protected ?ConfigInterface $config = null;
     protected ?LoggerInterface $logger = null;
+    protected ?EventServiceInterface $eventService = null;
     /** @var string[] */
     protected array $configPaths;
     protected bool $exitOnFinish = true;
@@ -51,9 +52,10 @@ abstract class AbstractApp {
             $this->config = Micro::get(ConfigInterface::class);
             $this->loadConfigs();
             $this->logger = Micro::get(LoggerInterface::class);
+            $this->eventService = Micro::get(EventServiceInterface::class);
             $this->init();
             $this->runMiddlewares();
-            Micro::get(EventServiceInterface::class)->emit(self::EVENT_INIT_FINISHED);
+            $this->eventService->emit(self::EVENT_INIT_FINISHED);
         } catch (Exception $e) {
             $this->handleException($e);
         }

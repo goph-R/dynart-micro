@@ -40,7 +40,7 @@ class View implements ViewInterface {
     }
 
     public function get(string $name, mixed $default = null): mixed {
-        return isset($this->data[$name]) ? $this->data[$name] : $default;
+        return $this->data[$name] ?? $default;
     }
 
     public function set(string $name, mixed $value): void {
@@ -72,7 +72,7 @@ class View implements ViewInterface {
     }
 
     public function block(string $name): string {
-        return isset($this->blocks[$name]) ? $this->blocks[$name] : '';
+        return $this->blocks[$name] ?? '';
     }
 
     public function startBlock(string $name): void {
@@ -142,14 +142,14 @@ class View implements ViewInterface {
      * @throws MicroException If the view path has a namespace but a folder wasn't added for it
      */
     protected function getRealPath(string $path): string {
-        $dotPos = strpos($path, ':');
-        if ($dotPos !== false) {
-            $namespace = substr($path, 0, $dotPos);
+        $colonPos = strpos($path, ':');
+        if ($colonPos !== false) {
+            $namespace = substr($path, 0, $colonPos);
             if (!isset($this->folders[$namespace])) {
                 throw new MicroException("Folder wasn't added with namespace: $namespace");
             }
             $folder = $this->folders[$namespace];
-            $name = substr($path, $dotPos + 1);
+            $name = substr($path, $colonPos + 1);
             $themePath = $this->theme.'/'.$namespace.'/'.$name;
         } else {
             $folder = $this->config->get(self::CONFIG_DEFAULT_FOLDER);
