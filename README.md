@@ -127,7 +127,7 @@ $router->add('/api/login', [AuthController::class, 'login'], 'POST');
 $router->add('/search', [SearchController::class, 'index'], 'BOTH'); // GET + POST
 ```
 
-**PHP 8 attributes:**
+**PHP 8 attributes** (active by default, controlled by `app.use_route_attributes`):
 
 ```php
 class BookController {
@@ -267,13 +267,12 @@ class MyCliApp extends CliApp {
 
 ### 🔐 JWT Authentication — `JwtAuth`
 
-Attribute-driven authorization backed by JWT tokens. Enable with `useJwtAuth()` (requires `useRouteAttributes()` to be active).
+Attribute-driven authorization backed by JWT tokens. Enable with `useJwtAuth()`. Route attributes are active by default — no extra setup needed.
 
 ```php
 class MyApp extends WebApp {
     public function init(): void {
         parent::init();
-        $this->useRouteAttributes();
         $this->useJwtAuth();
 
         // Map sub → permissions (your DB lookup)
