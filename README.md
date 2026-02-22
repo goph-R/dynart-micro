@@ -243,8 +243,8 @@ $this->addMiddleware(LocaleResolver::class);
 Pub/sub observer pattern with DI-compatible callables.
 
 ```php
-$events->subscribe('user.created', [NotificationService::class, 'onUserCreated']);
-$events->emit('user.created', [$user]);
+$events->subscribe('user:created', [NotificationService::class, 'onUserCreated']);
+$events->emit('user:created', [$user]);
 ```
 
 Built-in events: `app:init_finished`, `webapp:route_matched`, `cliapp:command_matched`
