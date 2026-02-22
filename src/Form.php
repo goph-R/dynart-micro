@@ -157,9 +157,9 @@ class Form {
      * Adds a validator for a field
      *
      * @param string $name The name of the field
-     * @param Validator $validator The validator
+     * @param AbstractValidator $validator The validator
      */
-    public function addValidator(string $name, Validator $validator): void {
+    public function addValidator(string $name, AbstractValidator $validator): void {
         if (!isset($this->validators[$name])) {
             $this->validators[$name] = [];
         }

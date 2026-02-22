@@ -6,7 +6,7 @@ namespace Dynart\Micro;
  * Handles CLI commands
  * @package Dynart\Micro
  */
-class CliApp extends App {
+class CliApp extends AbstractApp {
 
     const EVENT_COMMAND_MATCHED = 'cliapp.command_matched';
 

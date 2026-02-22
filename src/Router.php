@@ -121,7 +121,7 @@ class Router implements RouterInterface
         foreach ($this->prefixVariables as $callable) {
             $prefix .= '/'.call_user_func($callable);
         }
-        $result = $this->config->get(App::CONFIG_BASE_URL);
+        $result = $this->config->get(AbstractApp::CONFIG_BASE_URL);
         $useRewrite = $this->config->get(self::CONFIG_USE_REWRITE, self::DEFAULT_USE_REWRITE);
         if ($useRewrite) {
             $result .= $route == null ? '' : $prefix.$route;

@@ -7,7 +7,7 @@ use Exception;
 /**
  * Micro PHP Application
  */
-abstract class App {
+abstract class AbstractApp {
 
     const CONFIG_BASE_URL = 'app.base_url';
     const CONFIG_ROOT_PATH = 'app.root_path';

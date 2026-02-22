@@ -69,13 +69,13 @@ class Config implements ConfigInterface {
 
     public function getFullPath(string $path): string {
         if (str_starts_with($path, '~')) {
-            return $this->get(App::CONFIG_ROOT_PATH) . substr($path, 1);
+            return $this->get(AbstractApp::CONFIG_ROOT_PATH) . substr($path, 1);
         }
         return $path;
     }
 
     public function rootPath(): string {
-        return $this->get(App::CONFIG_ROOT_PATH, '');
+        return $this->get(AbstractApp::CONFIG_ROOT_PATH, '');
     }
 
     /**

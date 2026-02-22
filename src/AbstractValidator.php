@@ -2,7 +2,7 @@
 
 namespace Dynart\Micro;
 
-abstract class Validator {
+abstract class AbstractValidator {
 
     protected Form $form;
     protected string $message = '';

@@ -47,7 +47,7 @@ Micro::run(new WebApp(['config.ini.php']));
 ### Controllers/HomeController.php
 
 ```php
-namespace MyApp\Controllers;
+namespace App\Controllers;
 
 use Dynart\Micro\Attribute\Route;
 
@@ -68,7 +68,7 @@ class HomeController {
     },
     "autoload": {
         "psr-4": {
-            "MyApp\\": "."
+            "App\\": "."
         }
     }
 }
@@ -80,7 +80,7 @@ class HomeController {
 ;<?php /*
 app.root_path = /full/path/to/your/webapp
 app.base_url = http://url/to/your/webapp
-app.scan_namespaces = MyApp
+app.scan_namespaces = App
 ```
 
 ## 🏗️ Architecture
@@ -90,11 +90,11 @@ Micro::run(App)
   ├── fullInit()
   │   ├── Config loaded (INI files)
   │   ├── Logger created
-  │   ├── App::init()           ← register routes, services
+  │   ├── AbstractApp::init()           ← register routes, services
   │   ├── Middlewares run        ← locale, attributes, custom
   │   └── emit init_finished
   └── fullProcess()
-      └── App::process()        ← dispatch route / CLI command
+      └── AbstractApp::process()        ← dispatch route / CLI command
 ```
 
 ## 🧱 Components
@@ -270,7 +270,7 @@ class MyCliApp extends CliApp {
 Attribute-driven authorization backed by JWT tokens. Enable with `useJwtAuth()`. Route attributes are active by default — no extra setup needed.
 
 ```php
-class MyApp extends WebApp {
+class App extends WebApp {
     public function init(): void {
         parent::init();
         $this->useJwtAuth();
@@ -334,7 +334,7 @@ class AuthMiddleware implements MiddlewareInterface {
     }
 }
 
-// In App::init():
+// In AbstractApp::init():
 $this->addMiddleware(AuthMiddleware::class);
 ```
 
@@ -343,7 +343,7 @@ $this->addMiddleware(AuthMiddleware::class);
 ```
 src/
 ├── Micro.php                 DI container
-├── App.php                   Abstract application base
+├── AbstractApp.php                   Abstract application base
 ├── WebApp.php                HTTP application
 ├── CliApp.php                CLI application
 ├── Config.php                INI configuration
@@ -357,7 +357,7 @@ src/
 ├── Response.php              HTTP response
 ├── Logger.php                PSR-3 logging
 ├── Pager.php                 Pagination helper
-├── Validator.php             Abstract validator base
+├── AbstractValidator.php             Abstract validator base
 ├── UploadedFile.php          File upload wrapper
 ├── JwtAuth.php               JWT authorization service
 ├── JwtUser.php               Default JWT user value object

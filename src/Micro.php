@@ -11,7 +11,7 @@ use ReflectionException;
 class Micro {
 
     /** Holds the instance of the application */
-    protected static ?App $app = null;
+    protected static ?AbstractApp $app = null;
 
     /** Stores the classes in [interface => class] format, the class can be null */
     protected static array $classes = [];
@@ -26,7 +26,7 @@ class Micro {
      *
      * @throws MicroException if the instance was set before
      */
-    public static function run(App $app): void {
+    public static function run(AbstractApp $app): void {
         if (self::$app) {
             throw new MicroException("App was instantiated before!");
         }
@@ -38,7 +38,7 @@ class Micro {
     /**
      * Returns the instance of the application
      */
-    public static function app(): ?App {
+    public static function app(): ?AbstractApp {
         return self::$app;
     }
 
@@ -125,7 +125,7 @@ class Micro {
      *   }
      * }
      *
-     * class MyApp extends App {
+     * class App extends AbstractApp {
      *   private $something;
      *   public function __construct() {
      *     Micro::add(Config::class);

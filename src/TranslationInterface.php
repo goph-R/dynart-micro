@@ -54,7 +54,7 @@ interface TranslationInterface {
      * then you have to add at least one namespace with a folder path for example in your App::init() method:
      *
      * <pre>
-     * class MyApp extends App {
+     * class App extends AbstractApp {
      *   // ...
      *   public function init() {
      *     $translation = $this->get(Translation::class);

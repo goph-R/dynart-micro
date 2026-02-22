@@ -38,7 +38,7 @@ PHPUnit 9.5, config in `phpunit.xml.dist`. The `--stderr` flag is required becau
 - `Micro::add(Class::class)` — register a concrete class (interface = class)
 - `Micro::get(Interface::class)` — get or create singleton
 - `Micro::create(Class::class)` — create a new (non-singleton) instance
-- `Micro::run(App $app)` — bootstrap: sets app, calls `fullInit()` then `fullProcess()`
+- `Micro::run(AbstractApp $app)` — bootstrap: sets app, calls `fullInit()` then `fullProcess()`
 
 Classes with a `postConstruct()` method get it called automatically after instantiation (used for lazy init that depends on other services being available).
 
@@ -47,13 +47,13 @@ Classes with a `postConstruct()` method get it called automatically after instan
 ### Application Lifecycle
 
 ```
-Micro::run(App)
-  → App::fullInit()
+Micro::run(AbstractApp)
+  → AbstractApp::fullInit()
       → Config loaded, Logger created
-      → App::init() (subclass hook)
+      → AbstractApp::init() (subclass hook)
       → Middlewares run in order
-  → App::fullProcess()
-      → App::process() (subclass hook)
+  → AbstractApp::fullProcess()
+      → AbstractApp::process() (subclass hook)
       → finish()
 ```
 

@@ -11,7 +11,7 @@ use Dynart\Micro\Middleware\JwtValidator;
  * Handles HTTP request/response
  * @package Dynart\Micro
  */
-class WebApp extends App {
+class WebApp extends AbstractApp {
 
     const CONFIG_ERROR_PAGES_FOLDER = 'app.error_pages_folder';
     const CONFIG_USE_ROUTE_ATTRIBUTES = 'app.use_route_attributes';
@@ -143,8 +143,8 @@ class WebApp extends App {
             return;
         }
         parent::handleException($e);
-        $env = $this->config->get(App::CONFIG_ENVIRONMENT, App::PRODUCTION_ENVIRONMENT);
-        if ($env != App::PRODUCTION_ENVIRONMENT) {
+        $env = $this->config->get(AbstractApp::CONFIG_ENVIRONMENT, AbstractApp::PRODUCTION_ENVIRONMENT);
+        if ($env != AbstractApp::PRODUCTION_ENVIRONMENT) {
             $type = get_class($e);
             $file = $e->getFile();
             $line = $e->getLine();
