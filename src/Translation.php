@@ -13,6 +13,15 @@ class Translation implements TranslationInterface {
     /** The default locale */
     const DEFAULT_LOCALE = 'en';
 
+    /**
+     * The namespace of the texts the framework ships
+     *
+     * Registered automatically, so `Form`'s built in messages can actually be translated. An
+     * application overrides them by calling `add('micro', $itsOwnFolder)`, which replaces the
+     * folder for the namespace.
+     */
+    const NAMESPACE_MICRO = 'micro';
+
     /** The folders for all the translations in [namespace => path] format */
     protected array $folders = [];
 
@@ -38,6 +47,7 @@ class Translation implements TranslationInterface {
         $this->locale = $config->get(self::CONFIG_DEFAULT, self::DEFAULT_LOCALE);
         $this->allLocales = $config->getCommaSeparatedValues(self::CONFIG_ALL);
         $this->hasMultiLocales = count($this->allLocales) > 1;
+        $this->add(self::NAMESPACE_MICRO, dirname(__FILE__).'/../translations');
     }
 
     public function add(string $namespace, string $folder): void {

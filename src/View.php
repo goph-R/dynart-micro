@@ -6,6 +6,16 @@ class View implements ViewInterface {
 
     const CONFIG_DEFAULT_FOLDER = 'view.default_folder';
 
+    /**
+     * The namespace of the templates the framework ships
+     *
+     * Registered automatically, so the built in partials (the form ones) are findable without
+     * every application having to copy them into its own view folder or point
+     * `view.default_folder` at the framework. A theme overrides them the usual way, under
+     * `<theme>/micro/`.
+     */
+    const NAMESPACE_MICRO = 'micro';
+
     protected ConfigInterface $config;
 
     /** The layout for the currently fetched template */
@@ -36,8 +46,19 @@ class View implements ViewInterface {
     /** The functions were included? */
     protected bool $functionsIncluded = false;
 
+    /**
+     * How deep the current `fetch()` is nested
+     *
+     * Blocks accumulate on purpose, so several templates can contribute to the same one. That
+     * only makes sense within a single render, though, so the blocks are cleared when a
+     * top level fetch starts - otherwise a template rendered earlier in the request (a mail, a
+     * partial fetched from a service) would still have its content in there.
+     */
+    protected int $fetchDepth = 0;
+
     public function __construct(ConfigInterface $config) {
         $this->config = $config;
+        $this->folders[self::NAMESPACE_MICRO] = dirname(__FILE__).'/../views';
     }
 
     public function get(string $name, mixed $default = null): mixed {
@@ -150,15 +171,29 @@ class View implements ViewInterface {
         if (!file_exists($__path)) {
             throw new MicroException("Can't find view: $__viewPath, $__path");
         }
-        extract($this->data);
-        extract($__vars);
-        ob_start();
-        include $__path;
-        $result = ob_get_clean();
-        $layout = $this->layout;
-        if ($layout) {
-            $this->layout = '';
-            $result = $this->fetch($layout, $__vars);
+        if ($this->fetchDepth === 0) {
+            $this->blocks = [];
+        }
+        // A nested fetch has to start with no layout of its own, otherwise a partial rendered
+        // from inside a template that uses a layout would inherit it and render the whole page
+        // into the partial's output. `Form::fetch()` does exactly that.
+        $__previousLayout = $this->layout;
+        $this->layout = '';
+        $this->fetchDepth++;
+        try {
+            extract($this->data);
+            extract($__vars);
+            ob_start();
+            include $__path;
+            $result = ob_get_clean();
+            $layout = $this->layout;
+            $this->layout = $__previousLayout;
+            if ($layout) {
+                // still nested, so the blocks the template just filled are there for the layout
+                $result = $this->fetch($layout, $__vars);
+            }
+        } finally {
+            $this->fetchDepth--;
         }
         return $result;
     }

@@ -24,6 +24,16 @@ class Form {
     const DEFAULT_MESSAGE_CSRF_INVALID = 'CSRF token is invalid.';
 
     /**
+     * The partials the form renders itself with
+     *
+     * Namespaced to the framework's own views, so they resolve wherever the package sits. A
+     * theme overrides any of them by putting its own copy under `<theme>/micro/`.
+     */
+    const VIEW_ERRORS = View::NAMESPACE_MICRO.':form-errors';
+    const VIEW_FIELD = View::NAMESPACE_MICRO.':form-field';
+    const VIEW_INPUT = View::NAMESPACE_MICRO.':form-input';
+
+    /**
      * Stores the name of the form
      */
     protected string $name = 'form';
@@ -478,7 +488,7 @@ class Form {
     public function fetchErrors(): string {
         /** @var ViewInterface $view */
         $view = Micro::get(ViewInterface::class);
-        return $view->fetch('form-errors', [
+        return $view->fetch(self::VIEW_ERRORS, [
             'form' => $this
         ]);
     }
@@ -486,7 +496,7 @@ class Form {
     public function fetchField(string $name, array $field): string {
         /** @var ViewInterface $view */
         $view = Micro::get(ViewInterface::class);
-        return $view->fetch('form-field', [
+        return $view->fetch(self::VIEW_FIELD, [
             'form' => $this,
             'name' => $name,
             'field' => $field
@@ -496,7 +506,7 @@ class Form {
     public function fetchInput(string $name, array $field): string {
         /** @var ViewInterface $view */
         $view = Micro::get(ViewInterface::class);
-        return $view->fetch('form-input', [
+        return $view->fetch(self::VIEW_INPUT, [
             'form' => $this,
             'name' => $name,
             'field' => $field

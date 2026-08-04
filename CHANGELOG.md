@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.13.0] &ndash; 2026-08-04
+
+Found by rendering real pages for the first time. The first two are why a form and a layout could never be combined.
+
+### Fixed
+- **`View::fetch()` was not re-entrant: a nested fetch inherited the caller's layout.** A partial rendered from inside a template that uses a layout would see that layout still set, and return the *whole page* as its own output. `Form::fetch()` does exactly that, so any form rendered inside a laid-out template produced garbage. Each fetch now starts with no layout of its own and restores the caller's afterwards.
+- **Blocks leaked between independent renders.** `endBlock()` appends on purpose, so several templates can fill one block — but blocks were never cleared, so anything rendered earlier in the same request (a mail, a partial fetched from a service) was still in the block when the next page rendered, and appeared inside it. They are now cleared when a *top level* fetch starts; accumulation within one render is unchanged.
+
+### Added
+- **`View::NAMESPACE_MICRO`** — the framework's own views are registered under `micro:` automatically, so its partials resolve wherever the package sits. `Form` now fetches `micro:form-errors` / `micro:form-field` / `micro:form-input` through the new `Form::VIEW_*` constants. Previously those were namespace-less and resolved through `view.default_folder`, so they were unfindable unless an application copied them into its own view folder.
+- **`Translation::NAMESPACE_MICRO`** — the framework's own translations are registered under `micro` automatically, so `Form`'s built-in messages can actually be translated. An application overrides them with `add('micro', $itsOwnFolder)`.
+
+### Changed
+- A theme overrides the form partials under `<theme>/micro/` now, rather than by shadowing them in the default view folder
+
+---
+
 ## [0.12.0] &ndash; 2026-08-04
 
 ### Added
