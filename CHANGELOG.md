@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.11.0] &ndash; 2026-08-04
+
+### Added
+- **`JwtCookieReader` middleware** — lifts a JWT out of a cookie into the `Authorization` header, so `JwtValidator` and every `#[Authorize]` attribute keep working for a browser navigating to a server-rendered page, where there is nowhere to put that header. Must run *before* `JwtValidator` (a lower priority number). An `Authorization` header that is already present always wins, so an API client is never overridden by a stale cookie. Cookie name from `jwt.cookie_name`, default `token`.
+- **Cookie support on `Response`** — `setCookie()`, `clearCookie()`, `cookie()`, `cookies()`, `clearCookies()`. Options are merged into `Response::DEFAULT_COOKIE_OPTIONS`, which sets `httponly` and `samesite=Lax` but leaves `secure` off: turning it on by default would make cookies silently vanish on a plain HTTP development site, which is far harder to diagnose than a missing flag. Turn it on from the application config in production. `send()` emits the cookies before the headers.
+
+### Changed
+- `ResponseInterface` gained the six cookie methods — a breaking change for anything implementing it
+
+---
+
 ## [0.10.0] &ndash; 2026-08-04
 
 ### Fixed
