@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.16.0] &ndash; 2026-08-04
+
+### Added
+- `textarea` and `file` field types in `form-input.phtml` — a form library that cannot render a textarea is an odd gap, and a file input is what an upload form needs
+
+### Changed
+- **`Form` reads its view constants through `static::` rather than `self::`**, so a subclass can point at its own partials. That is how an application adds field types the framework knows nothing about, without either forking the partial or overriding `fetchInput()` wholesale.
+
+---
+
 ## [0.15.0] &ndash; 2026-08-04
 
 ### Fixed

@@ -17,6 +17,10 @@
             <option value="<?= esc_attr($value) ?>"<?= $form->value($name) == $value ? ' selected' : ''?>><?= esc_html($text) ?></option>
         <?php endforeach ?>
     </select>
+<?php elseif ($type == 'textarea'): ?>
+    <textarea id="<?= $id ?>" name="<?= $inputName ?>"<?= esc_attrs($attrs) ?>><?= $form->value($name, true) ?></textarea>
+<?php elseif ($type == 'file'): ?>
+    <input id="<?= $id ?>" name="<?= $inputName ?>" type="file"<?= esc_attrs($attrs) ?>>
 <?php elseif ($type == 'hidden'): ?>
     <input id="<?= $id ?>" name="<?= $inputName ?>" type="hidden" value="<?= $form->value($name, true) ?>"<?= esc_attrs($attrs) ?>>
 <?php endif ?>

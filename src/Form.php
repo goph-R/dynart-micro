@@ -28,6 +28,9 @@ class Form {
      *
      * Namespaced to the framework's own views, so they resolve wherever the package sits. A
      * theme overrides any of them by putting its own copy under `<theme>/micro/`.
+     *
+     * Read through `static::`, so a subclass can point at its own partials - which is how an
+     * application adds field types the framework knows nothing about.
      */
     const VIEW_ERRORS = View::NAMESPACE_MICRO.':form-errors';
     const VIEW_FIELD = View::NAMESPACE_MICRO.':form-field';
@@ -488,7 +491,7 @@ class Form {
     public function fetchErrors(): string {
         /** @var ViewInterface $view */
         $view = Micro::get(ViewInterface::class);
-        return $view->fetch(self::VIEW_ERRORS, [
+        return $view->fetch(static::VIEW_ERRORS, [
             'form' => $this
         ]);
     }
@@ -496,7 +499,7 @@ class Form {
     public function fetchField(string $name, array $field): string {
         /** @var ViewInterface $view */
         $view = Micro::get(ViewInterface::class);
-        return $view->fetch(self::VIEW_FIELD, [
+        return $view->fetch(static::VIEW_FIELD, [
             'form' => $this,
             'name' => $name,
             'field' => $field
@@ -506,7 +509,7 @@ class Form {
     public function fetchInput(string $name, array $field): string {
         /** @var ViewInterface $view */
         $view = Micro::get(ViewInterface::class);
-        return $view->fetch(self::VIEW_INPUT, [
+        return $view->fetch(static::VIEW_INPUT, [
             'form' => $this,
             'name' => $name,
             'field' => $field
