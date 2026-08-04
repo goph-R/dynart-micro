@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.14.0] &ndash; 2026-08-04
+
+### Added
+- **Catch-all routes** — `*` as the last segment of a route matches the whole remainder of the path and passes it as one parameter, so `/docs/*` matching `/docs/guide/install` yields `guide/install`. Needed for hierarchical page paths, which `?` cannot express because it matches exactly one segment. It requires at least one segment, so `/docs/*` does not match `/docs`.
+- `Router::hasCatchAll()`, and the `Router::SEGMENT` / `Router::CATCH_ALL` constants
+
+### Changed
+- **Exact and segment routes are matched before catch-all ones**, regardless of the order they were added. Without that, a `/*` registered early would swallow `/login` and route precedence would silently depend on registration order.
+
+---
+
 ## [0.13.0] &ndash; 2026-08-04
 
 Found by rendering real pages for the first time. The first two are why a form and a layout could never be combined.

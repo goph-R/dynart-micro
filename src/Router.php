@@ -9,6 +9,21 @@ class Router implements RouterInterface
      */
     const ROUTE_NOT_FOUND = [null, null];
 
+    /**
+     * Matches one path segment, passed to the callable as a parameter
+     */
+    const SEGMENT = '?';
+
+    /**
+     * Matches the rest of the path, however many segments it is
+     *
+     * Only meaningful as the **last** segment of a route. The whole remainder arrives as one
+     * parameter with the slashes intact, so `/docs/*` matching `/docs/guide/install` gives
+     * `guide/install`. It needs at least one segment to match, so `/docs/*` does not match
+     * `/docs` - register that separately if it should.
+     */
+    const CATCH_ALL = '*';
+
     const CONFIG_INDEX_FILE = 'router.index_file';
     const CONFIG_ROUTE_PARAMETER = 'router.route_parameter';
     const CONFIG_USE_REWRITE = 'router.use_rewrite';
@@ -75,14 +90,20 @@ class Router implements RouterInterface
         if (!$segmentsCount && isset($this->routes[$method]['/'])) { // if no segments and having home route
             return [$this->routes[$method]['/'], []]; // return with that
         }
-        $found = self::ROUTE_NOT_FOUND;
-        foreach ($routes as $route => $callable) {
-            $found = $this->match($route, $callable, $segments, $segmentsCount);
-            if ($found[0]) {
-                break;
+        // Exact routes win over catch-all ones regardless of the order they were added, so a
+        // `/*` cannot swallow `/login` just because it was registered first.
+        foreach ([false, true] as $catchAllPass) {
+            foreach ($routes as $route => $callable) {
+                if ($this->hasCatchAll($route) !== $catchAllPass) {
+                    continue;
+                }
+                $found = $this->match($route, $callable, $segments, $segmentsCount);
+                if ($found[0]) {
+                    return $found;
+                }
             }
         }
-        return $found;
+        return self::ROUTE_NOT_FOUND;
     }
 
     /**
@@ -94,16 +115,26 @@ class Router implements RouterInterface
     protected function match(string $route, callable|array $callable, array $currentParts, int $currentPartsCount): array {
         $parts = explode('/', $route);
         array_shift($parts);
-        if (count($parts) != $currentPartsCount) {
-            return self::ROUTE_NOT_FOUND;
+        $partsCount = count($parts);
+        $catchAllIndex = $this->hasCatchAll($route) ? $partsCount - 1 : -1;
+        if ($catchAllIndex === -1) {
+            if ($partsCount != $currentPartsCount) {
+                return self::ROUTE_NOT_FOUND;
+            }
+        } else if ($currentPartsCount < $partsCount) {
+            return self::ROUTE_NOT_FOUND; // the catch-all needs at least one segment of its own
         }
         $found = true;
         $params = [];
         foreach ($parts as $i => $part) {
+            if ($i === $catchAllIndex) {
+                $params[] = join('/', array_slice($currentParts, $i));
+                break;
+            }
             if ($part == $currentParts[$i]) {
                 continue;
             }
-            if ($part == '?') {
+            if ($part == self::SEGMENT) {
                 $params[] = $currentParts[$i];
                 continue;
             }
@@ -114,6 +145,13 @@ class Router implements RouterInterface
             return [$callable, $params];
         }
         return self::ROUTE_NOT_FOUND;
+    }
+
+    /**
+     * Does this route end with the catch-all segment?
+     */
+    public function hasCatchAll(string $route): bool {
+        return str_ends_with($route, '/'.self::CATCH_ALL);
     }
 
     public function url(?string $route = null, array $params = [], string $amp = '&'): string {
