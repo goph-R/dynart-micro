@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [0.15.0] &ndash; 2026-08-04
 
+### Fixed
+- **An empty argument value warned.** `CliCommands::matchCurrent()` read `$argument[0]` without checking the argument was non-empty, so `mycommand -name ""` — a perfectly ordinary way to clear a value — emitted "Uninitialized string offset 0" before working correctly.
+
 ### Added
 - `WebApp::redirect()` takes a status code, 302 by default. A canonical URL correction has to be a **301** — a temporary redirect leaves both URLs live as far as a search engine is concerned, which is the whole thing a canonical redirect exists to prevent.
 

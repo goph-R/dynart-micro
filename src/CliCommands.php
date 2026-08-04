@@ -44,7 +44,7 @@ class CliCommands implements CliCommandsInterface {
         $currentIndex = 0;
         for ($i = 2; $i < $_SERVER['argc']; $i++) {
             $argument = $_SERVER['argv'][$i];
-            if ($argument[0] == '-' && !$currentName) {
+            if ($argument !== '' && $argument[0] == '-' && !$currentName) {
                 $name = substr($argument, 1);
                 if (in_array($name, $paramNames)) {
                     $currentName = $name;
