@@ -82,7 +82,7 @@ Implement `Middleware` interface (single `run()` method), register with `$app->a
 
 ### Key Components
 
-- **Form**: CSRF protection, field binding from request, validators, error tracking
+- **Form**: CSRF protection, field binding from request, validators, error tracking. Field errors (`error()`, `errors()`) are kept separately from form-level errors (`addError()`, `formErrors()`). Built-in messages resolve through `setTranslation()` in the `micro` namespace with English fallbacks. `inputName()` produces `formname[field]` — it must stay in sync with `bind()`, which reads `$_REQUEST[formname]` as an array. `process()` calls the overridable `beforeValidate()` / `afterValidate()` hooks, and `validate()` is split into `validateCsrfValue()` / `validateRequiredFields()` / `runValidators()` for subclasses.
 - **Translation**: INI-based i18n, `add(namespace, folder)`, variable substitution in translations
 - **LocaleResolver**: Middleware for Accept-Language header detection
 - **EventService**: Pub/sub observer pattern

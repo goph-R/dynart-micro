@@ -8,6 +8,21 @@ namespace Dynart\Micro;
  */
 class Form {
 
+    /** The translation namespace used for the built in messages */
+    const TRANSLATION_NAMESPACE = 'micro';
+
+    /** The translation id of the "required field" message */
+    const MESSAGE_REQUIRED = 'form_required';
+
+    /** The translation id of the "invalid CSRF token" message */
+    const MESSAGE_CSRF_INVALID = 'form_csrf_invalid';
+
+    /** The message for a required field if there is no translation for it */
+    const DEFAULT_MESSAGE_REQUIRED = 'Required.';
+
+    /** The message for an invalid CSRF token if there is no translation for it */
+    const DEFAULT_MESSAGE_CSRF_INVALID = 'CSRF token is invalid.';
+
     /**
      * Stores the name of the form
      */
@@ -39,6 +54,11 @@ class Form {
     protected array $errors = [];
 
     /**
+     * The error messages of the form itself as a list of strings
+     */
+    protected array $formErrors = [];
+
+    /**
      * Validators for the fields in [name => [validator1, validator2]] format
      */
     protected array $validators = [];
@@ -48,10 +68,15 @@ class Form {
     protected RequestInterface $request;
 
     /**
+     * Used for the built in messages, English defaults are used when it is null
+     */
+    protected ?TranslationInterface $translation = null;
+
+    /**
      * Creates the form with given name and `$csrf` value
      *
-     * @param Request $request The HTTP request
-     * @param Session $session The session used for the CSRF check
+     * @param RequestInterface $request The HTTP request
+     * @param SessionInterface $session The session used for the CSRF check
      * @param string $name The name of the form, can be an empty string (usually for filter forms)
      * @param bool $csrf Is the form should use a CSRF field and validate it on `process()`?
      */
@@ -60,6 +85,32 @@ class Form {
         $this->session = $session;
         $this->name = $name;
         $this->csrf = $csrf;
+    }
+
+    /**
+     * Sets the translation used for the built in messages
+     *
+     * When it is not set, the English defaults are used. The translation ids are looked up in the
+     * `micro` namespace, so the application has to call `Translation::add('micro', $folder)` for
+     * the messages to be translated.
+     */
+    public function setTranslation(?TranslationInterface $translation): void {
+        $this->translation = $translation;
+    }
+
+    /**
+     * Returns with a translated built in message or with the given default
+     *
+     * `Translation::get()` returns with `#namespace:id#` when the text can not be found,
+     * in that case the `$default` is returned.
+     */
+    protected function message(string $id, string $default): string {
+        if ($this->translation === null) {
+            return $default;
+        }
+        $fullId = self::TRANSLATION_NAMESPACE.':'.$id;
+        $result = $this->translation->get($fullId);
+        return $result === '#'.$fullId.'#' ? $default : $result;
     }
 
     /**
@@ -76,7 +127,7 @@ class Form {
             throw new MicroException("Couldn't gather sufficient entropy");
         }
         $this->addFields([$this->csrfName() => ['type' => 'hidden']]);
-        $this->setValues([$this->csrfName() => $value]);
+        $this->addValues([$this->csrfName() => $value]);
         $this->session->set($this->csrfSessionName(), $value);
     }
 
@@ -109,6 +160,47 @@ class Form {
     }
 
     /**
+     * Sets the name of this form
+     *
+     * The name is part of the CSRF session name and the HTML input names, so it should be set
+     * before `generateCsrf()` or any rendering happens.
+     */
+    public function setName(string $name): void {
+        $this->name = $name;
+    }
+
+    /**
+     * Is this form using a CSRF field?
+     */
+    public function csrf(): bool {
+        return $this->csrf;
+    }
+
+    /**
+     * Sets whether this form should use a CSRF field
+     */
+    public function setCsrf(bool $csrf): void {
+        $this->csrf = $csrf;
+    }
+
+    /**
+     * Returns with the HTML input name for a field
+     *
+     * When the form has a name, the fields are grouped into an array, so PHP parses them into
+     * `$_REQUEST[form_name][field_name]`, which is what `bind()` reads back.
+     */
+    public function inputName(string $name): string {
+        return $this->name ? $this->name.'['.$name.']' : $name;
+    }
+
+    /**
+     * Returns with the HTML id for a field
+     */
+    public function inputId(string $name): string {
+        return $this->name ? $this->name.'_'.$name : $name;
+    }
+
+    /**
      * Returns the fields of this form in [name => [field_data]] format
      */
     public function fields(): array {
@@ -118,12 +210,22 @@ class Form {
     /**
      * Adds fields to the form (merges them with the existing ones)
      *
+     * A field can override the `$required` parameter with a `required` key in its own data, so
+     * mixed batches can be added in one call:
+     *
+     * <pre>
+     * $form->addFields([
+     *     'email' => ['type' => 'text'],
+     *     'notes' => ['type' => 'text', 'required' => false]
+     * ]);
+     * </pre>
+     *
      * @param array $fields The fields in [name => [field_data]] format
-     * @param bool $required Is this field required to be filled out?
+     * @param bool $required The default for the fields that don't declare it themselves
      */
     public function addFields(array $fields, bool $required = true): void {
-        if ($required) { // TODO: possible bug! What if one of the fields are not required?
-            $this->required = array_merge($this->required, array_keys($fields));
+        foreach ($fields as $name => $field) {
+            $this->setRequired($name, array_key_exists('required', $field) ? (bool)$field['required'] : $required);
         }
         $this->fields = array_merge($this->fields, $fields);
     }
@@ -149,7 +251,7 @@ class Form {
                 $this->required[] = $name;
             }
         } else {
-            $this->required = array_diff($this->required, [$name]);
+            $this->required = array_values(array_diff($this->required, [$name]));
         }
     }
 
@@ -177,11 +279,30 @@ class Form {
         $result = false;
         if ($this->request->httpMethod() == $httpMethod) {
             $this->bind();
+            $this->beforeValidate();
             $result = $this->validate();
+            $this->afterValidate($result);
         }
         $this->generateCsrf();
         return $result;
     }
+
+    /**
+     * Runs after `bind()` and before `validate()` in `process()`
+     *
+     * Subclasses can use it for emitting an event or for normalizing the bound values.
+     */
+    protected function beforeValidate(): void {}
+
+    /**
+     * Runs after `validate()` in `process()`
+     *
+     * Subclasses can use it for emitting an event. Adding an error here does not change the
+     * `$valid` value that `process()` returns, use `validate()` for that.
+     *
+     * @param bool $valid The result of the validation
+     */
+    protected function afterValidate(bool $valid): void {}
 
     /**
      * Binds the request values to the field values
@@ -191,7 +312,8 @@ class Form {
      */
     public function bind(): void {
         if ($this->name) {
-            $this->values = $this->request->get($this->name, []);
+            $values = $this->request->get($this->name, []);
+            $this->values = is_array($values) ? $values : [];
         } else {
             foreach ($this->fields as $name => $field) {
                 $this->values[$name] = $this->request->get($name);
@@ -210,7 +332,7 @@ class Form {
         if (array_key_exists($name, $this->values)) {
             $value = $this->values[$name];
             if ($escape) {
-                $value = htmlspecialchars($value, ENT_QUOTES);
+                $value = htmlspecialchars((string)$value, ENT_QUOTES);
             }
         }
         return $value;
@@ -245,10 +367,19 @@ class Form {
      * @param string $error
      */
     public function addError(string $error): void {
-        if (!isset($this->errors['_form'])) {
-            $this->errors['_form'] = [];
+        $this->formErrors[] = $error;
+    }
+
+    /**
+     * Adds an error for a field, keeps the first error if the field already has one
+     *
+     * @param string $name The field name
+     * @param string $error The error message
+     */
+    public function addFieldError(string $name, string $error): void {
+        if (!isset($this->errors[$name])) {
+            $this->errors[$name] = $error;
         }
-        $this->errors['_form'][] = $error;
     }
 
     /**
@@ -259,14 +390,36 @@ class Form {
      * @return bool The form validation was successful?
      */
     public function validate(): bool {
+        $this->validateCsrfValue();
+        $this->validateRequiredFields();
+        $this->runValidators();
+        return !$this->hasErrors();
+    }
+
+    /**
+     * Adds a form error when the CSRF token is invalid
+     */
+    protected function validateCsrfValue(): void {
         if (!$this->validateCsrf()) {
-            $this->addError('CSRF token is invalid.');
+            $this->addError($this->message(self::MESSAGE_CSRF_INVALID, self::DEFAULT_MESSAGE_CSRF_INVALID));
         }
+    }
+
+    /**
+     * Adds a field error for every empty required field
+     */
+    protected function validateRequiredFields(): void {
         foreach (array_keys($this->fields) as $name) {
             if ($this->required($name) && !$this->value($name)) {
-                $this->errors[$name] = 'Required.'; // TODO: Translation
+                $this->addFieldError($name, $this->message(self::MESSAGE_REQUIRED, self::DEFAULT_MESSAGE_REQUIRED));
             }
         }
+    }
+
+    /**
+     * Runs the field validators, skips the fields that already have an error
+     */
+    protected function runValidators(): void {
         foreach ($this->validators as $name => $validators) {
             if (isset($this->errors[$name])) {
                 continue;
@@ -276,12 +429,11 @@ class Form {
             }
             foreach ($validators as $validator) {
                 if (!$validator->validate($this->value($name))) {
-                    $this->errors[$name] = $validator->message();
+                    $this->addFieldError($name, $validator->message());
                     break;
                 }
             }
         }
-        return empty($this->errors);
     }
 
     /**
@@ -292,6 +444,27 @@ class Form {
      */
     public function error(string $name): ?string {
         return $this->errors[$name] ?? null;
+    }
+
+    /**
+     * Returns with the field errors in [name => message] format
+     */
+    public function errors(): array {
+        return $this->errors;
+    }
+
+    /**
+     * Returns with the errors of the form itself as a list of strings
+     */
+    public function formErrors(): array {
+        return $this->formErrors;
+    }
+
+    /**
+     * Returns true if the form or any of its fields has an error
+     */
+    public function hasErrors(): bool {
+        return !empty($this->errors) || !empty($this->formErrors);
     }
 
     public function fetch(): string {
@@ -331,9 +504,7 @@ class Form {
     }
 
     public function idByNameAndField(string $name, array $field): string {
-        return isset($field['id'])
-            ? ($this->name() ? $this->name().'_'.$name : $name)
-            : $field['id'];
+        return $field['id'] ?? $this->inputId($name);
     }
 
 }

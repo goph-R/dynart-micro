@@ -1,6 +1,6 @@
-<?php if ($form->error('_form')): ?>
+<?php if ($form->formErrors()): ?>
     <ul class="form-errors">
-        <?php foreach ($form->error('_form') as $error): ?>
+        <?php foreach ($form->formErrors() as $error): ?>
             <li><?= esc_html($error) ?></li>
         <?php endforeach ?>
     </ul>

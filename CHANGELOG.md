@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.9.0] &ndash; 2026-08-04
+
+### Fixed
+- **`Form` input names did not round trip.** `form-input.phtml` rendered `name="formname_field"` while `Form::bind()` reads `$_REQUEST[formname]` as an array, which PHP only populates from `name="formname[field]"`. Every named form bound an empty value set and never redisplayed what the user typed. The template now renders through the new `Form::inputName()`, so the rendered name and `bind()` share one definition.
+- **`Form::generateCsrf()` cleared all bound values.** It called `setValues()`, and `process()` calls `generateCsrf()` last, so a CSRF enabled form lost every value when redisplayed after a failed validation. It now uses `addValues()`.
+- **`Form::idByNameAndField()` had an inverted condition.** It returned the generated id when an explicit `id` was set, and an undefined array index when it was not. Explicit ids now work and no notice is emitted.
+- **`Form::addFields()` marked whole batches as required.** The `$required` parameter applied to every field in the call, so a mixed batch could not be expressed. Individual fields may now carry their own `required` key, which takes precedence.
+
+### Added
+- `Form::setTranslation()` — the built in `Required.` and `CSRF token is invalid.` messages are looked up in the `micro` translation namespace, falling back to English when no translation is set or the id is missing
+- `translations/en.ini` with the built in form messages
+- `Form` message constants: `MESSAGE_REQUIRED`, `MESSAGE_CSRF_INVALID`, `DEFAULT_MESSAGE_REQUIRED`, `DEFAULT_MESSAGE_CSRF_INVALID`, `TRANSLATION_NAMESPACE`
+- `Form::setName()` and `Form::setCsrf()` / `Form::csrf()` — the name was previously constructor only, which blocked building forms through a factory
+- `Form::inputName()` and `Form::inputId()` — the HTML name and id for a field, in one place
+- `Form::beforeValidate()` and `Form::afterValidate()` — overridable hooks around validation in `process()`
+- `Form::addFieldError()`, `Form::errors()`, `Form::formErrors()`, `Form::hasErrors()`
+- `Form::validate()` split into overridable `validateCsrfValue()`, `validateRequiredFields()` and `runValidators()`
+
+### Changed
+- **Form level errors moved out of `errors['_form']`** into their own `formErrors` list. `Form::error()` now always returns a `?string` for a field; use `formErrors()` for the form itself. `form-errors.phtml` updated accordingly.
+- `Form::bind()` ignores a non-array request value for a named form instead of assigning it
+
+---
+
 ## [0.8.0] &ndash; 2026-02-09
 
 ### Added
