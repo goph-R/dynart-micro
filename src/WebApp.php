@@ -70,14 +70,21 @@ class WebApp extends AbstractApp {
     }
 
     /**
-     * Redirects to the give location and parameters
+     * Redirects to the given location and parameters
      *
      * Clears the current headers, then sends back a `Location` header and empty body, then finishes the request.
-     * If `$location` NOT starts with `http` will be converted to a full URL with `Router::url`
+     * If `$location` does NOT start with `http` it is converted to a full URL with `Router::url`.
+     *
+     * @param int $statusCode 302 by default. Use 301 when the old URL is not merely being left
+     *                        for now but is *wrong* - a canonical correction, say - since only a
+     *                        permanent redirect tells a search engine to fold the two together.
      */
-    public function redirect(string $location, array $params = []): void {
+    public function redirect(string $location, array $params = [], int $statusCode = 302): void {
         $url = str_starts_with($location, 'http') ? $location : $this->router->url($location, $params);
         $this->response->clearHeaders();
+        if ($this->isWeb()) { // because of testing in cli
+            http_response_code($statusCode);
+        }
         $this->response->setHeader(self::HEADER_LOCATION, $url);
         $this->response->send();
         $this->finish();
