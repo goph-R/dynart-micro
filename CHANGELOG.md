@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.10.0] &ndash; 2026-08-04
+
+### Fixed
+- **`CliCommands::matchCurrent()` returned `null` for an unknown command**, while `CliApp::process()` destructures the result with `list()`. Every unrecognised or missing command therefore emitted two "Trying to access array offset on value of type null" warnings before printing its error — on the exact path a user hits by mistyping. It now returns the `CliCommands::COMMAND_NOT_FOUND` constant (`[null, null]`), mirroring `Router::ROUTE_NOT_FOUND`.
+
+### Added
+- `CliCommands::has()` — lets an application check whether a command exists before dispatching, so it can offer help instead of an error
+
+### Changed
+- **`CliCommandsInterface` gained `has()` and `matchCurrent()` is now `array` rather than `?array`** — a breaking change for anything implementing the interface
+
+---
+
 ## [0.9.0] &ndash; 2026-08-04
 
 ### Fixed

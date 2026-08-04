@@ -4,6 +4,9 @@ namespace Dynart\Micro;
 
 class CliCommands implements CliCommandsInterface {
 
+    /** Returned by `matchCurrent()` when there is no command with the current name */
+    const COMMAND_NOT_FOUND = [null, null];
+
     protected array $commands = [];
 
     public function add(string $name, callable|array $callable, array $paramNames = [], array $flagNames = []): void {
@@ -14,9 +17,16 @@ class CliCommands implements CliCommandsInterface {
         return $_SERVER['argv'][1] ?? null;
     }
 
-    public function matchCurrent(): ?array {
+    public function has(string $name): bool {
+        return isset($this->commands[$name]);
+    }
+
+    /**
+     * @return array The [callable, params] pair, or `COMMAND_NOT_FOUND` when there is no such command
+     */
+    public function matchCurrent(): array {
         if (!isset($this->commands[$this->current()])) {
-            return null;
+            return self::COMMAND_NOT_FOUND;
         }
         list($callable, $paramNames, $flagNames) = $this->commands[$this->current()];
 
