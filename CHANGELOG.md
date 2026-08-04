@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.12.0] &ndash; 2026-08-04
+
+### Added
+- **`View::exists()`** — is there a template at this path, resolved the same way `fetch()` resolves it, theme override included. For optional templates: catching the exception from `fetch()` would also swallow a `MicroException` thrown from *inside* a template that does exist, so a missing optional template and a broken one would look identical.
+
+### Changed
+- `ViewInterface` gained `exists()` — a breaking change for anything implementing it
+
+---
+
 ## [0.11.0] &ndash; 2026-08-04
 
 ### Added

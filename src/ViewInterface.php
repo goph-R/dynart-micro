@@ -107,6 +107,15 @@ interface ViewInterface {
     public function theme(): string;
 
     /**
+     * Is there a template at this path?
+     *
+     * Resolved the same way `fetch()` resolves it, theme override included. For optional
+     * templates, where catching the exception from `fetch()` would also swallow a
+     * `MicroException` thrown from inside a template that does exist.
+     */
+    public function exists(string $path): bool;
+
+    /**
      * Fetches a template with variables
      */
     public function fetch(string $__viewPath, array $__vars = []): string;

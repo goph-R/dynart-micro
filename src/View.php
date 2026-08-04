@@ -133,6 +133,17 @@ class View implements ViewInterface {
         return $this->theme;
     }
 
+    /**
+     * Is there a template at this path?
+     *
+     * Resolved exactly like `fetch()` does, theme override included. For optional templates,
+     * where catching the exception from `fetch()` would also swallow a `MicroException` thrown
+     * from inside a template that does exist.
+     */
+    public function exists(string $path): bool {
+        return file_exists($this->getRealPath($path).'.phtml');
+    }
+
     public function fetch(string $__viewPath, array $__vars=[]): string {
         $this->includeFunctions();
         $__path = $this->getRealPath($__viewPath).'.phtml';
