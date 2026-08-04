@@ -57,6 +57,17 @@ class Form {
     protected array $required = [];
 
     /**
+     * The uploaded files of the `file` fields, in [name => UploadedFile] format
+     *
+     * Kept apart from the values: the *value* of a file field is the name the browser sent, which
+     * is what `required` checks and what a template could print, while the file itself is an
+     * object that has to be handed to something that can store it.
+     *
+     * @var array<string, UploadedFile>
+     */
+    protected array $files = [];
+
+    /**
      * The values of the fields in [name => value] format
      */
     protected array $values = [];
@@ -160,9 +171,25 @@ class Form {
 
     /**
      * Returns true if the CSRF session value equals with the CSRF field value
+     *
+     * **A form with no token in the session fails.** It used to compare loosely, and in PHP
+     * `null == ''` is true - so any form the visitor had never rendered could be posted from
+     * another site with an empty `_csrf` and pass. That is the whole attack the token exists to
+     * stop, and it applied to every form nobody had opened yet in that session.
+     *
+     * The comparison is `hash_equals()` rather than `==`, so it does not leak the token through
+     * how long it takes to reject a guess.
      */
     public function validateCsrf(): bool {
-        return !$this->csrf || $this->session->get($this->csrfSessionName()) == $this->value($this->csrfName());
+        if (!$this->csrf) {
+            return true;
+        }
+        $expected = $this->session->get($this->csrfSessionName());
+        $actual = $this->value($this->csrfName());
+        if (!is_string($expected) || $expected === '' || !is_string($actual)) {
+            return false;
+        }
+        return hash_equals($expected, $actual);
     }
 
     /**
@@ -332,6 +359,51 @@ class Form {
                 $this->values[$name] = $this->request->get($name);
             }
         }
+        $this->bindFiles();
+    }
+
+    /**
+     * Binds the uploaded files of the `file` fields
+     *
+     * An upload arrives in `$_FILES`, not in `$_REQUEST`, so without this a `file` field is
+     * always empty - and a **required** one could never be satisfied, however many files were
+     * attached. The field's value becomes the name the browser sent, so `required` and the error
+     * messages work like any other field; the file itself is read with `uploadedFile()`.
+     *
+     * A named form posts `formname[field]`, which PHP groups under the form name in `$_FILES`,
+     * exactly the way it groups the ordinary inputs in `$_REQUEST`.
+     */
+    protected function bindFiles(): void {
+        $this->files = [];
+        $grouped = $this->name ? $this->request->uploadedFile($this->name) : null;
+        foreach ($this->fields as $name => $field) {
+            if (($field['type'] ?? '') !== 'file') {
+                continue;
+            }
+            $file = $this->name
+                ? (is_array($grouped) ? ($grouped[$name] ?? null) : null)
+                : $this->request->uploadedFile($name);
+            if (!$file instanceof UploadedFile || $file->error() === UPLOAD_ERR_NO_FILE) {
+                $this->values[$name] = null;
+                continue;
+            }
+            $this->files[$name] = $file;
+            $this->values[$name] = $file->name();
+        }
+    }
+
+    /**
+     * The file uploaded into a `file` field, if there was one
+     */
+    public function uploadedFile(string $name): ?UploadedFile {
+        return $this->files[$name] ?? null;
+    }
+
+    /**
+     * @return array<string, UploadedFile> Every uploaded file, keyed by field name
+     */
+    public function uploadedFiles(): array {
+        return $this->files;
     }
 
     /**

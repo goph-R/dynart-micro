@@ -224,7 +224,32 @@ class AttributeProcessor implements MiddlewareInterface {
      */
     protected function processClass(\ReflectionClass $refClass): void {
         foreach ($this->handlers[AttributeHandlerInterface::TARGET_CLASS] as $handler) {
-            $this->processSubject($handler, $refClass->getName(), $refClass);
+            $this->processClassAttribute($handler, $refClass);
+        }
+    }
+
+    /**
+     * Finds a class-level attribute on the class or on the nearest ancestor that declares one
+     *
+     * PHP attributes are **not inherited**: `ReflectionClass::getAttributes()` on a subclass does
+     * not see its parent's. Without this, an `#[Authorize]` on an abstract base controller would
+     * apply to nothing at all - silently, and failing *open*, since every subclass would then be
+     * reachable anonymously. Declaring "this whole area needs a login" once is worth having.
+     *
+     * The nearest declaration wins, so a subclass can still demand more than its base does. The
+     * handler is given the *concrete* class name, which is the one a request will arrive at.
+     *
+     * Abstract classes are never registered with the container, so this walk is the only way
+     * their attributes are seen at all.
+     */
+    protected function processClassAttribute(AttributeHandlerInterface $handler, \ReflectionClass $refClass): void {
+        $current = $refClass;
+        while ($current !== false) {
+            if ($current->getAttributes($handler->attributeClass()) !== []) {
+                $this->processSubject($handler, $refClass->getName(), $current);
+                return;
+            }
+            $current = $current->getParentClass();
         }
     }
 

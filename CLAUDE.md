@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**dynart-micro** is a micro PHP framework (v0.8.0) providing dependency injection, routing, templating, form handling, i18n, CLI support, and JWT-based authentication. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`. Requires `firebase/php-jwt ^7.0`.
+**dynart-micro** is a micro PHP framework (v0.17.0) providing dependency injection, routing, templating, form handling, i18n, CLI support, and JWT-based authentication. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`. Requires `firebase/php-jwt ^7.0`.
 
 The test suite lives in a **separate repository** at `../dynart-micro-test/`. That project symlinks this library via a Composer path repository (`vendor/dynart/micro` → `../dynart-micro`). Always treat both folders as a single codebase.
 
@@ -65,6 +65,10 @@ Routes registered via `Router::add(path, callable, method)` or `@route` PHPDoc a
 
 `WebApp::useRouteAttributes()` enables attribute-based routing by adding the `AttributeProcessor` middleware.
 
+`#[Route]` is repeatable, so one action can answer `GET` and `POST`.
+
+**Class-level attributes are inherited.** PHP's are not, so `AttributeProcessor` walks up to the nearest ancestor that declares one and hands the handler the concrete class name. Without it an `#[Authorize]` on an abstract base controller applies to nothing — silently, and failing *open*. A subclass declaring its own wins.
+
 ### Config
 
 INI-based (`parse_ini_file`), dot-notation keys (e.g., `app.base_url`). Supports:
@@ -76,13 +80,15 @@ INI-based (`parse_ini_file`), dot-notation keys (e.g., `app.base_url`). Supports
 
 PHP templates (`.phtml`), namespace folders (`view->addFolder('ns', 'path')` → `view->fetch('ns:template')`), layout/block system, theme overrides. Helper functions loaded from `views/functions.php`.
 
+A template body is `include`d **inside `View::fetch()`** and shares that method's scope, so a variable named like one of its locals would overwrite it. `fetch()` unsets the reserved names before extracting; still, never pass `get_defined_vars()` from a template to a nested fetch — it hands down the path of the file being included, and the template ends up including itself.
+
 ### Middleware
 
 Implement `Middleware` interface (single `run()` method), register with `$app->addMiddleware()`. Runs after `init()`, before `process()`.
 
 ### Key Components
 
-- **Form**: CSRF protection, field binding from request, validators, error tracking. Field errors (`error()`, `errors()`) are kept separately from form-level errors (`addError()`, `formErrors()`). Built-in messages resolve through `setTranslation()` in the `micro` namespace with English fallbacks. `inputName()` produces `formname[field]` — it must stay in sync with `bind()`, which reads `$_REQUEST[formname]` as an array. `process()` calls the overridable `beforeValidate()` / `afterValidate()` hooks, and `validate()` is split into `validateCsrfValue()` / `validateRequiredFields()` / `runValidators()` for subclasses.
+- **Form**: CSRF protection, field binding from request, validators, error tracking. `validateCsrf()` fails when the session holds no token — it used to compare loosely, and `null == ''` let any form the visitor had not rendered be posted from another site with an empty `_csrf`. `bind()` also binds uploaded files for `file` fields, since an upload arrives in `$_FILES` and a required file field could otherwise never be satisfied; read them with `uploadedFile()`. Field errors (`error()`, `errors()`) are kept separately from form-level errors (`addError()`, `formErrors()`). Built-in messages resolve through `setTranslation()` in the `micro` namespace with English fallbacks. `inputName()` produces `formname[field]` — it must stay in sync with `bind()`, which reads `$_REQUEST[formname]` as an array. `process()` calls the overridable `beforeValidate()` / `afterValidate()` hooks, and `validate()` is split into `validateCsrfValue()` / `validateRequiredFields()` / `runValidators()` for subclasses.
 - **Translation**: INI-based i18n, `add(namespace, folder)`, variable substitution in translations
 - **LocaleResolver**: Middleware for Accept-Language header detection
 - **EventService**: Pub/sub observer pattern

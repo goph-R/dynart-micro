@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.17.0] &ndash; 2026-08-04
+
+### Security
+- **A form with no CSRF token in the session no longer validates.** `validateCsrf()` compared loosely, and in PHP `null == ''` is true — so **any** form the visitor had not rendered yet could be posted from another site with an empty `_csrf` and pass. That is precisely the attack the token exists to stop, and it applied to every form nobody had opened in that session. The comparison is now `hash_equals()` against a token that has to be a non-empty string.
+- **A class-level attribute is looked up along the inheritance chain.** PHP attributes are not inherited, so an `#[Authorize]` on an abstract base controller applied to *nothing* — silently, and failing **open**: every subclass was reachable anonymously. `AttributeProcessor` now walks up to the nearest ancestor that declares one, and hands the handler the concrete class name. A subclass declaring its own still wins. Abstract classes are never registered with the container, so this walk is the only way their attributes are seen at all.
+
+### Added
+- **`#[Route]` is repeatable.** One action commonly answers more than one method — a form is `GET` to render it and `POST` to process it — and both belong on the same method rather than on a second one that delegates.
+- **`Form` binds uploaded files.** An upload arrives in `$_FILES`, never in `$_REQUEST`, so a `file` field was always empty and a **required** one could never be satisfied however many files were attached. `bind()` now sets the field's value to the name the browser sent — so `required` and the error messages behave like any other field — and `uploadedFile()` / `uploadedFiles()` return the files themselves. A field left alone arrives as `UPLOAD_ERR_NO_FILE` and is correctly not a file.
+
+### Fixed
+- **A template variable can no longer overwrite `View::fetch()`'s own locals.** A template body is `include`d inside that method, so it shares its scope: a template passing `get_defined_vars()` to a nested fetch handed down `$__path`, the nested fetch extracted it over its own, and the template included *itself* — until the stack ran out and the PHP worker died with no response at all.
+
+---
+
 ## [0.16.0] &ndash; 2026-08-04
 
 ### Added

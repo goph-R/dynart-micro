@@ -181,6 +181,12 @@ class View implements ViewInterface {
         $this->layout = '';
         $this->fetchDepth++;
         try {
+            // A template body runs in *this* scope, so a variable named like one of this
+            // method's own locals would overwrite it. `$__path` is the file about to be
+            // included: a template passing `get_defined_vars()` on to a nested fetch hands down
+            // its own path, and the nested fetch then includes the caller instead of the
+            // template asked for - forever, until the stack runs out.
+            unset($__vars['__viewPath'], $__vars['__vars'], $__vars['__path'], $__vars['__previousLayout']);
             extract($this->data);
             extract($__vars);
             ob_start();
