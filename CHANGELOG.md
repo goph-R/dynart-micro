@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.18.0] &ndash; 2026-08-05
+
+### Security
+- **`Request::ip()` no longer believes a header.** It returned `X-Forwarded-For`, or even `Client-IP`, whenever one was present — and both are written by whoever sent the request. Anything counting or blocking by address could be handed a different one every time, or somebody else's, which is worse: then the count belongs to them. It is now `REMOTE_ADDR` unless the request arrived from an address listed in **`request.trusted_proxies`**, in which case the rightmost entry of `X-Forwarded-For` that is not itself a trusted proxy is used — the last address a machine we trust actually saw.
+
+### Fixed
+- **`Config::getCommaSeparatedValues()` poisoned its own cache.** It stored the list it built under the same name `get()` caches the raw value under, so the second call for a setting exploded an array and fataled, and a `get()` in between silently returned a list where a string belonged. Lists are cached separately now. A missing or empty setting is an empty list rather than a list holding one empty string.
+
+### Notes
+**`request.trusted_proxies` is empty by default, which fails closed.** An installation that is not behind a proxy cannot be talked into believing that it is. Behind one — nginx, Cloudflare, a load balancer — set it to the address it connects from, or every visitor arrives as the proxy and shares one identity. That is the safe direction to be wrong in, but it is still wrong: a rate limit keyed on the address would then be one bucket for the whole internet.
+
+---
+
 ## [0.17.0] &ndash; 2026-08-04
 
 ### Security

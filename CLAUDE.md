@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**dynart-micro** is a micro PHP framework (v0.17.0) providing dependency injection, routing, templating, form handling, i18n, CLI support, and JWT-based authentication. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`. Requires `firebase/php-jwt ^7.0`.
+**dynart-micro** is a micro PHP framework (v0.18.0) providing dependency injection, routing, templating, form handling, i18n, CLI support, and JWT-based authentication. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`. Requires `firebase/php-jwt ^7.0`.
 
 The test suite lives in a **separate repository** at `../dynart-micro-test/`. That project symlinks this library via a Composer path repository (`vendor/dynart/micro` → `../dynart-micro`). Always treat both folders as a single codebase.
 
@@ -75,6 +75,14 @@ INI-based (`parse_ini_file`), dot-notation keys (e.g., `app.base_url`). Supports
 - Environment variable override via `{{VAR_NAME}}` syntax
 - Path alias: `~` expands to `app.root_path`
 - Comma-separated values and hierarchical array parsing (`items.0.name`)
+
+`getCommaSeparatedValues()` caches into its **own** map. It used to write the list it built under the name `get()` caches the raw value under, so asking twice exploded an array and fataled, and a `get()` in between returned a list where a string belonged. A missing setting is `[]`, not `['']`.
+
+### The client address
+
+`Request::ip()` is `REMOTE_ADDR` **unless the request came from an address in `request.trusted_proxies`**, in which case it is the rightmost `X-Forwarded-For` entry that is not itself a trusted proxy. It used to return the header whenever it was present, which meant anything counting or blocking by address could be handed a new one on every request — or somebody else's.
+
+Empty by default, so an installation not behind a proxy cannot be told that it is. **Behind one, set it**, or every visitor arrives as the proxy and shares one identity.
 
 ### View / Templating
 

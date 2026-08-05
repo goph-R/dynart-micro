@@ -7,6 +7,9 @@ class Config implements ConfigInterface {
     private array $config = [];
     private array $cached = [];
 
+    /** Comma separated settings, as lists. Kept apart from `cached`: same name, different type. */
+    private array $cachedValues = [];
+
     public function __construct() {}
 
     public function load(string $path): void {
@@ -15,6 +18,7 @@ class Config implements ConfigInterface {
 
     public function clearCache(): void {
         $this->cached = [];
+        $this->cachedValues = [];
     }
 
     public function get(string $name, mixed $default = null, bool $useCache = true): mixed {
@@ -28,10 +32,28 @@ class Config implements ConfigInterface {
         return $this->cacheAndReturn($name, $this->replaceEnvValue($value), $useCache);
     }
 
+    /**
+     * A comma separated setting, as a list
+     *
+     * **Cached apart from the raw values.** It used to write its list into the same cache that
+     * `get()` reads, under the same name: the first call left an array where the string had
+     * been, so the second call exploded an array and fataled, and any `get()` of that name in
+     * between silently returned a list. It took a caller asking for the same setting twice in
+     * one request to find it.
+     *
+     * A missing or empty setting is an empty list rather than a list holding one empty string,
+     * which was never anything a caller wanted to iterate.
+     */
     public function getCommaSeparatedValues(string $name, bool $useCache = true): array {
-        $values = explode(',', $this->get($name));
-        $result = array_map([$this, 'getArrayItemValue'], $values);
-        return $this->cacheAndReturn($name, $result, $useCache);
+        if ($useCache && array_key_exists($name, $this->cachedValues)) {
+            return $this->cachedValues[$name];
+        }
+        $value = trim((string)$this->get($name, '', $useCache));
+        $result = $value === '' ? [] : array_map([$this, 'getArrayItemValue'], explode(',', $value));
+        if ($useCache) {
+            $this->cachedValues[$name] = $result;
+        }
+        return $result;
     }
 
     public function getArray(string $prefix, array $default = [], bool $useCache = true): array {
