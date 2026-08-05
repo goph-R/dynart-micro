@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.19.0] &ndash; 2026-08-05
+
+### Added
+- **`View::addFolder()` takes a `$themeable` flag**, and `isThemeable()` reports it. A namespace registered with `false` is not looked for in the active theme, by `fetch()` or by `exists()`.
+
+### Notes
+A theme overriding one template otherwise reaches **every** template there is, in every namespace. For anything an application ships and relies on staying what it shipped — an administration area most obviously — that is not restyling a page, it is a theme replacing the layout the way in is rendered with. The choice belongs to whoever registers the folder, because only they know which kind of templates they are.
+
+The default is `true`, so nothing that exists today changes.
+
+---
+
 ## [0.18.1] &ndash; 2026-08-05
 
 ### Security

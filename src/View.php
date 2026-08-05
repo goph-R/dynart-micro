@@ -33,6 +33,9 @@ class View implements ViewInterface {
     /** Stores the paths for the folders by namespace */
     protected array $folders = [];
 
+    /** Which namespaces the active theme may replace templates in, by namespace */
+    protected array $themeableNamespaces = [];
+
     /** Holds the view variables */
     protected array $data = [];
 
@@ -138,8 +141,21 @@ class View implements ViewInterface {
         $this->blocks[$name] .= ob_get_clean();
     }
 
-    public function addFolder(string $namespace, string $path): void {
+    /**
+     * @param bool $themeable May the active theme replace templates in this namespace?
+     *
+     * True for anything a theme is meant to restyle. **False for the templates an application
+     * cannot afford a theme to touch** - an administration area, say, where a theme replacing the
+     * layout does not restyle a page, it locks somebody out of their own site. The choice belongs
+     * to whoever registers the folder, because only they know which of the two it is.
+     */
+    public function addFolder(string $namespace, string $path, bool $themeable = true): void {
         $this->folders[$namespace] = $path;
+        $this->themeableNamespaces[$namespace] = $themeable;
+    }
+
+    public function isThemeable(string $namespace): bool {
+        return $this->themeableNamespaces[$namespace] ?? true;
     }
 
     public function folder(string $namespace): string {
@@ -224,6 +240,7 @@ class View implements ViewInterface {
      */
     protected function getRealPath(string $path): string {
         $colonPos = strpos($path, ':');
+        $namespace = null;
         if ($colonPos !== false) {
             $namespace = substr($path, 0, $colonPos);
             if (!isset($this->folders[$namespace])) {
@@ -237,7 +254,11 @@ class View implements ViewInterface {
             $name = $path;
             $themePath = $this->theme.'/'.$path;
         }
-        if ($this->theme) {
+        // A namespace can refuse to be themed. Without that, a theme overriding one template
+        // reaches every template there is - including the ones an application relies on to stay
+        // what it shipped, which for an administration area is the difference between restyling
+        // a page and locking somebody out of their own site.
+        if ($this->theme && ($namespace === null || $this->isThemeable($namespace))) {
             $themeFullPath = $this->config->getFullPath($themePath);
             if (file_exists($themeFullPath.'.phtml')) {
                 return $themeFullPath;

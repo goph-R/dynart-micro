@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**dynart-micro** is a micro PHP framework (v0.18.0) providing dependency injection, routing, templating, form handling, i18n, CLI support, and JWT-based authentication. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`. Requires `firebase/php-jwt ^7.0`.
+**dynart-micro** is a micro PHP framework (v0.19.0) providing dependency injection, routing, templating, form handling, i18n, CLI support, and JWT-based authentication. PHP 8.0+, namespace `Dynart\Micro`, PSR-4 autoload from `src/`. Requires `firebase/php-jwt ^7.0`.
 
 The test suite lives in a **separate repository** at `../dynart-micro-test/`. That project symlinks this library via a Composer path repository (`vendor/dynart/micro` → `../dynart-micro`). Always treat both folders as a single codebase.
 
@@ -86,7 +86,9 @@ Empty by default, so an installation not behind a proxy cannot be told that it i
 
 ### View / Templating
 
-PHP templates (`.phtml`), namespace folders (`view->addFolder('ns', 'path')` → `view->fetch('ns:template')`), layout/block system, theme overrides. Helper functions loaded from `views/functions.php`.
+PHP templates (`.phtml`), namespace folders (`view->addFolder('ns', 'path')` → `view->fetch('ns:template')`), layout/block system, theme overrides.
+
+**A namespace can refuse to be themed**: `addFolder('ns', 'path', false)`. Without it a theme overriding one template reaches every template in every namespace, which for an administration area is not a restyled page but somebody locked out of their own site. `exists()` honours the flag too, or it would disagree with `fetch()`. Helper functions loaded from `views/functions.php`.
 
 A template body is `include`d **inside `View::fetch()`** and shares that method's scope, so a variable named like one of its locals would overwrite it. `fetch()` unsets the reserved names before extracting; still, never pass `get_defined_vars()` from a template to a nested fetch — it hands down the path of the file being included, and the template ends up including itself.
 

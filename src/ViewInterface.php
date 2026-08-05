@@ -89,7 +89,16 @@ interface ViewInterface {
      *
      * The `$path` should NOT end with a '/'
      */
-    public function addFolder(string $namespace, string $path): void;
+    public function addFolder(string $namespace, string $path, bool $themeable = true): void;
+
+    /**
+     * May the active theme replace templates in this namespace?
+     *
+     * True unless the folder was registered otherwise. A namespace that says no is one an
+     * application cannot afford a theme to touch - an administration area, where a replaced
+     * layout is not a restyled page but somebody locked out of their own site.
+     */
+    public function isThemeable(string $namespace): bool;
 
     /**
      * Returns with the folder path by namespace
