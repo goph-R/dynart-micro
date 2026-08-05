@@ -22,13 +22,23 @@ class Logger extends KLogger implements LoggerInterface {
 
     private string $level;
 
+    /**
+     * @param ConfigInterface $config `log.dir`, `log.level`, `log.options`
+     *
+     * The directory goes through `getFullPath()`, so `~/logs` means the application's root and
+     * not a folder called `~`. Without that the only way to write outside the working directory
+     * was an absolute path, and the working directory of a web request is wherever the entry
+     * script lives - which is inside the document root, where a log file is a URL.
+     *
+     * `static::` rather than `self::` for the defaults, so a subclass can choose safer ones.
+     */
     public function __construct(ConfigInterface $config) {
         parent::__construct(
-            $config->get(self::CONFIG_DIR, self::DEFAULT_DIR),
-            $config->get(self::CONFIG_LEVEL, self::DEFAULT_LEVEL),
-            $config->getArray(self::CONFIG_OPTIONS, self::DEFAULT_OPTIONS)
+            $config->getFullPath($config->get(static::CONFIG_DIR, static::DEFAULT_DIR)),
+            $config->get(static::CONFIG_LEVEL, static::DEFAULT_LEVEL),
+            $config->getArray(static::CONFIG_OPTIONS, static::DEFAULT_OPTIONS)
         );
-        $this->level = $config->get(self::CONFIG_LEVEL, self::DEFAULT_LEVEL);
+        $this->level = $config->get(static::CONFIG_LEVEL, static::DEFAULT_LEVEL);
     }
 
     public function level(): string {

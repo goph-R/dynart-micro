@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.18.1] &ndash; 2026-08-05
+
+### Security
+- **The log directory is resolved through `getFullPath()`.** `log.dir` defaults to the *relative* `logs`, and a relative path is resolved against the working directory — which for a web request is wherever the entry script lives, inside the document root. An application that configured no log directory therefore wrote its errors, their stack traces, their absolute paths and their bound SQL parameters into a folder the web server serves. `~/logs` now means the application root, so there is a way to say "outside the document root" that is not an absolute path.
+
+### Changed
+- `Logger` reads its defaults through `static::` rather than `self::`, so a subclass can choose safer ones. `Dpress\DpressLogger` does exactly that.
+
+---
+
 ## [0.18.0] &ndash; 2026-08-05
 
 ### Security
