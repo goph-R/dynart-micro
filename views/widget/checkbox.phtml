@@ -1,0 +1,15 @@
+<?php
+/**
+ * One checkbox, optionally with its own label text beside it
+ *
+ * `text` wraps the box in a `<label>` so the words are clickable. That is separate from the
+ * field's `label`, which `form-field.phtml` renders above: "Registration" is what the setting is
+ * called, "Anybody may create an account" is what ticking it means.
+ */
+$id = $form->idByNameAndField($name, $field);
+$value = $field['value'] ?? '1';
+$hasText = isset($field['text']);
+?>
+<?php if ($hasText): ?><label><?php endif ?>
+<input id="<?= $id ?>" name="<?= $form->inputName($name) ?>" type="checkbox" value="<?= esc_attr($value) ?>"<?= $form->value($name) == $value ? ' checked' : '' ?><?= esc_attrs($field['attributes'] ?? []) ?>>
+<?php if ($hasText): ?><?= esc_html($field['text']) ?></label><?php endif ?>

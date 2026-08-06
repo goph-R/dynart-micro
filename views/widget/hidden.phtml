@@ -1,0 +1,8 @@
+<?php
+/**
+ * `form-field.phtml` also knows this type by name - it leaves the label, the error and the
+ * wrapping div off, because there is nothing to point a label at.
+ */
+$id = $form->idByNameAndField($name, $field);
+?>
+<input id="<?= $id ?>" name="<?= $form->inputName($name) ?>" type="hidden" value="<?= $form->value($name, true) ?>"<?= esc_attrs($field['attributes'] ?? []) ?>>

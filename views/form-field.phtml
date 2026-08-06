@@ -1,5 +1,6 @@
 <?php $inputId = $form->idByNameAndField($name, $field) ?>
-<?php $visible = $field['type'] != 'hidden' && !isset($field['hidden']) ?>
+<?php // defaulted like everywhere else: a field without a type is a text field, not a notice ?>
+<?php $visible = ($field['type'] ?? 'text') != 'hidden' && !isset($field['hidden']) ?>
 <?php if ($visible): ?>
 <div id="<?= $inputId ?>_field" class="form-field">
     <?php if (isset($field['label'])): ?>

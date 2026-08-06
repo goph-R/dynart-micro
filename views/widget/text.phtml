@@ -1,0 +1,7 @@
+<?php
+/**
+ * The default type: a field with no `type` at all renders as one of these.
+ */
+$id = $form->idByNameAndField($name, $field);
+?>
+<input id="<?= $id ?>" name="<?= $form->inputName($name) ?>" type="text" value="<?= $form->value($name, true) ?>"<?= esc_attrs($field['attributes'] ?? []) ?>>

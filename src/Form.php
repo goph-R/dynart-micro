@@ -27,14 +27,15 @@ class Form {
      * The partials the form renders itself with
      *
      * Namespaced to the framework's own views, so they resolve wherever the package sits. A
-     * theme overrides any of them by putting its own copy under `<theme>/micro/`.
+     * theme overrides either by putting its own copy under `<theme>/micro/`.
      *
-     * Read through `static::`, so a subclass can point at its own partials - which is how an
-     * application adds field types the framework knows nothing about.
+     * These two are the wrapper - the errors list, and the label/error/description around one
+     * field. **The field itself is not here**: which template renders a `select` is a question
+     * with as many answers as there are field types, so it belongs in `FormWidgets` rather than
+     * in a constant that only one subclass can ever set.
      */
     const VIEW_ERRORS = View::NAMESPACE_MICRO.':form-errors';
     const VIEW_FIELD = View::NAMESPACE_MICRO.':form-field';
-    const VIEW_INPUT = View::NAMESPACE_MICRO.':form-input';
 
     /**
      * Stores the name of the form
@@ -578,10 +579,27 @@ class Form {
         ]);
     }
 
+    /**
+     * The markup of one field, from the template registered for its type
+     *
+     * An unregistered type used to render **nothing at all** - no error, no warning, an empty
+     * string - which is a long afternoon for anybody who has just added a field type and cannot
+     * see why their form is missing a row. It now says so, in the page and in the log.
+     */
     public function fetchInput(string $name, array $field): string {
-        /** @var ViewInterface $view */
-        $view = Micro::get(ViewInterface::class);
-        return $view->fetch(static::VIEW_INPUT, [
+        $type = $field['type'] ?? 'text';
+        $widgets = Micro::get(FormWidgets::class);
+        $view = $widgets->view($type);
+        if ($view === null) {
+            Micro::get(LoggerInterface::class)->warning(
+                "No form widget is registered for the field type '$type'"
+                ." (field '$name', form '{$this->name}'). Registered: ".join(', ', $widgets->types())
+            );
+            return '<!-- no form widget for the field type '.htmlspecialchars($type, ENT_QUOTES).' -->';
+        }
+        /** @var ViewInterface $viewService */
+        $viewService = Micro::get(ViewInterface::class);
+        return $viewService->fetch($view, [
             'form' => $this,
             'name' => $name,
             'field' => $field

@@ -1,0 +1,8 @@
+<?php
+/**
+ * The one type `Form` itself knows about: `bindFiles()` reads `$_FILES` for a field whose type is
+ * exactly `file`, so renaming this type would quietly stop uploads binding.
+ */
+$id = $form->idByNameAndField($name, $field);
+?>
+<input id="<?= $id ?>" name="<?= $form->inputName($name) ?>" type="file"<?= esc_attrs($field['attributes'] ?? []) ?>>

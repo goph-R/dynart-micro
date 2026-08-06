@@ -30,6 +30,9 @@ abstract class AbstractApp {
         Micro::add(ConfigInterface::class, Config::class);
         Micro::add(LoggerInterface::class, Logger::class);
         Micro::add(EventServiceInterface::class, EventService::class);
+        // here rather than in `WebApp`, so a form fetched from a command still knows what a
+        // `select` looks like. Nothing is built until something renders one.
+        Micro::add(FormWidgets::class);
     }
 
     /**

@@ -1,0 +1,17 @@
+<?php
+/**
+ * A dropdown, from `options` as `value => text`
+ *
+ * `options` is defaulted rather than assumed. It used to be read straight out of the field, so a
+ * builder that forgot it - or built the list from a query that returned nothing - took the whole
+ * page down with an undefined index. An empty select is a visible mistake; a fatal is a blank
+ * screen and a log line.
+ */
+$id = $form->idByNameAndField($name, $field);
+$selected = $form->value($name);
+?>
+<select id="<?= $id ?>" name="<?= $form->inputName($name) ?>"<?= esc_attrs($field['attributes'] ?? []) ?>>
+    <?php foreach (($field['options'] ?? []) as $value => $text): ?>
+        <option value="<?= esc_attr($value) ?>"<?= $selected == $value ? ' selected' : '' ?>><?= esc_html($text) ?></option>
+    <?php endforeach ?>
+</select>

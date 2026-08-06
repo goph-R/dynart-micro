@@ -5,6 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.20.0] &ndash; 2026-08-06
+
+A form field type is a registration, not a branch in a template.
+
+### Added
+- **`FormWidgets`** — a registry of field type → view. `add('colour', 'myapp:widget/colour')` is now all it takes to add a field type, and replacing a built-in (`add('select', ...)`) works the same way, so an application wanting its own `select` no longer has to fork the other six to get it.
+- **`views/widget/*.phtml`** — the seven built-in types, one file each. The framework registers them through the same call an application uses; a mechanism the framework does not eat is a mechanism nobody has tested.
+
+### Changed
+- **`Form::VIEW_INPUT` is gone**, and `views/form-input.phtml` with it. It was an `if/elseif` chain over seven types, and the only way to add an eighth was to point the constant at a copy of the whole chain — a mechanism with room for **exactly one** contributor. Whoever spent it closed the door behind them. `VIEW_ERRORS` and `VIEW_FIELD` stay: there is one errors list and one label/error wrapper, so a constant is the right shape for those.
+- **An unregistered field type says so.** It used to render an empty string — no error, no warning, a missing row in somebody's form and nothing anywhere to explain it. It now renders an HTML comment naming the type and logs a warning listing what *is* registered, which is usually enough to spot the typo.
+
+### Fixed
+- **`select` with no `options` no longer fatals.** It was read straight out of the field, so a builder that forgot the key — or built the list from a query that returned nothing — took the page down with an undefined index. An empty `<select>` is a visible mistake; a blank screen is not.
+- **`form-field.phtml` no longer raises a notice** for a field with no `type`. It is a text field, the same default the widgets use.
+
+### Notes
+A plain `text` field now costs **one** template include instead of two, because the fall-through hop is gone — an application's own partial used to be fetched first and then delegate to the framework's.
+
+Migrating: nothing, unless you set `VIEW_INPUT`. If you did, register your types instead — the templates themselves need no changes beyond being split one per file.
+
+---
+
 ## [0.19.0] &ndash; 2026-08-05
 
 ### Added

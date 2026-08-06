@@ -1,0 +1,2 @@
+<?php $id = $form->idByNameAndField($name, $field) ?>
+<textarea id="<?= $id ?>" name="<?= $form->inputName($name) ?>"<?= esc_attrs($field['attributes'] ?? []) ?>><?= $form->value($name, true) ?></textarea>
