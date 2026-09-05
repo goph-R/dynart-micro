@@ -79,8 +79,28 @@ class Router implements RouterInterface
         return count($this->prefixVariables) - 1;
     }
 
-    public function matchCurrentRoute(): array {
+    /**
+     * The method a route is looked up under
+     *
+     * **`HEAD` is looked up as `GET`.** A `HEAD` is a `GET` that stops before the body: RFC 9110
+     * requires the headers to be the ones a `GET` would have sent, and the server drops the body
+     * on the way out - Apache does it, and so does PHP's own built-in server. Without this,
+     * routes are registered under `GET` and nothing ever matches a `HEAD`, so **every URL of
+     * every application answers 404** to one. It looks like a working site to a browser and a
+     * dead one to everything that checks a URL without wanting to read it: uptime monitors, link
+     * checkers, and the feed readers that ask whether a feed has changed before fetching it.
+     *
+     * A method rather than two lines inline because `matchCurrentRoute()` asks twice, and the
+     * home route asking the raw method while the rest asked a mapped one is the sort of
+     * disagreement that answers 404 for `/` alone.
+     */
+    protected function currentMethod(): string {
         $method = $this->request->httpMethod();
+        return $method === 'HEAD' ? 'GET' : $method;
+    }
+
+    public function matchCurrentRoute(): array {
+        $method = $this->currentMethod();
         $routes = array_key_exists($method, $this->routes) ? $this->routes[$method] : [];
         $segments = $this->segments;
         foreach ($this->prefixVariables as $prefixVariable) { // remove prefix variables from the segments

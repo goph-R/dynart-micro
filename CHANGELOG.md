@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.20.2] &ndash; 2026-09-05
+
+### Fixed
+- **A `HEAD` request answered 404 on every route of every application.** Routes are registered under `GET`, `Router::matchCurrentRoute()` looked the method up as it arrived, and `HEAD` matched nothing - so it fell through to `sendError(404)`. A browser never noticed, because a browser sends `GET`. Everything that checks a URL without wanting to read it did: uptime monitors, link checkers, and the feed readers that ask whether a feed has changed before fetching it. All of them saw a dead site.
+
+  A `HEAD` is a `GET` that stops before the body, and RFC 9110 requires its headers to be the ones a `GET` would have sent - the server drops the body on the way out, which Apache and PHP's built-in server both already do. So it is looked up as `GET`, in one `currentMethod()` rather than inline: `matchCurrentRoute()` asks twice, and the home route asking the raw method while everything else asked a mapped one would answer 404 for `/` alone, which is the hardest version of this to spot.
+
+  **Mapped to `GET` and to nothing else.** A `HEAD` does not reach a `POST` route, because answering one would run a handler that expects to change something.
+
+  Found from the outside: `curl -I` against a freshly migrated site returned 404 for every page that was plainly working in a browser.
+
+---
+
 ## [0.20.1] &ndash; 2026-09-05
 
 A checkbox that is turned off says so.
