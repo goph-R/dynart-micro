@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.20.1] &ndash; 2026-09-05
+
+A checkbox that is turned off says so.
+
+### Fixed
+- **A named form now binds every field it declared**, giving `null` to the ones the request did not carry. A browser sends **nothing at all** for an unticked checkbox, and nothing for a `name[]` list with none of its boxes ticked, so those fields were simply absent from `values()`. A controller reading them with `array_key_exists()` — which is how "was this field on the form?" is asked — could not tell *turned off* from *not asked*, and left the stored value alone: a setting stayed on however many times it was switched off, and the screen reported that it saved, because everything else did save.
+
+  Absence is now decided by what the form **declared**, not by what the request happened to carry. A field that is genuinely not on this form was never added to `$fields` and stays missing, so "leave it alone" still works. The unnamed branch of `bind()` already behaved this way; this is the named one catching up.
+
+### Notes
+Migrating: nothing to change, but code that treated a missing key as "unticked" now receives `null` instead — which is falsy, so an `empty()` or a `?? []` reads the same. Code that treated a missing key as **"do not touch"** for a field the form *does* declare will now touch it, which is the point of the fix.
+
+---
+
 ## [0.20.0] &ndash; 2026-08-06
 
 A form field type is a registration, not a branch in a template.

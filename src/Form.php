@@ -360,7 +360,33 @@ class Form {
                 $this->values[$name] = $this->request->get($name);
             }
         }
+        $this->bindUnsentFields();
         $this->bindFiles();
+    }
+
+    /**
+     * Gives every declared field a value, `null` for the ones the browser did not send
+     *
+     * **A browser sends nothing at all for an unticked checkbox**, and nothing for a
+     * `name[]` list with none of its boxes ticked. Without this the field is simply absent
+     * from `values()`, and a controller reading it with `array_key_exists()` - which is how
+     * "was this field on the form?" is asked - cannot tell "unticked" from "not asked", so it
+     * leaves the old value alone. The setting stays on however many times it is turned off,
+     * and nothing errors: the screen says it saved, because it did save everything else.
+     *
+     * So absence is decided here, by what the form **declared**, and not by what the request
+     * happened to carry. A field that is genuinely not on this form - `categories` on a page,
+     * `status` for somebody who may not publish - was never added to `$fields`, and stays
+     * missing from `values()` for the controller to skip.
+     *
+     * The unnamed branch of `bind()` already worked this way. This is the named one catching up.
+     */
+    protected function bindUnsentFields(): void {
+        foreach (array_keys($this->fields) as $name) {
+            if (!array_key_exists($name, $this->values)) {
+                $this->values[$name] = null;
+            }
+        }
     }
 
     /**
