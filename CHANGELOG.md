@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [0.20.3] &ndash; 2026-09-26
+
+### Fixed
+- **A longer catch-all route is tried before a shorter one**, whatever order they were added in. Exact routes already won over catch-alls; between two catch-alls the first one added won, so an application's `/*` - registered with its own controllers, before any plugin's - answered `/docs/engine/VGA` too, and a plugin's `/docs/*` was never reached. The catch-alls are now tried by their number of segments, longest first; routes of the same length keep the order they were added in.
+
+---
+
 ## [0.20.2] &ndash; 2026-09-05
 
 ### Fixed

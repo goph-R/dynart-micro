@@ -111,13 +111,21 @@ class Router implements RouterInterface
             return [$this->routes[$method]['/'], []]; // return with that
         }
         // Exact routes win over catch-all ones regardless of the order they were added, so a
-        // `/*` cannot swallow `/login` just because it was registered first.
-        foreach ([false, true] as $catchAllPass) {
-            foreach ($routes as $route => $callable) {
-                if ($this->hasCatchAll($route) !== $catchAllPass) {
-                    continue;
-                }
-                $found = $this->match($route, $callable, $segments, $segmentsCount);
+        // `/*` cannot swallow `/login` just because it was registered first. Among the catch-alls
+        // the longer one is tried first, for the same reason: `/*` must not swallow `/docs/*`.
+        $exact = [];
+        $catchAll = [];
+        foreach (array_keys($routes) as $route) {
+            if ($this->hasCatchAll($route)) {
+                $catchAll[] = $route;
+            } else {
+                $exact[] = $route;
+            }
+        }
+        usort($catchAll, fn(string $a, string $b): int => substr_count($b, '/') <=> substr_count($a, '/'));
+        foreach ([$exact, $catchAll] as $pass) {
+            foreach ($pass as $route) {
+                $found = $this->match($route, $routes[$route], $segments, $segmentsCount);
                 if ($found[0]) {
                     return $found;
                 }
