@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.0.0] &ndash; 2026-11-23
+
+The version number is a promise now.
+
+### Changed
+- **`katzgrau/klogger` is required at `^1.2` rather than `dev-master`**, and **`minimum-stability: dev` is gone** with it. A release called stable that depends on an untagged branch is not one: Composer refuses a dev requirement in any project left at its default `stable` minimum, so every application built on Micro had to loosen its own stability to install the framework - and `dev-master` is whatever that branch happened to be on the day it was fetched, with no tag anybody could pin or roll back to. `1.2.2` is the newest release and the one the suite now runs against; it asks for `psr/log ^1.0`, whose `LoggerInterface` carries no return types, which is what `Logger::error()` has always overridden.
+- **`firebase/php-jwt` resolves to a stable `v7.2.2`** as a consequence, where the dev stability had been letting a dev release through.
+- **The `version` key is out of `composer.json`.** The git tag is the version, in one place. Two places drift, and the half that drifts is the one nobody reads - Packagist takes the tag and the file is believed by whoever opens it.
+
+### Added
+- **`extra.branch-alias`** maps `dev-main` to `1.0.x-dev`, which is what keeps a Composer **path** repository working now that the version is not written in the file. A path repo takes its version from the checkout: exactly on a tag it reads `1.0.0`, one commit later it reads `dev-main`, and a sibling asking for `^1.0` would stop resolving the moment work continued on `main`. The alias answers that question for every commit between tags.
+
+### Notes
+Nothing in `src/` changed. 1.0.0 is 0.20.3's code with a release contract around it, and the last change to behaviour was 0.20.3 on 2026-09-26.
+
+**Migrating: no code changes.** An application that required `dynart/micro` as `@stable` or `dev-main` should now ask for **`^1.0`** - an explicit range is the half of semantic versioning that lives in the consumer, and `@stable` would have accepted a future 2.0 without a word.
+
+Applications may also be able to drop their own `minimum-stability: dev`, if the framework's `dev-master` logger was the only reason it was there.
+
+---
+
 ## [0.20.3] &ndash; 2026-09-26
 
 ### Fixed

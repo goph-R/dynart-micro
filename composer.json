@@ -2,7 +2,6 @@
     "name": "dynart/micro",
     "description": "Micro PHP framework.",
     "type": "library",
-    "version": "0.20.3",
     "license": "Apache-2.0",
     "autoload": {
         "psr-4": {
@@ -17,10 +16,14 @@
     ],
     "require": {
         "php": ">=8.0",
-        "katzgrau/klogger": "dev-master",
+        "katzgrau/klogger": "^1.2",
         "firebase/php-jwt": "^7.0",
         "ext-ctype": "*",
         "ext-pdo": "*"
     },
-    "minimum-stability": "dev"
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    }
 }
