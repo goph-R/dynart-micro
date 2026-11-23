@@ -201,7 +201,6 @@ $html = $view->fetch('admin:dashboard', ['user' => $user]);
 ### 📝 Forms — `Form`
 
 CSRF protection, field binding, validators, error tracking.
-*Work in progress*
 
 ```php
 $form = new Form($request, $session, 'login');
